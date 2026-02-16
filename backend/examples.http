@@ -1,0 +1,73 @@
+### Ricoh Fleet Governance API - Examples
+### Use with REST Client extension in VS Code or similar tools
+
+@baseUrl = http://localhost:8000
+
+### Health Check
+GET {{baseUrl}}/
+Accept: application/json
+
+###
+
+### Scan Network (Demo Mode)
+GET {{baseUrl}}/scan?ip_range=192.168.1.0/24
+Accept: application/json
+
+###
+
+### Scan Network (Different Range)
+GET {{baseUrl}}/scan?ip_range=10.0.0.0/24
+Accept: application/json
+
+###
+
+### Register Printer
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "ip": "192.168.1.100",
+  "assigned_name": "Impresora Oficina Principal"
+}
+
+###
+
+### Register Another Printer
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "ip": "192.168.1.101",
+  "assigned_name": "Impresora Sala de Reuniones"
+}
+
+###
+
+### Get Fleet
+GET {{baseUrl}}/fleet
+Accept: application/json
+
+###
+
+### Remove Printer from Fleet
+DELETE {{baseUrl}}/fleet/192.168.1.100
+Accept: application/json
+
+###
+
+### Invalid IP Range (Error Test)
+GET {{baseUrl}}/scan?ip_range=invalid
+Accept: application/json
+
+###
+
+### Register Non-existent Printer (Error Test)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "ip": "192.168.1.200",
+  "assigned_name": "Impresora Inexistente"
+}
+
+###

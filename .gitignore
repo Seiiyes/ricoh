@@ -1,0 +1,59 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+dist
+dist-ssr
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+backend/venv/
+backend/env/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# Environment
+.env
+backend/.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+postgres_data/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Debug files
+backend/*.html
+backend/debug_*.py
+backend/provision_response.html
+backend/add_user_form_debug.html
+
+# Fleet data
+backend/fleet.json

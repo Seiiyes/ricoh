@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ricoh-postgres
+    environment:
+      POSTGRES_DB: ricoh_fleet
+      POSTGRES_USER: ricoh_admin
+      POSTGRES_PASSWORD: ricoh_secure_2024
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - ricoh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ricoh_admin -d ricoh_fleet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Database Admin UI (Adminer)
+  adminer:
+    image: adminer:latest
+    container_name: ricoh-adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - ricoh-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ricoh-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ricoh_admin:ricoh_secure_2024@postgres:5432/ricoh_fleet
+      - DEMO_MODE=false
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+      - SECRET_KEY=ricoh-secret-key-change-in-production
+    volumes:
+      - ./backend:/app
+    networks:
+      - ricoh-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # React Frontend (Development)
+  frontend:
+    image: node:20-alpine
+    container_name: ricoh-frontend
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    networks:
+      - ricoh-network
+    command: sh -c "npm install && npm run dev -- --host"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  ricoh-network:
+    driver: bridge
+    name: ricoh-network
+
+volumes:
+  postgres_data:
+    name: ricoh-postgres-data
+  node_modules:
+    name: ricoh-node-modules
