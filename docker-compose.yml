@@ -50,14 +50,21 @@ services:
     environment:
       - DATABASE_URL=postgresql://ricoh_admin:ricoh_secure_2024@postgres:5432/ricoh_fleet
       - DEMO_MODE=false
+      - DEBUG=true
       - API_HOST=0.0.0.0
       - API_PORT=8000
-      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174
       - SECRET_KEY=ricoh-secret-key-change-in-production
     volumes:
       - ./backend:/app
     networks:
       - ricoh-network
+    dns:
+      - 11.0.20.10
+      - 192.168.91.1
+      - 8.8.8.8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

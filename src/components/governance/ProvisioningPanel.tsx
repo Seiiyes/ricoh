@@ -8,7 +8,7 @@ import { printerDeviceToCardProps } from "@/utils/printerTransform";
 import { fetchPrinters, createUser, provisionUser, connectWebSocket, updatePrinter, refreshPrinterSNMP } from "@/services/printerService";
 import type { PrinterDevice } from "@/types";
 
-export const ProvisioningPanel = () => {
+export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscoveryOnly?: boolean }) => {
   const { logs, addLog, printers, isLoading, setPrinters, setLoading, selectedPrinters, clearSelection } = usePrinterStore();
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -85,7 +85,7 @@ export const ProvisioningPanel = () => {
       setLoading(true);
       const result = await fetchPrinters();
       setPrinters(result);
-      addLog(`Flota actualizada: ${result.length} impresora(s) disponible(s)`, 'success');
+      addLog(`Equipos actualizados: ${result.length} impresora(s) disponible(s)`, 'success');
     } catch (error) {
       console.error('Error al recargar impresoras:', error);
     } finally {
@@ -227,7 +227,8 @@ export const ProvisioningPanel = () => {
   return (
     <div className="flex flex-col h-screen bg-[#F8FAFC]">
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: User Form */}
+        {/* Left: User Form - Only show when not in discovery-only mode */}
+        {!showDiscoveryOnly && (
         <div className="w-[400px] border-r bg-white p-6 space-y-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] overflow-y-auto">
           <div className="flex items-center gap-2 text-ricoh-red mb-8">
             <UserPlus size={20} />
@@ -451,8 +452,9 @@ export const ProvisioningPanel = () => {
             )}
           </button>
         </div>
+        )}
 
-        {/* Right: Fleet Selection */}
+        {/* Right: Equipment Selection */}
         <div className="flex-1 p-6 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-3 items-center">

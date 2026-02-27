@@ -151,7 +151,7 @@ def seed_demo_data():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Ricoh Fleet Governance - Database Initialization")
+    print("Ricoh Equipment Management - Database Initialization")
     print("=" * 60)
     print()
     

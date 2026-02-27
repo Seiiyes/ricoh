@@ -1,4 +1,4 @@
-### Ricoh Fleet Governance API - Examples
+### Ricoh Equipment Management API - Examples
 ### Use with REST Client extension in VS Code or similar tools
 
 @baseUrl = http://localhost:8000

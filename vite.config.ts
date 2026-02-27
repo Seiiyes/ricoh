@@ -9,4 +9,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    port: 5173,
+    watch: {
+      ignored: [
+        '**/backend/**',
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/docs/**',
+        '**/backups/**'
+      ]
+    }
+  },
+  optimizeDeps: {
+    exclude: ['backend']
+  }
 })

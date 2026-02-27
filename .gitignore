@@ -38,6 +38,10 @@ backend/.env
 *.sqlite3
 postgres_data/
 
+# Backups (Descomenta la siguiente linea si NO quieres subir respaldos a GitHub)
+# backups/*.sql
+# Si quieres subir los respaldos, deja esta linea comentada
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

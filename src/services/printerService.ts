@@ -217,12 +217,32 @@ export async function refreshPrinterSNMP(printerId: number): Promise<any> {
  */
 export async function createUser(user: {
   name: string;
-  pin: string;
-  smb_path?: string;
-  email?: string;
-  department?: string;
+  codigo_de_usuario: string;
+  empresa?: string;
+  centro_costos?: string;
+  network_credentials?: {
+    username: string;
+    password?: string;
+  };
+  smb_config?: {
+    server: string;
+    port: number;
+    path: string;
+  };
+  available_functions?: {
+    copier?: boolean;
+    copier_color?: boolean;
+    printer?: boolean;
+    printer_color?: boolean;
+    document_server?: boolean;
+    fax?: boolean;
+    scanner?: boolean;
+    browser?: boolean;
+  };
 }): Promise<any> {
   try {
+    console.log('📤 Sending user creation request:', user);
+    
     const response = await fetch(`${API_BASE_URL}/users/`, {
       method: 'POST',
       headers: {
@@ -233,10 +253,13 @@ export async function createUser(user: {
     
     if (!response.ok) {
       const error = await response.json();
+      console.error('❌ User creation failed:', error);
       throw new Error(error.detail || 'Failed to create user');
     }
     
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ User created successfully:', result);
+    return result;
   } catch (error) {
     console.error('Failed to create user:', error);
     throw error;

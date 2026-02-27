@@ -14,30 +14,30 @@ import ipaddress
 class AvailableFunctions(BaseModel):
     """Available printer functions"""
     copier: bool = False
+    copier_color: bool = False
     printer: bool = False
+    printer_color: bool = False
     document_server: bool = False
     fax: bool = False
     scanner: bool = False
     browser: bool = False
     
-    @validator('copier', 'printer', 'document_server', 'fax', 'scanner', 'browser')
-    def at_least_one_function(cls, v, values):
-        """Ensure at least one function is enabled"""
-        # Check if at least one function is True
-        if not any(values.values()) and not v:
-            raise ValueError("At least one function must be enabled")
-        return v
+    # Remove specific cross-field validator that causes issues in parallel validation
 
 
 class SMBConfiguration(BaseModel):
     """SMB folder configuration"""
     server: str = Field(..., min_length=1, max_length=255, description="Server name or IP")
     port: int = Field(21, ge=1, le=65535, description="SMB port")
-    path: str = Field(..., min_length=1, max_length=500, description="UNC path")
+    path: str = Field(..., max_length=500, description="UNC path")
     
     @validator('path')
     def validate_unc_path(cls, v):
         """Validate UNC path format"""
+        # Allow empty path
+        if not v or len(v) == 0:
+            return v
+        # If not empty, must start with \\
         if not v.startswith('\\\\'):
             raise ValueError("Path must start with \\\\ (UNC format)")
         return v
@@ -46,34 +46,68 @@ class SMBConfiguration(BaseModel):
 class NetworkCredentials(BaseModel):
     """Network authentication credentials"""
     username: str = Field(default="reliteltda\\scaner", min_length=1, max_length=255, description="Network username")
-    password: str = Field(..., min_length=1, max_length=255, description="Network password")
+    password: Optional[str] = Field(None, max_length=255, description="Network password")
 
 
 class UserBase(BaseModel):
     """Base user schema"""
     name: str = Field(..., min_length=1, max_length=100, description="Full name (Nombre)")
-    email: Optional[EmailStr] = None
-    department: Optional[str] = Field(None, max_length=100)
+    empresa: Optional[str] = Field(None, max_length=255, description="Empresa")
+    centro_costos: Optional[str] = Field(None, max_length=100, description="Centro de costos")
 
 
 class UserCreate(UserBase):
     """Schema for creating a user"""
     codigo_de_usuario: str = Field(..., min_length=4, max_length=8, description="Numeric authentication code")
     
-    # Network credentials
-    network_credentials: NetworkCredentials
+    # Network credentials - can be nested or flat
+    network_credentials: Optional[NetworkCredentials] = None
+    network_username: Optional[str] = Field(None, max_length=255)
+    network_password: Optional[str] = Field(None, max_length=255)
     
-    # SMB configuration
-    smb_config: SMBConfiguration
+    # SMB configuration - can be nested or flat
+    smb_config: Optional[SMBConfiguration] = None
+    smb_server: Optional[str] = Field(None, max_length=255)
+    smb_port: Optional[int] = Field(None, ge=1, le=65535)
+    smb_path: Optional[str] = Field(None, max_length=500)
     
-    # Available functions
-    available_functions: AvailableFunctions
+    # Available functions - can be nested or flat
+    available_functions: Optional[AvailableFunctions] = None
+    func_copier: Optional[bool] = None
+    func_copier_color: Optional[bool] = None
+    func_printer: Optional[bool] = None
+    func_printer_color: Optional[bool] = None
+    func_document_server: Optional[bool] = None
+    func_fax: Optional[bool] = None
+    func_scanner: Optional[bool] = None
+    func_browser: Optional[bool] = None
     
     @validator('codigo_de_usuario')
     def validate_codigo(cls, v):
         """Ensure codigo_de_usuario is numeric"""
         if not v.isdigit():
             raise ValueError("Código de usuario must contain only digits")
+        return v
+    
+    @validator('smb_path')
+    def validate_unc_path_flat(cls, v):
+        """Validate UNC path format for flat structure"""
+        if v and len(v) > 0 and not v.startswith('\\\\'):
+            raise ValueError("Path must start with \\\\ (UNC format)")
+        return v
+    
+    @validator('network_username')
+    def validate_network_username(cls, v):
+        """Validate network username is not empty string"""
+        if v is not None and len(v) == 0:
+            return None  # Convert empty string to None
+        return v
+    
+    @validator('smb_server')
+    def validate_smb_server(cls, v):
+        """Validate SMB server is not empty string"""
+        if v is not None and len(v) == 0:
+            return None  # Convert empty string to None
         return v
 
 
@@ -87,13 +121,15 @@ class UserUpdate(BaseModel):
     smb_port: Optional[int] = Field(None, ge=1, le=65535)
     smb_path: Optional[str] = Field(None, min_length=1, max_length=500)
     func_copier: Optional[bool] = None
+    func_copier_color: Optional[bool] = None
     func_printer: Optional[bool] = None
+    func_printer_color: Optional[bool] = None
     func_document_server: Optional[bool] = None
     func_fax: Optional[bool] = None
     func_scanner: Optional[bool] = None
     func_browser: Optional[bool] = None
-    email: Optional[EmailStr] = None
-    department: Optional[str] = Field(None, max_length=100)
+    empresa: Optional[str] = Field(None, max_length=255)
+    centro_costos: Optional[str] = Field(None, max_length=100)
     is_active: Optional[bool] = None
 
 
@@ -112,7 +148,9 @@ class UserResponse(UserBase):
     
     # Available functions
     func_copier: bool
+    func_copier_color: bool
     func_printer: bool
+    func_printer_color: bool
     func_document_server: bool
     func_fax: bool
     func_scanner: bool
@@ -136,6 +174,7 @@ class PrinterBase(BaseModel):
     hostname: str = Field(..., min_length=1, max_length=255)
     ip_address: str = Field(..., description="IPv4 or IPv6 address")
     location: Optional[str] = Field(None, max_length=255)
+    empresa: Optional[str] = Field(None, max_length=255, description="Company/Organization")
     
     @validator('ip_address')
     def validate_ip(cls, v):
@@ -164,6 +203,8 @@ class PrinterUpdate(BaseModel):
     """Schema for updating a printer"""
     hostname: Optional[str] = Field(None, min_length=1, max_length=255)
     location: Optional[str] = Field(None, max_length=255)
+    empresa: Optional[str] = Field(None, max_length=255)
+    serial_number: Optional[str] = Field(None, max_length=100)
     status: Optional[Literal['online', 'offline', 'error', 'maintenance']] = None
     toner_cyan: Optional[int] = Field(None, ge=0, le=100)
     toner_magenta: Optional[int] = Field(None, ge=0, le=100)
@@ -175,6 +216,7 @@ class PrinterUpdate(BaseModel):
 class PrinterResponse(PrinterBase):
     """Schema for printer response"""
     id: int
+    empresa: Optional[str]
     status: str
     detected_model: Optional[str]
     serial_number: Optional[str]
@@ -273,7 +315,7 @@ class UserProvisioningStatus(BaseModel):
     """Schema for user provisioning status"""
     user_id: int
     user_name: str
-    email: Optional[str]
+    empresa: Optional[str]
     smb_path: Optional[str]
     total_printers: int
     printers: List[dict]
@@ -316,3 +358,29 @@ class ErrorResponse(BaseModel):
     """Error response schema"""
     detail: str
     error_code: Optional[str] = None
+
+
+# ============================================================================
+# User Functions Update Schemas
+# ============================================================================
+
+class UpdateUserFunctionsRequest(BaseModel):
+    """Request schema for updating user functions on a printer"""
+    copiadora: bool = False
+    copiadora_color: bool = False
+    impresora: bool = False
+    impresora_color: bool = False
+    escaner: bool = False
+    document_server: bool = False
+    fax: bool = False
+    navegador: bool = False
+
+
+class UpdateUserFunctionsResponse(BaseModel):
+    """Response schema for updating user functions"""
+    success: bool
+    message: str
+    user_code: str
+    printer_ip: str
+    functions_updated: dict
+

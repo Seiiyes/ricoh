@@ -43,15 +43,17 @@ class User(Base):
     
     # Available Functions (Funciones disponibles)
     func_copier = Column(Boolean, default=False, nullable=False)  # Copiadora
+    func_copier_color = Column(Boolean, default=False, nullable=False)  # Copiadora Color
     func_printer = Column(Boolean, default=False, nullable=False)  # Impresora
+    func_printer_color = Column(Boolean, default=False, nullable=False)  # Impresora Color
     func_document_server = Column(Boolean, default=False, nullable=False)  # Document Server
     func_fax = Column(Boolean, default=False, nullable=False)  # Fax
     func_scanner = Column(Boolean, default=False, nullable=False)  # Escáner
     func_browser = Column(Boolean, default=False, nullable=False)  # Navegador
     
     # Optional Fields
-    email = Column(String(255), nullable=True, unique=True, index=True)
-    department = Column(String(100), nullable=True)
+    empresa = Column(String(255), nullable=True, index=True)  # Empresa (antes email)
+    centro_costos = Column(String(100), nullable=True, index=True)  # Centro de costos (antes department)
     
     # Metadata
     is_active = Column(Boolean, default=True)
@@ -66,12 +68,12 @@ class User(Base):
     )
 
     def __repr__(self):
-        return f"<User(id={self.id}, name='{self.name}', email='{self.email}')>"
+        return f"<User(id={self.id}, name='{self.name}', empresa='{self.empresa}')>"
 
 
 class Printer(Base):
     """
-    Printer model for fleet management
+    Printer model for equipment management
     Stores printer information and status
     """
     __tablename__ = "printers"
@@ -80,9 +82,10 @@ class Printer(Base):
     hostname = Column(String(255), nullable=False, index=True)
     ip_address = Column(String(45), nullable=False, unique=True, index=True)  # IPv4/IPv6
     location = Column(String(255), nullable=True)
+    empresa = Column(String(255), nullable=True, index=True)  # Company/Organization
     status = Column(Enum(PrinterStatus), default=PrinterStatus.OFFLINE)
     detected_model = Column(String(100), nullable=True)
-    serial_number = Column(String(100), nullable=True, unique=True)
+    serial_number = Column(String(100), nullable=True, index=True)  # Unique constraint removed to allow NULL duplicates
     
     # Capabilities
     has_color = Column(Boolean, default=False)
@@ -127,6 +130,17 @@ class UserPrinterAssignment(Base):
     provisioned_at = Column(DateTime(timezone=True), server_default=func.now())
     is_active = Column(Boolean, default=True)
     notes = Column(Text, nullable=True)
+    
+    # Per-Printer Functions (Estado real en este dispositivo)
+    entry_index = Column(String(10), nullable=True) # ID físico en la impresora
+    func_copier = Column(Boolean, default=False, nullable=False)
+    func_copier_color = Column(Boolean, default=False, nullable=False)
+    func_printer = Column(Boolean, default=False, nullable=False)
+    func_printer_color = Column(Boolean, default=False, nullable=False)
+    func_document_server = Column(Boolean, default=False, nullable=False)
+    func_fax = Column(Boolean, default=False, nullable=False)
+    func_scanner = Column(Boolean, default=False, nullable=False)
+    func_browser = Column(Boolean, default=False, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="printer_assignments")

@@ -1,14 +1,25 @@
 """
-Ricoh Multi-Fleet Governance Suite - Backend API
+Ricoh Equipment Management Suite - Backend API
 FastAPI server with PostgreSQL, WebSockets, and network discovery
 """
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import os
 import json
+import logging
 from datetime import datetime
 from typing import List
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG if os.getenv("DEBUG", "false").lower() == "true" else logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
 
 # Import database
 from db.database import init_db, engine
@@ -52,7 +63,7 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events
     """
     # Startup
-    print("🚀 Starting Ricoh Fleet Governance API...")
+    print("🚀 Starting Ricoh Equipment Management API...")
     print("📊 Initializing database...")
     
     # Create tables
@@ -65,19 +76,19 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    print("🛑 Shutting down Ricoh Fleet Governance API...")
+    print("🛑 Shutting down Ricoh Equipment Management API...")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="Ricoh Fleet Governance API",
-    description="Backend API for Ricoh printer fleet discovery and management with PostgreSQL",
+    title="Ricoh Equipment Management API",
+    description="Backend API for Ricoh printer equipment discovery and management with PostgreSQL",
     version="2.0.0",
     lifespan=lifespan
 )
 
 # CORS Configuration
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174").split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -86,6 +97,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Global exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors with detailed logging"""
+    body = await request.body()
+    logger.error("=" * 80)
+    logger.error("❌ VALIDATION ERROR")
+    logger.error("=" * 80)
+    logger.error(f"URL: {request.url}")
+    logger.error(f"Method: {request.method}")
+    logger.error(f"Body: {body.decode('utf-8')}")
+    logger.error(f"Errors: {json.dumps(exc.errors(), indent=2)}")
+    logger.error("=" * 80)
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": exc.errors(),
+            "body": body.decode('utf-8')
+        }
+    )
 
 
 # Include API routers
@@ -100,14 +134,14 @@ app.include_router(discovery_router)
 async def root():
     """Health check endpoint"""
     return {
-        "service": "Ricoh Fleet Governance API",
+        "service": "Ricoh Equipment Management API",
         "status": "online",
         "version": "2.0.0",
         "demo_mode": os.getenv("DEMO_MODE", "true").lower() == "true",
         "database": "PostgreSQL",
         "features": [
             "User Management",
-            "Printer Fleet Management",
+            "Printer Equipment Management",
             "Network Discovery",
             "Bulk Provisioning",
             "Real-time WebSocket Updates"
@@ -128,17 +162,27 @@ async def websocket_logs(websocket: WebSocket):
         await websocket.send_json({
             "id": "system",
             "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": "Connected to Ricoh Fleet Governance Console",
+            "message": "Connected to Ricoh Equipment Management Console",
             "type": "info"
         })
         
-        # Keep connection alive and listen for messages
+        # Simple loop to keep alive, listening for any message (even if we ignore them)
         while True:
-            data = await websocket.receive_text()
-            # Echo back or process if needed
-            
+            try:
+                # Escuchar pero con un timeout implícito o simplemente esperar
+                await websocket.receive_text()
+            except Exception:
+                # Si hay error en la recepción (como un timeout del cliente), seguimos vivos
+                break
+                
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket Error: {e}")
+        try:
+            manager.disconnect(websocket)
+        except:
+            pass
 
 
 # Helper function to broadcast logs

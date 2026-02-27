@@ -1,4 +1,4 @@
--- Ricoh Fleet Governance - Database Schema
+-- Ricoh Equipment Management - Database Schema
 -- Execute this script to create all tables
 
 -- Drop existing tables if they exist (careful in production!)

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Ricoh Multi-Fleet Governance Suite - Development Startup Script
+# Ricoh Equipment Management Suite - Development Startup Script
 
-echo "🚀 Starting Ricoh Multi-Fleet Governance Suite..."
+echo "🚀 Starting Ricoh Equipment Management Suite..."
 echo ""
 
 # Check if Python is installed

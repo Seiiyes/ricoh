@@ -1,7 +1,7 @@
 @echo off
-REM Ricoh Multi-Fleet Governance Suite - Development Startup Script for Windows
+REM Ricoh Equipment Management Suite - Development Startup Script for Windows
 
-echo Starting Ricoh Multi-Fleet Governance Suite...
+echo Starting Ricoh Equipment Management Suite...
 echo.
 
 REM Check if Python is installed

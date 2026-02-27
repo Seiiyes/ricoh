@@ -1,4 +1,4 @@
-# Ricoh Multi-Fleet Governance Suite - Backend
+# Ricoh Equipment Management Suite - Backend
 
 Backend API en Python con FastAPI para descubrimiento y gestión de impresoras Ricoh en red.
 
@@ -8,7 +8,7 @@ Backend API en Python con FastAPI para descubrimiento y gestión de impresoras R
 - **Registro de Dispositivos**: Permite asignar nombres personalizados a las impresoras
 - **Modo Demo**: Incluye 3 impresoras ficticias para pruebas sin hardware físico
 - **API Asíncrona**: Escaneo concurrente de múltiples IPs sin bloqueo
-- **Persistencia**: Almacena el registro de flota en `fleet.json`
+- **Persistencia**: Almacena el registro de equipos en `fleet.json`
 - **CORS Configurado**: Listo para integrarse con el frontend React
 
 ## Requisitos

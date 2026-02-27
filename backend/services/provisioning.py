@@ -9,7 +9,8 @@ import logging
 import time
 
 from db.repository import UserRepository, PrinterRepository, AssignmentRepository
-from db.models import User, Printer
+from db.models import User, Printer, UserPrinterAssignment
+from sqlalchemy import and_
 from services.encryption import get_encryption_service
 from services.ricoh_web_client import get_ricoh_web_client
 
@@ -157,23 +158,36 @@ class ProvisioningService:
         if not user:
             raise ValueError(f"User with ID {user_id} not found")
         
-        printers = AssignmentRepository.get_user_printers(db, user_id)
+        # Obtener las asignaciones directamente para acceder a sus metadatos (permisos por impresora)
+        assignments = db.query(UserPrinterAssignment).filter(
+            UserPrinterAssignment.user_id == user_id,
+            UserPrinterAssignment.is_active == True
+        ).all()
         
         return {
             "user_id": user.id,
             "user_name": user.name,
-            "email": user.email,
+            "empresa": user.empresa,
             "smb_path": user.smb_path,
-            "total_printers": len(printers),
+            "total_printers": len(assignments),
             "printers": [
                 {
-                    "id": p.id,
-                    "hostname": p.hostname,
-                    "ip_address": p.ip_address,
-                    "location": p.location,
-                    "status": p.status.value
+                    "id": a.printer.id,
+                    "hostname": a.printer.hostname,
+                    "ip_address": a.printer.ip_address,
+                    "location": a.printer.location,
+                    "status": a.printer.status.value,
+                    "entry_index": a.entry_index,
+                    "permisos": {
+                        "copiadora": a.func_copier,
+                        "impresora": a.func_printer,
+                        "document_server": a.func_document_server,
+                        "fax": a.func_fax,
+                        "escaner": a.func_scanner,
+                        "navegador": a.func_browser
+                    }
                 }
-                for p in printers
+                for a in assignments
             ]
         }
     
@@ -195,7 +209,28 @@ class ProvisioningService:
             Dict with removal results
         """
         removed_count = 0
+        ricoh_client = get_ricoh_web_client()
+        
+        # Permisos para deshabilitar (Todo en False)
+        disabled_permissions = {k: False for k in ['copiadora', 'escaner', 'impresora', 'document_server', 'fax', 'navegador']}
+
         for printer_id in printer_ids:
+            # 1. Obtener la asignación para tener el entry_index
+            assignment = db.query(UserPrinterAssignment).filter(
+                and_(
+                    UserPrinterAssignment.user_id == user_id,
+                    UserPrinterAssignment.printer_id == printer_id
+                )
+            ).first()
+            
+            if assignment and assignment.entry_index:
+                # 2. Intentar deshabilitar en el hardware
+                printer = PrinterRepository.get_by_id(db, printer_id)
+                if printer:
+                    logger.info(f"🚫 Deshabilitando funciones de usuario {user_id} en impresora {printer.ip_address}...")
+                    ricoh_client.set_user_functions(printer.ip_address, assignment.entry_index, disabled_permissions)
+            
+            # 3. Eliminar de la base de datos
             if AssignmentRepository.delete(db, user_id, printer_id):
                 removed_count += 1
         
@@ -233,8 +268,8 @@ class ProvisioningService:
                 {
                     "id": u.id,
                     "name": u.name,
-                    "email": u.email,
-                    "department": u.department
+                    "empresa": u.empresa,
+                    "centro_costos": u.centro_costos
                 }
                 for u in users
             ]

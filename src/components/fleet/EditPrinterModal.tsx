@@ -12,12 +12,16 @@ interface EditPrinterModalProps {
 export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrinterModalProps) => {
   const [hostname, setHostname] = useState('');
   const [location, setLocation] = useState('');
+  const [empresa, setEmpresa] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (printer) {
       setHostname(printer.hostname);
       setLocation(printer.location || '');
+      setEmpresa(printer.empresa || '');
+      setSerialNumber(printer.serial_number || '');
     }
   }, [printer]);
 
@@ -29,6 +33,8 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
       await onSave(printer.id, {
         hostname,
         location: location || null,
+        empresa: empresa || null,
+        serial_number: serialNumber || null,
       });
       onClose();
     } catch (error) {
@@ -96,6 +102,37 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
               className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
               placeholder="Ej: Oficina Principal - Piso 2"
             />
+          </div>
+
+          {/* Empresa */}
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+              Empresa
+            </label>
+            <input
+              type="text"
+              value={empresa}
+              onChange={(e) => setEmpresa(e.target.value)}
+              className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
+              placeholder="Ej: ACME Corp"
+            />
+          </div>
+
+          {/* Serial Number / ID Máquina */}
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+              ID Máquina (Serial)
+            </label>
+            <input
+              type="text"
+              value={serialNumber}
+              onChange={(e) => setSerialNumber(e.target.value)}
+              className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
+              placeholder="Ej: E174M210096"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              💡 No confundir con el hostname. El ID máquina aparece en la web de la impresora.
+            </p>
           </div>
         </div>
 

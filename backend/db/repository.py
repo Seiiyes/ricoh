@@ -2,7 +2,7 @@
 Repository pattern for database operations
 Provides abstraction layer between API and database
 """
-from typing import List, Optional
+from typing import List, Optional, Dict
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from datetime import datetime
@@ -17,10 +17,11 @@ class UserRepository:
     def create(db: Session, name: str, codigo_de_usuario: str, 
                network_username: str, network_password_encrypted: str,
                smb_server: str, smb_port: int, smb_path: str,
-               func_copier: bool = False, func_printer: bool = False,
+               func_copier: bool = False, func_copier_color: bool = False,
+               func_printer: bool = False, func_printer_color: bool = False,
                func_document_server: bool = False, func_fax: bool = False,
                func_scanner: bool = False, func_browser: bool = False,
-               email: Optional[str] = None, department: Optional[str] = None) -> User:
+               empresa: Optional[str] = None, centro_costos: Optional[str] = None) -> User:
         """Create a new user with complete configuration"""
         user = User(
             name=name,
@@ -31,13 +32,15 @@ class UserRepository:
             smb_port=smb_port,
             smb_path=smb_path,
             func_copier=func_copier,
+            func_copier_color=func_copier_color,
             func_printer=func_printer,
+            func_printer_color=func_printer_color,
             func_document_server=func_document_server,
             func_fax=func_fax,
             func_scanner=func_scanner,
             func_browser=func_browser,
-            email=email,
-            department=department
+            empresa=empresa,
+            centro_costos=centro_costos
         )
         db.add(user)
         db.commit()
@@ -50,9 +53,9 @@ class UserRepository:
         return db.query(User).filter(User.id == user_id).first()
     
     @staticmethod
-    def get_by_email(db: Session, email: str) -> Optional[User]:
-        """Get user by email"""
-        return db.query(User).filter(User.email == email).first()
+    def get_by_empresa(db: Session, empresa: str) -> Optional[User]:
+        """Get user by empresa"""
+        return db.query(User).filter(User.empresa == empresa).first()
     
     @staticmethod
     def get_by_codigo(db: Session, codigo_de_usuario: str) -> Optional[User]:
@@ -96,7 +99,7 @@ class UserRepository:
         return db.query(User).filter(
             or_(
                 User.name.ilike(search_pattern),
-                User.email.ilike(search_pattern)
+                User.empresa.ilike(search_pattern)
             )
         ).all()
 
@@ -202,18 +205,80 @@ class AssignmentRepository:
     """Repository for UserPrinterAssignment operations"""
     
     @staticmethod
-    def create(db: Session, user_id: int, printer_id: int, notes: Optional[str] = None) -> UserPrinterAssignment:
-        """Create a new assignment"""
+    def create(db: Session, user_id: int, printer_id: int, 
+               entry_index: Optional[str] = None,
+               permissions: Optional[Dict] = None,
+               notes: Optional[str] = None) -> UserPrinterAssignment:
+        """Create a new assignment with initial permissions"""
         assignment = UserPrinterAssignment(
             user_id=user_id,
             printer_id=printer_id,
+            entry_index=entry_index,
             notes=notes
         )
+        
+        if permissions:
+            assignment.func_copier = permissions.get('copiadora', False)
+            assignment.func_copier_color = permissions.get('copiadora_color', False)
+            assignment.func_printer = permissions.get('impresora', False)
+            assignment.func_printer_color = permissions.get('impresora_color', False)
+            assignment.func_document_server = permissions.get('document_server', False)
+            assignment.func_fax = permissions.get('fax', False)
+            assignment.func_scanner = permissions.get('escaner', False)
+            assignment.func_browser = permissions.get('navegador', False)
+            
         db.add(assignment)
         db.commit()
         db.refresh(assignment)
         return assignment
+
+    @staticmethod
+    def update_assignment_state(db: Session, user_id: int, printer_id: int, 
+                               permissions: Dict,
+                               entry_index: Optional[str] = None) -> Optional[UserPrinterAssignment]:
+        """Update the actual state of an assignment (after sync). Creates it if missing."""
+        assignment = db.query(UserPrinterAssignment).filter(
+            and_(
+                UserPrinterAssignment.user_id == user_id,
+                UserPrinterAssignment.printer_id == printer_id
+            )
+        ).first()
+        
+        if not assignment:
+            # Si no existe, la creamos (permite gestión de usuarios importados)
+            assignment = UserPrinterAssignment(
+                user_id=user_id,
+                printer_id=printer_id,
+                entry_index=entry_index
+            )
+            db.add(assignment)
+        elif entry_index:
+            assignment.entry_index = entry_index
+            
+        # Actualizar permisos
+        assignment.func_copier = permissions.get('copiadora', False)
+        assignment.func_copier_color = permissions.get('copiadora_color', False)
+        assignment.func_printer = permissions.get('impresora', False)
+        assignment.func_printer_color = permissions.get('impresora_color', False)
+        assignment.func_document_server = permissions.get('document_server', False)
+        assignment.func_fax = permissions.get('fax', False)
+        assignment.func_scanner = permissions.get('escaner', False)
+        assignment.func_browser = permissions.get('navegador', False)
+        
+        db.commit()
+        db.refresh(assignment)
+        return assignment
     
+    @staticmethod
+    def get_by_user_and_printer(db: Session, user_id: int, printer_id: int) -> Optional[UserPrinterAssignment]:
+        """Recupera una asignación específica por usuario e impresora"""
+        return db.query(UserPrinterAssignment).filter(
+            and_(
+                UserPrinterAssignment.user_id == user_id,
+                UserPrinterAssignment.printer_id == printer_id
+            )
+        ).first()
+
     @staticmethod
     def bulk_create(db: Session, user_id: int, printer_ids: List[int]) -> List[UserPrinterAssignment]:
         """Create multiple assignments for a user"""

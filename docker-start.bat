@@ -1,8 +1,8 @@
 @echo off
-REM Ricoh Multi-Fleet Governance Suite - Docker Startup Script
+REM Ricoh Equipment Management Suite - Docker Startup Script
 
 echo ========================================
-echo Ricoh Multi-Fleet Governance Suite
+echo Ricoh Equipment Management Suite
 echo Docker Compose Startup
 echo ========================================
 echo.

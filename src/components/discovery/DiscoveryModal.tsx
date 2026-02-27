@@ -35,6 +35,12 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const [scanComplete, setScanComplete] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Manual add state
+  const [showManualAdd, setShowManualAdd] = useState(false);
+  const [manualIP, setManualIP] = useState('');
+  const [manualPort, setManualPort] = useState('161');
+  const [isCheckingManual, setIsCheckingManual] = useState(false);
 
   if (!isOpen) return null;
 
@@ -107,6 +113,53 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
     }
   };
 
+  const handleManualAdd = async () => {
+    if (!manualIP) {
+      alert('Por favor ingresa una dirección IP');
+      return;
+    }
+
+    try {
+      setIsCheckingManual(true);
+      
+      // Llamar al endpoint de escaneo con una sola IP
+      const response = await fetch(`http://localhost:8000/discovery/check-printer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ip_address: manualIP,
+          snmp_port: parseInt(manualPort) || 161
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo conectar con la impresora');
+      }
+
+      const device = await response.json();
+      
+      // Agregar a la lista de dispositivos descubiertos
+      const editableDevice: EditableDevice = {
+        ...device,
+        editedHostname: device.hostname,
+        editedLocation: device.location || ''
+      };
+      
+      setDiscoveredDevices(prev => [...prev, editableDevice]);
+      setSelectedDevices(prev => new Set([...prev, device.ip_address]));
+      setScanComplete(true);
+      setShowManualAdd(false);
+      setManualIP('');
+      setManualPort('161');
+      
+    } catch (error) {
+      console.error('Error agregando impresora manual:', error);
+      alert('No se pudo conectar con la impresora. Verifica la IP y el puerto SNMP.');
+    } finally {
+      setIsCheckingManual(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
@@ -163,6 +216,65 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
                 )}
               </button>
             </div>
+            
+            {/* Manual Add Button */}
+            <div className="mt-3">
+              <button
+                onClick={() => setShowManualAdd(!showManualAdd)}
+                className="text-sm text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+              >
+                {showManualAdd ? '− Ocultar' : '+ Agregar impresora manualmente'}
+              </button>
+            </div>
+
+            {/* Manual Add Form */}
+            {showManualAdd && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="text-sm font-bold text-blue-900 mb-3">Agregar Impresora por IP</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">
+                      Dirección IP
+                    </label>
+                    <input
+                      type="text"
+                      value={manualIP}
+                      onChange={(e) => setManualIP(e.target.value)}
+                      placeholder="192.168.91.250"
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      disabled={isCheckingManual}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">
+                      Puerto SNMP
+                    </label>
+                    <input
+                      type="text"
+                      value={manualPort}
+                      onChange={(e) => setManualPort(e.target.value)}
+                      placeholder="161"
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      disabled={isCheckingManual}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleManualAdd}
+                  disabled={isCheckingManual || !manualIP}
+                  className="mt-3 w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm uppercase tracking-wide hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCheckingManual ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Verificando...
+                    </>
+                  ) : (
+                    'Agregar Impresora'
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Results */}

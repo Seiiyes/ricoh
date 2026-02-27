@@ -1,9 +1,12 @@
 """
 User management API routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
+import logging
 
 from db.database import get_db
 from db.repository import UserRepository
@@ -11,21 +14,44 @@ from services.encryption import get_encryption_service
 from .schemas import UserCreate, UserUpdate, UserResponse, MessageResponse
 
 router = APIRouter(prefix="/users", tags=["users"])
+logger = logging.getLogger(__name__)
+
+
+@router.post("/debug", status_code=200)
+async def debug_user_creation(request: Request):
+    """Debug endpoint to see what data is being sent"""
+    body = await request.body()
+    logger.info("=" * 80)
+    logger.info("DEBUG: User creation request")
+    logger.info("=" * 80)
+    logger.info(f"Raw body: {body.decode('utf-8')}")
+    
+    try:
+        import json
+        data = json.loads(body)
+        logger.info("Parsed JSON:")
+        for key, value in data.items():
+            logger.info(f"  {key}: {value} (type: {type(value).__name__})")
+    except Exception as e:
+        logger.error(f"Error parsing JSON: {e}")
+    
+    return {"received": body.decode('utf-8')}
 
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user with complete configuration
+    Accepts both nested and flat data structures
     """
-    # Check if email already exists
-    if user.email:
-        existing = UserRepository.get_by_email(db, user.email)
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"User with email {user.email} already exists"
-            )
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"📥 Received user creation request")
+    logger.info(f"   Name: {user.name}")
+    logger.info(f"   Código: {user.codigo_de_usuario}")
+    logger.info(f"   Empresa: {user.empresa}")
+    logger.info(f"   Centro costos: {user.centro_costos}")
     
     # Check if codigo_de_usuario already exists
     existing_codigo = UserRepository.get_by_codigo(db, user.codigo_de_usuario)
@@ -35,31 +61,85 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
             detail=f"User with código de usuario {user.codigo_de_usuario} already exists"
         )
     
+    # Extract network credentials (nested or flat)
+    if user.network_credentials:
+        logger.info("   Using nested network_credentials")
+        network_username = user.network_credentials.username
+        raw_password = user.network_credentials.password or ""
+    else:
+        logger.info("   Using flat network fields")
+        network_username = user.network_username or "reliteltda\\scaner"
+        raw_password = user.network_password or ""
+    
+    logger.info(f"   Network username: {network_username}")
+    
+    # Extract SMB configuration (nested or flat)
+    if user.smb_config:
+        logger.info("   Using nested smb_config")
+        smb_server = user.smb_config.server
+        smb_port = user.smb_config.port
+        smb_path = user.smb_config.path or ""  # Allow empty
+    else:
+        logger.info("   Using flat SMB fields")
+        smb_server = user.smb_server or ""
+        smb_port = user.smb_port or 21
+        smb_path = user.smb_path or ""  # Allow empty
+    
+    logger.info(f"   SMB: {smb_server}:{smb_port} -> {smb_path}")
+    
+    # Extract available functions (nested or flat)
+    if user.available_functions:
+        logger.info("   Using nested available_functions")
+        func_copier = user.available_functions.copier
+        func_copier_color = user.available_functions.copier_color
+        func_printer = user.available_functions.printer
+        func_printer_color = user.available_functions.printer_color
+        func_document_server = user.available_functions.document_server
+        func_fax = user.available_functions.fax
+        func_scanner = user.available_functions.scanner
+        func_browser = user.available_functions.browser
+    else:
+        logger.info("   Using flat function fields")
+        func_copier = user.func_copier or False
+        func_copier_color = user.func_copier_color or False
+        func_printer = user.func_printer or False
+        func_printer_color = user.func_printer_color or False
+        func_document_server = user.func_document_server or False
+        func_fax = user.func_fax or False
+        func_scanner = user.func_scanner or False
+        func_browser = user.func_browser or False
+    
+    logger.info(f"   Functions: copier={func_copier}, scanner={func_scanner}, printer={func_printer}")
+    
     # Encrypt network password
     encryption_service = get_encryption_service()
-    encrypted_password = encryption_service.encrypt(user.network_credentials.password)
+    encrypted_password = encryption_service.encrypt(raw_password)
     
     try:
         new_user = UserRepository.create(
             db,
             name=user.name,
             codigo_de_usuario=user.codigo_de_usuario,
-            network_username=user.network_credentials.username,
+            network_username=network_username,
             network_password_encrypted=encrypted_password,
-            smb_server=user.smb_config.server,
-            smb_port=user.smb_config.port,
-            smb_path=user.smb_config.path,
-            func_copier=user.available_functions.copier,
-            func_printer=user.available_functions.printer,
-            func_document_server=user.available_functions.document_server,
-            func_fax=user.available_functions.fax,
-            func_scanner=user.available_functions.scanner,
-            func_browser=user.available_functions.browser,
-            email=user.email,
-            department=user.department
+            smb_server=smb_server,
+            smb_port=smb_port,
+            smb_path=smb_path,
+            func_copier=func_copier,
+            func_copier_color=func_copier_color,
+            func_printer=func_printer,
+            func_printer_color=func_printer_color,
+            func_document_server=func_document_server,
+            func_fax=func_fax,
+            func_scanner=func_scanner,
+            func_browser=func_browser,
+            empresa=user.empresa,
+            centro_costos=user.centro_costos
         )
+        logger.info(f"✅ User created successfully: ID={new_user.id}")
         return new_user
     except Exception as e:
+        logger.error(f"❌ Error creating user: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create user: {str(e)}"

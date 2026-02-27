@@ -47,7 +47,7 @@ class PasswordEncryptionService:
             Base64-encoded encrypted password
         """
         if not plaintext:
-            raise ValueError("Cannot encrypt empty password")
+            return ""
             
         # Convert to bytes, encrypt, and return as string
         encrypted_bytes = self.cipher.encrypt(plaintext.encode())
@@ -64,7 +64,7 @@ class PasswordEncryptionService:
             Decrypted password in plain text
         """
         if not ciphertext:
-            raise ValueError("Cannot decrypt empty ciphertext")
+            return ""
             
         # Convert to bytes, decrypt, and return as string
         decrypted_bytes = self.cipher.decrypt(ciphertext.encode())
