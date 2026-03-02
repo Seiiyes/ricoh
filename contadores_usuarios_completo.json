@@ -1,0 +1,8747 @@
+[
+  {
+    "codigo_usuario": "1010",
+    "nombre_usuario": "LINA JIMENEZ",
+    "total_impresiones": {
+      "bn": 6,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 6,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 6,
+      "color_ymc": 0
+    },
+    "total_paginas": 6
+  },
+  {
+    "codigo_usuario": "6203",
+    "nombre_usuario": "LISETH CRUZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9561",
+    "nombre_usuario": "LUIS MEJIA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6822",
+    "nombre_usuario": "MARIA CAMPOS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9440",
+    "nombre_usuario": "BRAYAN NIÑO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9214",
+    "nombre_usuario": "JUAN PABLO DELGADO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1792",
+    "nombre_usuario": "JOAM SANCHEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9412",
+    "nombre_usuario": "JOHANNA YATE",
+    "total_impresiones": {
+      "bn": 5429,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 2500,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2929,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 15936,
+      "todo_color": 3
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 5429,
+      "color_ymc": 0
+    },
+    "total_paginas": 5429
+  },
+  {
+    "codigo_usuario": "0328",
+    "nombre_usuario": "AMANDA AVILA",
+    "total_impresiones": {
+      "bn": 58,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 8,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 50,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 58,
+      "color_ymc": 0
+    },
+    "total_paginas": 58
+  },
+  {
+    "codigo_usuario": "2101",
+    "nombre_usuario": "LEANDRO GALEANO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7988",
+    "nombre_usuario": "YULI MURILLO",
+    "total_impresiones": {
+      "bn": 23,
+      "color": 67
+    },
+    "copiadora": {
+      "blanco_negro": 7,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 16,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 67
+    },
+    "escaner": {
+      "blanco_negro": 30,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 90,
+      "color_ymc": 201
+    },
+    "total_paginas": 90
+  },
+  {
+    "codigo_usuario": "3687",
+    "nombre_usuario": "RECEPCION",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1021",
+    "nombre_usuario": "SAMANTA CARDENAS",
+    "total_impresiones": {
+      "bn": 7592,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1310,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 6282,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 7592,
+      "color_ymc": 0
+    },
+    "total_paginas": 7592
+  },
+  {
+    "codigo_usuario": "9328",
+    "nombre_usuario": "MANUEL BARROS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2442",
+    "nombre_usuario": "ANGIE DIAZ",
+    "total_impresiones": {
+      "bn": 1645,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 19,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1626,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1645,
+      "color_ymc": 0
+    },
+    "total_paginas": 1645
+  },
+  {
+    "codigo_usuario": "2877",
+    "nombre_usuario": "ASIST DESPACHOS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3030",
+    "nombre_usuario": "AUX NOMINA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0802",
+    "nombre_usuario": "FELIPE BARAHONA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3999",
+    "nombre_usuario": "MARIA GONZALEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9628",
+    "nombre_usuario": "STEPHANY MUNOS",
+    "total_impresiones": {
+      "bn": 525,
+      "color": 2
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 525,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 2
+    },
+    "escaner": {
+      "blanco_negro": 102,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 527,
+      "color_ymc": 6
+    },
+    "total_paginas": 527
+  },
+  {
+    "codigo_usuario": "1129",
+    "nombre_usuario": "TESORERIA FJSB",
+    "total_impresiones": {
+      "bn": 87,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 86,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 88,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 87,
+      "color_ymc": 0
+    },
+    "total_paginas": 87
+  },
+  {
+    "codigo_usuario": "8568",
+    "nombre_usuario": "CARLOS FUERTE",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2020",
+    "nombre_usuario": "NOMINA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1006",
+    "nombre_usuario": "DIANA BELTRAN",
+    "total_impresiones": {
+      "bn": 1760,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 119,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1641,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 517,
+      "todo_color": 130
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1760,
+      "color_ymc": 0
+    },
+    "total_paginas": 1760
+  },
+  {
+    "codigo_usuario": "5019",
+    "nombre_usuario": "MILENA NUÑEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2810",
+    "nombre_usuario": "SARA BUITRAGO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1565",
+    "nombre_usuario": "Aux Sena Nomina",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4711",
+    "nombre_usuario": "YANNETH PEÑATE",
+    "total_impresiones": {
+      "bn": 15,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 6,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 9,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 15,
+      "color_ymc": 0
+    },
+    "total_paginas": 15
+  },
+  {
+    "codigo_usuario": "1044",
+    "nombre_usuario": "MARITZA GOMEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7078",
+    "nombre_usuario": "JEISSON TOCASUCHE",
+    "total_impresiones": {
+      "bn": 52,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 51,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 52,
+      "color_ymc": 0
+    },
+    "total_paginas": 52
+  },
+  {
+    "codigo_usuario": "3802",
+    "nombre_usuario": "URIEL BARRAGAN",
+    "total_impresiones": {
+      "bn": 150,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 150,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 143,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 150,
+      "color_ymc": 0
+    },
+    "total_paginas": 150
+  },
+  {
+    "codigo_usuario": "0936",
+    "nombre_usuario": "CRISTIAN  FERNANDEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7510",
+    "nombre_usuario": "FABIAN POVEDA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1805",
+    "nombre_usuario": "DIANA SOLANO",
+    "total_impresiones": {
+      "bn": 121,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 121,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 121,
+      "color_ymc": 0
+    },
+    "total_paginas": 121
+  },
+  {
+    "codigo_usuario": "6723",
+    "nombre_usuario": "CLAUDIA MORALES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1025",
+    "nombre_usuario": "MARCELA GOMEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5339",
+    "nombre_usuario": "YAMILE MAHECHA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1226",
+    "nombre_usuario": "JOSE BALLESTEROS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1909",
+    "nombre_usuario": "LUISA CLAVIJO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8709",
+    "nombre_usuario": "DEISY MORA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4686",
+    "nombre_usuario": "JENIFER HERNANDEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3321",
+    "nombre_usuario": "ALEXANDER TOLOZA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1215",
+    "nombre_usuario": "GEORGE RAMIREZ",
+    "total_impresiones": {
+      "bn": 659,
+      "color": 1
+    },
+    "copiadora": {
+      "blanco_negro": 198,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 461,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 1
+    },
+    "escaner": {
+      "blanco_negro": 39,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 660,
+      "color_ymc": 3
+    },
+    "total_paginas": 660
+  },
+  {
+    "codigo_usuario": "1806",
+    "nombre_usuario": "CAMILA ALCANTARA",
+    "total_impresiones": {
+      "bn": 6108,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 805,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 5303,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 163,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 6108,
+      "color_ymc": 0
+    },
+    "total_paginas": 6108
+  },
+  {
+    "codigo_usuario": "4682",
+    "nombre_usuario": "GILDARDO URIBE",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3143",
+    "nombre_usuario": "MIGUEL REYES",
+    "total_impresiones": {
+      "bn": 285,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 52,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 233,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 36,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 285,
+      "color_ymc": 0
+    },
+    "total_paginas": 285
+  },
+  {
+    "codigo_usuario": "0518",
+    "nombre_usuario": "MAREBA LOZANO",
+    "total_impresiones": {
+      "bn": 3086,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 698,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2388,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 815,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 3086,
+      "color_ymc": 0
+    },
+    "total_paginas": 3086
+  },
+  {
+    "codigo_usuario": "1989",
+    "nombre_usuario": "ALEXANDRA TOLOZA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0608",
+    "nombre_usuario": "STELLA ALVARADO",
+    "total_impresiones": {
+      "bn": 392,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 392,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 392,
+      "color_ymc": 0
+    },
+    "total_paginas": 392
+  },
+  {
+    "codigo_usuario": "1313",
+    "nombre_usuario": "JULIAN CORTES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4848",
+    "nombre_usuario": "JORGE E ATARA",
+    "total_impresiones": {
+      "bn": 669,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 22,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 647,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 669,
+      "color_ymc": 0
+    },
+    "total_paginas": 669
+  },
+  {
+    "codigo_usuario": "1026",
+    "nombre_usuario": "JENNIFER MCCORMICK",
+    "total_impresiones": {
+      "bn": 1199,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 24,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1175,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1199,
+      "color_ymc": 0
+    },
+    "total_paginas": 1199
+  },
+  {
+    "codigo_usuario": "0607",
+    "nombre_usuario": "DIEGO ALVIAR",
+    "total_impresiones": {
+      "bn": 2120,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 93,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2027,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2120,
+      "color_ymc": 0
+    },
+    "total_paginas": 2120
+  },
+  {
+    "codigo_usuario": "2496",
+    "nombre_usuario": "HENRY GONZALEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1306",
+    "nombre_usuario": "ALEJANDRA VALENCIA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0211",
+    "nombre_usuario": "JAVIER SOTO",
+    "total_impresiones": {
+      "bn": 1062,
+      "color": 3
+    },
+    "copiadora": {
+      "blanco_negro": 1055,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 7,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 3
+    },
+    "escaner": {
+      "blanco_negro": 234,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1065,
+      "color_ymc": 9
+    },
+    "total_paginas": 1065
+  },
+  {
+    "codigo_usuario": "7277",
+    "nombre_usuario": "ANGIE CARREÑO",
+    "total_impresiones": {
+      "bn": 168,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 167,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 168,
+      "color_ymc": 0
+    },
+    "total_paginas": 168
+  },
+  {
+    "codigo_usuario": "1787",
+    "nombre_usuario": "ANGELA ALARCON",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6196",
+    "nombre_usuario": "ADOLFO PINEDA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0186",
+    "nombre_usuario": "YEFFERSON MUÑOZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0538",
+    "nombre_usuario": "LUISA TORO",
+    "total_impresiones": {
+      "bn": 2,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2,
+      "color_ymc": 0
+    },
+    "total_paginas": 2
+  },
+  {
+    "codigo_usuario": "5103",
+    "nombre_usuario": "EYMI RODRIGUEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1011",
+    "nombre_usuario": "FABIAN SANTAMARIA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3835",
+    "nombre_usuario": "MARIA CHICANGANA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3480",
+    "nombre_usuario": "JENYFFER FORERO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2014",
+    "nombre_usuario": "TERY BOILES",
+    "total_impresiones": {
+      "bn": 2566,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 5,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2561,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 8,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2566,
+      "color_ymc": 0
+    },
+    "total_paginas": 2566
+  },
+  {
+    "codigo_usuario": "7877",
+    "nombre_usuario": "JORGE ECHEVERRY",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5353",
+    "nombre_usuario": "NATALY PERDOMO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0327",
+    "nombre_usuario": "LUIS MELO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8353",
+    "nombre_usuario": "ALEXIS BURBANO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2013",
+    "nombre_usuario": "CLAUDIA BURITICA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9876",
+    "nombre_usuario": "DANIEL VARGAS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2907",
+    "nombre_usuario": "DAYANA CHAVEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2049",
+    "nombre_usuario": "TEO SANDOVAL",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9735",
+    "nombre_usuario": "INEFRAY MENDOZA",
+    "total_impresiones": {
+      "bn": 1285,
+      "color": 155
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1285,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 155
+    },
+    "escaner": {
+      "blanco_negro": 177,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1440,
+      "color_ymc": 465
+    },
+    "total_paginas": 1440
+  },
+  {
+    "codigo_usuario": "0306",
+    "nombre_usuario": "JUAN PIMIENTO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8107",
+    "nombre_usuario": "JOHAN OCHOA",
+    "total_impresiones": {
+      "bn": 121,
+      "color": 412
+    },
+    "copiadora": {
+      "blanco_negro": 48,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 4
+    },
+    "impresora": {
+      "blanco_negro": 73,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 408
+    },
+    "escaner": {
+      "blanco_negro": 214,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 533,
+      "color_ymc": 1236
+    },
+    "total_paginas": 533
+  },
+  {
+    "codigo_usuario": "1709",
+    "nombre_usuario": "DIANA NONSOQUE",
+    "total_impresiones": {
+      "bn": 3022,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1657,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1365,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 11476,
+      "todo_color": 326
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 3022,
+      "color_ymc": 0
+    },
+    "total_paginas": 3022
+  },
+  {
+    "codigo_usuario": "9357",
+    "nombre_usuario": "PAULA BETANCUR",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2463",
+    "nombre_usuario": "DORA CASTILLO",
+    "total_impresiones": {
+      "bn": 9489,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 334,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 9155,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 60,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 9489,
+      "color_ymc": 0
+    },
+    "total_paginas": 9489
+  },
+  {
+    "codigo_usuario": "2108",
+    "nombre_usuario": "DORIS PESCADOR",
+    "total_impresiones": {
+      "bn": 285,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 35,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 250,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 20,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 285,
+      "color_ymc": 0
+    },
+    "total_paginas": 285
+  },
+  {
+    "codigo_usuario": "0707",
+    "nombre_usuario": "JONATHAN ALFONSO",
+    "total_impresiones": {
+      "bn": 5268,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 434,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 4834,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 217,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 5268,
+      "color_ymc": 0
+    },
+    "total_paginas": 5268
+  },
+  {
+    "codigo_usuario": "1420",
+    "nombre_usuario": "ANA FLORIDO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1020",
+    "nombre_usuario": "PAOLA RODRIGUEZ",
+    "total_impresiones": {
+      "bn": 524,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 523,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 524,
+      "color_ymc": 0
+    },
+    "total_paginas": 524
+  },
+  {
+    "codigo_usuario": "4973",
+    "nombre_usuario": "MICHAEL GONZALEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6871",
+    "nombre_usuario": "STIVEN SANTOFINIO",
+    "total_impresiones": {
+      "bn": 38,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 38,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 38,
+      "color_ymc": 0
+    },
+    "total_paginas": 38
+  },
+  {
+    "codigo_usuario": "5275",
+    "nombre_usuario": "SANDRA TOCORA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4940",
+    "nombre_usuario": "LUZ ORTIZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1145",
+    "nombre_usuario": "ZULEIBY ROMERO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0812",
+    "nombre_usuario": "YADI MOYA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3182",
+    "nombre_usuario": "JHIMALLY ORTIZ",
+    "total_impresiones": {
+      "bn": 461,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 125,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 336,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 25,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 461,
+      "color_ymc": 0
+    },
+    "total_paginas": 461
+  },
+  {
+    "codigo_usuario": "3806",
+    "nombre_usuario": "ANA NOVA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4060",
+    "nombre_usuario": "JERALDIN ALFARO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2652",
+    "nombre_usuario": "JUAN PABLO GAITAN",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1729",
+    "nombre_usuario": "SANDRA PIEDRAHITA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8756",
+    "nombre_usuario": "MILDRE VERGARA",
+    "total_impresiones": {
+      "bn": 1,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1,
+      "color_ymc": 0
+    },
+    "total_paginas": 1
+  },
+  {
+    "codigo_usuario": "1402",
+    "nombre_usuario": "SERGIO FONEGRA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1207",
+    "nombre_usuario": "VANESSA URREA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2847",
+    "nombre_usuario": "ANDREA GONZALEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1308",
+    "nombre_usuario": "NUBIA VARGAS",
+    "total_impresiones": {
+      "bn": 409,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 21,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 388,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 9,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 409,
+      "color_ymc": 0
+    },
+    "total_paginas": 409
+  },
+  {
+    "codigo_usuario": "7701",
+    "nombre_usuario": "JULIETH SEGURA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1227",
+    "nombre_usuario": "YEIMY BARRERA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2580",
+    "nombre_usuario": "JUAN HERRERA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9810",
+    "nombre_usuario": "SEIDY MONCAYO",
+    "total_impresiones": {
+      "bn": 220,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 42,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 178,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 220,
+      "color_ymc": 0
+    },
+    "total_paginas": 220
+  },
+  {
+    "codigo_usuario": "1523",
+    "nombre_usuario": "CARLOS PARRA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5274",
+    "nombre_usuario": "ANDRES VALENCIA",
+    "total_impresiones": {
+      "bn": 71,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 71,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 16,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 71,
+      "color_ymc": 0
+    },
+    "total_paginas": 71
+  },
+  {
+    "codigo_usuario": "2207",
+    "nombre_usuario": "LEONARDO AVENDAÑO",
+    "total_impresiones": {
+      "bn": 75,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 75,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 75,
+      "color_ymc": 0
+    },
+    "total_paginas": 75
+  },
+  {
+    "codigo_usuario": "8816",
+    "nombre_usuario": "AURA AGUAS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1969",
+    "nombre_usuario": "ANDREA MENGUAL",
+    "total_impresiones": {
+      "bn": 70,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 70,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 70,
+      "color_ymc": 0
+    },
+    "total_paginas": 70
+  },
+  {
+    "codigo_usuario": "0931",
+    "nombre_usuario": "SOFIA CRISTANCHO",
+    "total_impresiones": {
+      "bn": 986,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 63,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 923,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 11533,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 986,
+      "color_ymc": 0
+    },
+    "total_paginas": 986
+  },
+  {
+    "codigo_usuario": "3581",
+    "nombre_usuario": "SONIA CORTES",
+    "total_impresiones": {
+      "bn": 4462,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 14,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 4448,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 11189,
+      "todo_color": 89
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 4462,
+      "color_ymc": 0
+    },
+    "total_paginas": 4462
+  },
+  {
+    "codigo_usuario": "0430",
+    "nombre_usuario": "VIVIAN DANIELA CACER",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5168",
+    "nombre_usuario": "MARIAN CUBILLOS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1694",
+    "nombre_usuario": "DIANA MARCELA MORENO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1434",
+    "nombre_usuario": "GERMAN NEIRA",
+    "total_impresiones": {
+      "bn": 23,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 23,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 23,
+      "color_ymc": 0
+    },
+    "total_paginas": 23
+  },
+  {
+    "codigo_usuario": "8805",
+    "nombre_usuario": "DIANA MORENO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7520",
+    "nombre_usuario": "LINA ZAPATA JIMENEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3870",
+    "nombre_usuario": "JENNIFER MUÑOZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5877",
+    "nombre_usuario": "YENIFER GARCIA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5719",
+    "nombre_usuario": "JHAN POLANIA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1998",
+    "nombre_usuario": "ALBERT MENDOZA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6721",
+    "nombre_usuario": "YEIMI GARZON",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1223",
+    "nombre_usuario": "JESSICA MURILLO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0527",
+    "nombre_usuario": "JHONATAN CLLEJAS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2073",
+    "nombre_usuario": "JHON HINESTROZA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8553",
+    "nombre_usuario": "MIGUEL TRIGOS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2714",
+    "nombre_usuario": "WILMER LOPEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1845",
+    "nombre_usuario": "MARIA PUERTO",
+    "total_impresiones": {
+      "bn": 82,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 17,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 65,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 30,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 82,
+      "color_ymc": 0
+    },
+    "total_paginas": 82
+  },
+  {
+    "codigo_usuario": "7985",
+    "nombre_usuario": "GIOVANNY VASQUEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5564",
+    "nombre_usuario": "KAREN CALVO",
+    "total_impresiones": {
+      "bn": 1381,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 229,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1152,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 72,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1381,
+      "color_ymc": 0
+    },
+    "total_paginas": 1381
+  },
+  {
+    "codigo_usuario": "0556",
+    "nombre_usuario": "MAYKOL FAJARDO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5678",
+    "nombre_usuario": "LUCCIANNY VARELA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8006",
+    "nombre_usuario": "MARIA ZABALETA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0606",
+    "nombre_usuario": "YESENIA ELLES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5527",
+    "nombre_usuario": "CATALINA AMEZQUITA",
+    "total_impresiones": {
+      "bn": 4600,
+      "color": 501
+    },
+    "copiadora": {
+      "blanco_negro": 691,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 2
+    },
+    "impresora": {
+      "blanco_negro": 3909,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 499
+    },
+    "escaner": {
+      "blanco_negro": 2249,
+      "todo_color": 39
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 5101,
+      "color_ymc": 1503
+    },
+    "total_paginas": 5101
+  },
+  {
+    "codigo_usuario": "8377",
+    "nombre_usuario": "JENNY CASTILLO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0535",
+    "nombre_usuario": "LILIANA PRADA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 24,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1266",
+    "nombre_usuario": "LUISA LANCHEROS",
+    "total_impresiones": {
+      "bn": 1003,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 119,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 884,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 846,
+      "todo_color": 104
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1003,
+      "color_ymc": 0
+    },
+    "total_paginas": 1003
+  },
+  {
+    "codigo_usuario": "9003",
+    "nombre_usuario": "MAGDALENA TORRES",
+    "total_impresiones": {
+      "bn": 523,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 413,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 110,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 523,
+      "color_ymc": 0
+    },
+    "total_paginas": 523
+  },
+  {
+    "codigo_usuario": "9201",
+    "nombre_usuario": "LAURA SIERRA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9882",
+    "nombre_usuario": "CRISTIAN SUAREZ",
+    "total_impresiones": {
+      "bn": 1145,
+      "color": 4
+    },
+    "copiadora": {
+      "blanco_negro": 151,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 1
+    },
+    "impresora": {
+      "blanco_negro": 994,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 3
+    },
+    "escaner": {
+      "blanco_negro": 1529,
+      "todo_color": 26
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1149,
+      "color_ymc": 12
+    },
+    "total_paginas": 1149
+  },
+  {
+    "codigo_usuario": "1260",
+    "nombre_usuario": "JUAN LOPEZ",
+    "total_impresiones": {
+      "bn": 133,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 133,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 133,
+      "color_ymc": 0
+    },
+    "total_paginas": 133
+  },
+  {
+    "codigo_usuario": "8176",
+    "nombre_usuario": "MARTHA SUAREZ",
+    "total_impresiones": {
+      "bn": 394,
+      "color": 11
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 393,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 11
+    },
+    "escaner": {
+      "blanco_negro": 271,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 405,
+      "color_ymc": 33
+    },
+    "total_paginas": 405
+  },
+  {
+    "codigo_usuario": "9930",
+    "nombre_usuario": "MIGUEL GUILLEN",
+    "total_impresiones": {
+      "bn": 1803,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 201,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1602,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 912,
+      "todo_color": 889
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1803,
+      "color_ymc": 0
+    },
+    "total_paginas": 1803
+  },
+  {
+    "codigo_usuario": "6641",
+    "nombre_usuario": "DANNA LOZANO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5277",
+    "nombre_usuario": "PEDRO BRICEÑO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4140",
+    "nombre_usuario": "MARIA DUCURARA",
+    "total_impresiones": {
+      "bn": 2705,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 25,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2680,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2705,
+      "color_ymc": 0
+    },
+    "total_paginas": 2705
+  },
+  {
+    "codigo_usuario": "1106",
+    "nombre_usuario": "LOREN PULIDO",
+    "total_impresiones": {
+      "bn": 5003,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1705,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 3298,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 450,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 5003,
+      "color_ymc": 0
+    },
+    "total_paginas": 5003
+  },
+  {
+    "codigo_usuario": "6370",
+    "nombre_usuario": "SANTIAGO MENDIVE",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2834",
+    "nombre_usuario": "PEDRO CASTAÑEDA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1183",
+    "nombre_usuario": "LAURA MENDEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3552",
+    "nombre_usuario": "YELITZA JAZZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3849",
+    "nombre_usuario": "LEIDY SANCHEZ",
+    "total_impresiones": {
+      "bn": 5754,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 893,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 4861,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 56,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 5754,
+      "color_ymc": 0
+    },
+    "total_paginas": 5754
+  },
+  {
+    "codigo_usuario": "6019",
+    "nombre_usuario": "DARWIN CAICEDO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2860",
+    "nombre_usuario": "KAREN PINZON",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2004",
+    "nombre_usuario": "JUAN RODRIGUEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8815",
+    "nombre_usuario": "PILAR RODRIGUEZ",
+    "total_impresiones": {
+      "bn": 952,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 9,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 943,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 159,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 952,
+      "color_ymc": 0
+    },
+    "total_paginas": 952
+  },
+  {
+    "codigo_usuario": "3620",
+    "nombre_usuario": "INGRY JIMENEZ",
+    "total_impresiones": {
+      "bn": 1049,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 22,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1027,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 121,
+      "todo_color": 3
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1049,
+      "color_ymc": 0
+    },
+    "total_paginas": 1049
+  },
+  {
+    "codigo_usuario": "4445",
+    "nombre_usuario": "CRISTIAN CAVIEDES",
+    "total_impresiones": {
+      "bn": 2284,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 349,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1935,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 277,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2284,
+      "color_ymc": 0
+    },
+    "total_paginas": 2284
+  },
+  {
+    "codigo_usuario": "1128",
+    "nombre_usuario": "SARA TACHA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2828",
+    "nombre_usuario": "TATIANA CARRILLO",
+    "total_impresiones": {
+      "bn": 21,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 16,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 5,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 3,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 21,
+      "color_ymc": 0
+    },
+    "total_paginas": 21
+  },
+  {
+    "codigo_usuario": "6081",
+    "nombre_usuario": "JULIAN CORTES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1939",
+    "nombre_usuario": "GINA PULGARIN",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9068",
+    "nombre_usuario": "LIZETH MORENO",
+    "total_impresiones": {
+      "bn": 7,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 7,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 7,
+      "color_ymc": 0
+    },
+    "total_paginas": 7
+  },
+  {
+    "codigo_usuario": "2019",
+    "nombre_usuario": "NELCY FORERO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6496",
+    "nombre_usuario": "VIVIAN CUSTODE",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1016",
+    "nombre_usuario": "KRYSTEL GARZON",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3147",
+    "nombre_usuario": "JUAN DOMINGUEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3905",
+    "nombre_usuario": "ADRIANA VARGAS",
+    "total_impresiones": {
+      "bn": 2353,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 45,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2308,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2228,
+      "todo_color": 2449
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2353,
+      "color_ymc": 0
+    },
+    "total_paginas": 2353
+  },
+  {
+    "codigo_usuario": "0037",
+    "nombre_usuario": "DAYANA DELGADO",
+    "total_impresiones": {
+      "bn": 210,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 210,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 210,
+      "color_ymc": 0
+    },
+    "total_paginas": 210
+  },
+  {
+    "codigo_usuario": "0048",
+    "nombre_usuario": "ANDRES RUEDA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2773",
+    "nombre_usuario": "IVAN MONTERO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2835",
+    "nombre_usuario": "MAGDALENA MORALES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3279",
+    "nombre_usuario": "EVA SIERRA",
+    "total_impresiones": {
+      "bn": 285,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 34,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 251,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 41,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 285,
+      "color_ymc": 0
+    },
+    "total_paginas": 285
+  },
+  {
+    "codigo_usuario": "7486",
+    "nombre_usuario": "MAGDA HERNANDEZ",
+    "total_impresiones": {
+      "bn": 807,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 12,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 795,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 807,
+      "color_ymc": 0
+    },
+    "total_paginas": 807
+  },
+  {
+    "codigo_usuario": "0258",
+    "nombre_usuario": "ANDRES SANCHEZ",
+    "total_impresiones": {
+      "bn": 7702,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1358,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 6344,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 835,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 7702,
+      "color_ymc": 0
+    },
+    "total_paginas": 7702
+  },
+  {
+    "codigo_usuario": "9967",
+    "nombre_usuario": "SANDRA GARCIA",
+    "total_impresiones": {
+      "bn": 16647,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 7770,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 8877,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2606,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 16647,
+      "color_ymc": 0
+    },
+    "total_paginas": 16647
+  },
+  {
+    "codigo_usuario": "6365",
+    "nombre_usuario": "CARLOS BARRIOS",
+    "total_impresiones": {
+      "bn": 1288,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 23,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1265,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 352,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1288,
+      "color_ymc": 0
+    },
+    "total_paginas": 1288
+  },
+  {
+    "codigo_usuario": "2053",
+    "nombre_usuario": "LEIDY BERNAL",
+    "total_impresiones": {
+      "bn": 124,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 18,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 106,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 723,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 124,
+      "color_ymc": 0
+    },
+    "total_paginas": 124
+  },
+  {
+    "codigo_usuario": "4248",
+    "nombre_usuario": "DALLANA MARTINEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2383",
+    "nombre_usuario": "YASMIN DELGADO",
+    "total_impresiones": {
+      "bn": 339,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 48,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 291,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 60,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 339,
+      "color_ymc": 0
+    },
+    "total_paginas": 339
+  },
+  {
+    "codigo_usuario": "1001",
+    "nombre_usuario": "DAVID SANDOVAL",
+    "total_impresiones": {
+      "bn": 3627,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 425,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 3202,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 190,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 3627,
+      "color_ymc": 0
+    },
+    "total_paginas": 3627
+  },
+  {
+    "codigo_usuario": "1401",
+    "nombre_usuario": "YULLY CABRA",
+    "total_impresiones": {
+      "bn": 1386,
+      "color": 460
+    },
+    "copiadora": {
+      "blanco_negro": 18,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 9
+    },
+    "impresora": {
+      "blanco_negro": 1368,
+      "mono_color": 0,
+      "dos_colores": 5,
+      "color": 446
+    },
+    "escaner": {
+      "blanco_negro": 53,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1846,
+      "color_ymc": 1369
+    },
+    "total_paginas": 1846
+  },
+  {
+    "codigo_usuario": "5607",
+    "nombre_usuario": "MATEO LANCHEROS",
+    "total_impresiones": {
+      "bn": 2542,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 9,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2533,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2310,
+      "todo_color": 42
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2542,
+      "color_ymc": 0
+    },
+    "total_paginas": 2542
+  },
+  {
+    "codigo_usuario": "6543",
+    "nombre_usuario": "WILMAR CORRALES",
+    "total_impresiones": {
+      "bn": 1099,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 330,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 769,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 246,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1099,
+      "color_ymc": 0
+    },
+    "total_paginas": 1099
+  },
+  {
+    "codigo_usuario": "5594",
+    "nombre_usuario": "MARTHA CORREDOR",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6155",
+    "nombre_usuario": "Yenny Hernandez",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5561",
+    "nombre_usuario": "YENNY MARCELA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7793",
+    "nombre_usuario": "TATIANA SANCHEZ",
+    "total_impresiones": {
+      "bn": 1850,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 26,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1824,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 26,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1850,
+      "color_ymc": 0
+    },
+    "total_paginas": 1850
+  },
+  {
+    "codigo_usuario": "9023",
+    "nombre_usuario": "JUAN CESPEDES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "2748",
+    "nombre_usuario": "LAURA GONZALEZ",
+    "total_impresiones": {
+      "bn": 153,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 26,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 127,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 153,
+      "color_ymc": 0
+    },
+    "total_paginas": 153
+  },
+  {
+    "codigo_usuario": "4640",
+    "nombre_usuario": "JUAN ANDRES",
+    "total_impresiones": {
+      "bn": 96,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 93,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 3,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 96,
+      "color_ymc": 0
+    },
+    "total_paginas": 96
+  },
+  {
+    "codigo_usuario": "2788",
+    "nombre_usuario": "NAYIB TORRES",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9697",
+    "nombre_usuario": "ANGIE GONZALEZ",
+    "total_impresiones": {
+      "bn": 1123,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 12,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1111,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 42,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1123,
+      "color_ymc": 0
+    },
+    "total_paginas": 1123
+  },
+  {
+    "codigo_usuario": "8346",
+    "nombre_usuario": "LEONARDO PARDO",
+    "total_impresiones": {
+      "bn": 41,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 41,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 41,
+      "color_ymc": 0
+    },
+    "total_paginas": 41
+  },
+  {
+    "codigo_usuario": "5538",
+    "nombre_usuario": "MONICA JIMENEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5521",
+    "nombre_usuario": "VALENTINA TEJADA",
+    "total_impresiones": {
+      "bn": 441,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 51,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 390,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 122,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 441,
+      "color_ymc": 0
+    },
+    "total_paginas": 441
+  },
+  {
+    "codigo_usuario": "5203",
+    "nombre_usuario": "NATALIA ROSAS",
+    "total_impresiones": {
+      "bn": 31,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 30,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 31,
+      "color_ymc": 0
+    },
+    "total_paginas": 31
+  },
+  {
+    "codigo_usuario": "3222",
+    "nombre_usuario": "CLAUDIA PERALTA",
+    "total_impresiones": {
+      "bn": 1286,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1286,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 217,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1286,
+      "color_ymc": 0
+    },
+    "total_paginas": 1286
+  },
+  {
+    "codigo_usuario": "3472",
+    "nombre_usuario": "LUCIA VELASQUEZ",
+    "total_impresiones": {
+      "bn": 584,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 57,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 527,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 584,
+      "color_ymc": 0
+    },
+    "total_paginas": 584
+  },
+  {
+    "codigo_usuario": "2583",
+    "nombre_usuario": "LEIDY GOMEZ",
+    "total_impresiones": {
+      "bn": 257,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 256,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 16,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 257,
+      "color_ymc": 0
+    },
+    "total_paginas": 257
+  },
+  {
+    "codigo_usuario": "9209",
+    "nombre_usuario": "ELDA BAUTISTA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4113",
+    "nombre_usuario": "CARLOS BUITRAGO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6983",
+    "nombre_usuario": "OSCAR CASTELLANOS",
+    "total_impresiones": {
+      "bn": 384,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 15,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 369,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 384,
+      "color_ymc": 0
+    },
+    "total_paginas": 384
+  },
+  {
+    "codigo_usuario": "1125",
+    "nombre_usuario": "VALENTINA TEJADA",
+    "total_impresiones": {
+      "bn": 30,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 21,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 9,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 40,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 30,
+      "color_ymc": 0
+    },
+    "total_paginas": 30
+  },
+  {
+    "codigo_usuario": "7126",
+    "nombre_usuario": "BRENDA HERNANDEZ",
+    "total_impresiones": {
+      "bn": 100,
+      "color": 937
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 100,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 937
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1037,
+      "color_ymc": 2811
+    },
+    "total_paginas": 1037
+  },
+  {
+    "codigo_usuario": "2827",
+    "nombre_usuario": "CAROLINA CALDERON",
+    "total_impresiones": {
+      "bn": 2,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2,
+      "color_ymc": 0
+    },
+    "total_paginas": 2
+  },
+  {
+    "codigo_usuario": "7029",
+    "nombre_usuario": "EVIDALIA VELOZA",
+    "total_impresiones": {
+      "bn": 4,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 4,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 16,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 4,
+      "color_ymc": 0
+    },
+    "total_paginas": 4
+  },
+  {
+    "codigo_usuario": "6916",
+    "nombre_usuario": "OSCAR VELANDIA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "1202",
+    "nombre_usuario": "Yenny Hernandez",
+    "total_impresiones": {
+      "bn": 8997,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1842,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 7155,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 7644,
+      "todo_color": 106
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 8997,
+      "color_ymc": 0
+    },
+    "total_paginas": 8997
+  },
+  {
+    "codigo_usuario": "0655",
+    "nombre_usuario": "LAURA SANTIAGO",
+    "total_impresiones": {
+      "bn": 168,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 168,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2,
+      "todo_color": 52
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 168,
+      "color_ymc": 0
+    },
+    "total_paginas": 168
+  },
+  {
+    "codigo_usuario": "7809",
+    "nombre_usuario": "DIEGO MARTINEZ",
+    "total_impresiones": {
+      "bn": 1,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1,
+      "color_ymc": 0
+    },
+    "total_paginas": 1
+  },
+  {
+    "codigo_usuario": "0539",
+    "nombre_usuario": "ROSA BARBOSA",
+    "total_impresiones": {
+      "bn": 683,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 416,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 267,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 683,
+      "color_ymc": 0
+    },
+    "total_paginas": 683
+  },
+  {
+    "codigo_usuario": "0455",
+    "nombre_usuario": "YURI MORENO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5753",
+    "nombre_usuario": "IBETH MILENA",
+    "total_impresiones": {
+      "bn": 474,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 94,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 380,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 22,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 474,
+      "color_ymc": 0
+    },
+    "total_paginas": 474
+  },
+  {
+    "codigo_usuario": "3390",
+    "nombre_usuario": "SERGIO HIGUERA",
+    "total_impresiones": {
+      "bn": 2,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2,
+      "color_ymc": 0
+    },
+    "total_paginas": 2
+  },
+  {
+    "codigo_usuario": "4410",
+    "nombre_usuario": "FELIPE BARAHONA",
+    "total_impresiones": {
+      "bn": 46,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 46,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 46,
+      "color_ymc": 0
+    },
+    "total_paginas": 46
+  },
+  {
+    "codigo_usuario": "4079",
+    "nombre_usuario": "ENDERSON CABRERA",
+    "total_impresiones": {
+      "bn": 1200,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 314,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 886,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 2,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1200,
+      "color_ymc": 0
+    },
+    "total_paginas": 1200
+  },
+  {
+    "codigo_usuario": "2772",
+    "nombre_usuario": "NIDIA RIVERA",
+    "total_impresiones": {
+      "bn": 480,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 166,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 314,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 6,
+      "todo_color": 1
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 480,
+      "color_ymc": 0
+    },
+    "total_paginas": 480
+  },
+  {
+    "codigo_usuario": "1423",
+    "nombre_usuario": "LINA CUERVO",
+    "total_impresiones": {
+      "bn": 21,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 9,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 12,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 21,
+      "color_ymc": 0
+    },
+    "total_paginas": 21
+  },
+  {
+    "codigo_usuario": "6530",
+    "nombre_usuario": "THALIA BRIGGITH",
+    "total_impresiones": {
+      "bn": 522,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 27,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 495,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 522,
+      "color_ymc": 0
+    },
+    "total_paginas": 522
+  },
+  {
+    "codigo_usuario": "8436",
+    "nombre_usuario": "ANGIE MUÑOZ",
+    "total_impresiones": {
+      "bn": 4,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 4,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 4,
+      "color_ymc": 0
+    },
+    "total_paginas": 4
+  },
+  {
+    "codigo_usuario": "4663",
+    "nombre_usuario": "ERICK SUAREZ",
+    "total_impresiones": {
+      "bn": 8,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 8,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 8,
+      "color_ymc": 0
+    },
+    "total_paginas": 8
+  },
+  {
+    "codigo_usuario": "7353",
+    "nombre_usuario": "JESSICA VEGA",
+    "total_impresiones": {
+      "bn": 1231,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 495,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 736,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1231,
+      "color_ymc": 0
+    },
+    "total_paginas": 1231
+  },
+  {
+    "codigo_usuario": "0120",
+    "nombre_usuario": "ROSANGELA ROJAS",
+    "total_impresiones": {
+      "bn": 284,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 66,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 218,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 24,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 284,
+      "color_ymc": 0
+    },
+    "total_paginas": 284
+  },
+  {
+    "codigo_usuario": "1061",
+    "nombre_usuario": "JESSICA GUZMAN",
+    "total_impresiones": {
+      "bn": 4,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 4,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 4,
+      "color_ymc": 0
+    },
+    "total_paginas": 4
+  },
+  {
+    "codigo_usuario": "9218",
+    "nombre_usuario": "IVAN LEGUIZAMON",
+    "total_impresiones": {
+      "bn": 421,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 155,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 266,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 6,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 421,
+      "color_ymc": 0
+    },
+    "total_paginas": 421
+  },
+  {
+    "codigo_usuario": "0877",
+    "nombre_usuario": "BETSABE ALVAREZ",
+    "total_impresiones": {
+      "bn": 686,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 64,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 622,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 686,
+      "color_ymc": 0
+    },
+    "total_paginas": 686
+  },
+  {
+    "codigo_usuario": "8227",
+    "nombre_usuario": "KEILA RAMOS",
+    "total_impresiones": {
+      "bn": 4772,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 1624,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 3148,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 148,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 4772,
+      "color_ymc": 0
+    },
+    "total_paginas": 4772
+  },
+  {
+    "codigo_usuario": "4771",
+    "nombre_usuario": "CATALINA VELEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "0547",
+    "nombre_usuario": "ADRIANA MAQUILLO",
+    "total_impresiones": {
+      "bn": 3489,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 2112,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 1377,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 3489,
+      "color_ymc": 0
+    },
+    "total_paginas": 3489
+  },
+  {
+    "codigo_usuario": "8602",
+    "nombre_usuario": "ISABEL BOTELLO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8968",
+    "nombre_usuario": "DAYANA MARISELLA",
+    "total_impresiones": {
+      "bn": 172,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 172,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 172,
+      "color_ymc": 0
+    },
+    "total_paginas": 172
+  },
+  {
+    "codigo_usuario": "3017",
+    "nombre_usuario": "ANA VARGAS",
+    "total_impresiones": {
+      "bn": 363,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 363,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 24,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 363,
+      "color_ymc": 0
+    },
+    "total_paginas": 363
+  },
+  {
+    "codigo_usuario": "4735",
+    "nombre_usuario": "IBETH LOPEZ",
+    "total_impresiones": {
+      "bn": 91,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 10,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 81,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 91,
+      "color_ymc": 0
+    },
+    "total_paginas": 91
+  },
+  {
+    "codigo_usuario": "1032",
+    "nombre_usuario": "SERGIO CUEVAS",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8336",
+    "nombre_usuario": "NATALIA TORRES",
+    "total_impresiones": {
+      "bn": 36,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 36,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 270,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 36,
+      "color_ymc": 0
+    },
+    "total_paginas": 36
+  },
+  {
+    "codigo_usuario": "1355",
+    "nombre_usuario": "MARISOL FOMEQUE",
+    "total_impresiones": {
+      "bn": 67,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 3,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 64,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 234,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 67,
+      "color_ymc": 0
+    },
+    "total_paginas": 67
+  },
+  {
+    "codigo_usuario": "0826",
+    "nombre_usuario": "DAYANA NOBLES",
+    "total_impresiones": {
+      "bn": 17,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 4,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 13,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 11,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 17,
+      "color_ymc": 0
+    },
+    "total_paginas": 17
+  },
+  {
+    "codigo_usuario": "1000",
+    "nombre_usuario": "LAURY VELASQUEZ",
+    "total_impresiones": {
+      "bn": 92,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 8,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 84,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 469,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 92,
+      "color_ymc": 0
+    },
+    "total_paginas": 92
+  },
+  {
+    "codigo_usuario": "7946",
+    "nombre_usuario": "NATALIA SILVA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6793",
+    "nombre_usuario": "MONICA PEÑA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6918",
+    "nombre_usuario": "DAVID SALGADO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6054",
+    "nombre_usuario": "LEIDY CARRASCAL",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4687",
+    "nombre_usuario": "DANY DAGUA",
+    "total_impresiones": {
+      "bn": 150,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 6,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 144,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 150,
+      "color_ymc": 0
+    },
+    "total_paginas": 150
+  },
+  {
+    "codigo_usuario": "1069",
+    "nombre_usuario": "YURI ZUBIETA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "9130",
+    "nombre_usuario": "MARIA CARRIZOSA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4576",
+    "nombre_usuario": "INGRID FANDIÑO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "6705",
+    "nombre_usuario": "DIANA CESPEDES",
+    "total_impresiones": {
+      "bn": 2,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 2,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 2,
+      "color_ymc": 0
+    },
+    "total_paginas": 2
+  },
+  {
+    "codigo_usuario": "3271",
+    "nombre_usuario": "CRISTIAN SALGADO",
+    "total_impresiones": {
+      "bn": 112,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 20,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 92,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 170,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 112,
+      "color_ymc": 0
+    },
+    "total_paginas": 112
+  },
+  {
+    "codigo_usuario": "8072",
+    "nombre_usuario": "JORGE ROCHA",
+    "total_impresiones": {
+      "bn": 3,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 3,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 3,
+      "color_ymc": 0
+    },
+    "total_paginas": 3
+  },
+  {
+    "codigo_usuario": "2274",
+    "nombre_usuario": "MARYURY CHAUCARAMA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7104",
+    "nombre_usuario": "JUAN LIZARAZO",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "3857",
+    "nombre_usuario": "DANIELA BELTRAN",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "4688",
+    "nombre_usuario": "DANY DAGUA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5466",
+    "nombre_usuario": "NANCY ESPAÑOL",
+    "total_impresiones": {
+      "bn": 372,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 22,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 350,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 372,
+      "color_ymc": 0
+    },
+    "total_paginas": 372
+  },
+  {
+    "codigo_usuario": "7607",
+    "nombre_usuario": "YENCY BOHORQUEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "5776",
+    "nombre_usuario": "MARIAMTH AMAYA",
+    "total_impresiones": {
+      "bn": 322,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 322,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 1973,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 322,
+      "color_ymc": 0
+    },
+    "total_paginas": 322
+  },
+  {
+    "codigo_usuario": "5806",
+    "nombre_usuario": "DIANA PINZON",
+    "total_impresiones": {
+      "bn": 138,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 138,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 138,
+      "color_ymc": 0
+    },
+    "total_paginas": 138
+  },
+  {
+    "codigo_usuario": "0375",
+    "nombre_usuario": "YINA SOSA",
+    "total_impresiones": {
+      "bn": 1171,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 844,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 327,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 1171,
+      "color_ymc": 0
+    },
+    "total_paginas": 1171
+  },
+  {
+    "codigo_usuario": "1299",
+    "nombre_usuario": "JERSON CRUZ",
+    "total_impresiones": {
+      "bn": 243,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 14,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 229,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 243,
+      "color_ymc": 0
+    },
+    "total_paginas": 243
+  },
+  {
+    "codigo_usuario": "8889",
+    "nombre_usuario": "LEIDY VACA",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "7783",
+    "nombre_usuario": "ANGIE MENDEZ",
+    "total_impresiones": {
+      "bn": 85,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 85,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 85,
+      "color_ymc": 0
+    },
+    "total_paginas": 85
+  },
+  {
+    "codigo_usuario": "6713",
+    "nombre_usuario": "MARITZA SANCHEZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  },
+  {
+    "codigo_usuario": "8785",
+    "nombre_usuario": "PEDRO PEREZ",
+    "total_impresiones": {
+      "bn": 0,
+      "color": 0
+    },
+    "copiadora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "todo_color": 0
+    },
+    "impresora": {
+      "blanco_negro": 0,
+      "mono_color": 0,
+      "dos_colores": 0,
+      "color": 0
+    },
+    "escaner": {
+      "blanco_negro": 0,
+      "todo_color": 0
+    },
+    "fax": {
+      "blanco_negro": 0,
+      "paginas_transmitidas": 0
+    },
+    "revelado": {
+      "negro": 0,
+      "color_ymc": 0
+    },
+    "total_paginas": 0
+  }
+]

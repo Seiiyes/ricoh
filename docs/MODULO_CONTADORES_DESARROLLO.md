@@ -407,8 +407,19 @@ Si no se encuentran los contadores en la interfaz web:
 - Otras funciones: A3/DLT (2,811), Dúplex (46,830)
 
 **Contadores por Usuario:**
-- ⚠️ No disponibles en la URL encontrada
-- Requiere investigación adicional o ajuste de requerimientos
+- ✅ **URL encontrada:** `/web/entry/es/websys/status/getUserCounter.cgi`
+- ✅ Parser implementado y funcionando
+- ✅ Datos disponibles por usuario:
+  * Código de usuario
+  * Nombre de usuario
+  * Total impresiones (B/N, Color)
+  * Copiadora (Blanco y negro, Mono Color, Dos colores, A Todo Color)
+  * Impresora (Blanco y negro, Mono Color, Dos colores, Color)
+  * Escáner (Blanco y negro, A Todo Color)
+  * Fax (Blanco y negro, Páginas transmitidas)
+  * Revelado (Negro, Color YMC)
+- ✅ Soporte para paginación (265 usuarios en 27 páginas)
+- ✅ Función para obtener todos los usuarios
 
 ### 🎯 Decisión Técnica
 **Método seleccionado:** Interfaz Web HTTP
