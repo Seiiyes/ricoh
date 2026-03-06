@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ProvisioningPanel } from './components/governance/ProvisioningPanel';
 import { AdministracionUsuarios } from './components/usuarios/AdministracionUsuarios';
-import { UserCog, UserPlus, Search } from 'lucide-react';
+import { ContadoresModule } from './components/contadores/ContadoresModule';
+import { UserCog, UserPlus, Search, BarChart3 } from 'lucide-react';
 
 function App() {
-  const [vistaActual, setVistaActual] = useState<'descubrimiento' | 'aprovisionamiento' | 'administracion'>('descubrimiento');
+  const [vistaActual, setVistaActual] = useState<'descubrimiento' | 'aprovisionamiento' | 'administracion' | 'contadores'>('descubrimiento');
 
   return (
     <div className="flex h-screen">
@@ -52,6 +53,18 @@ function App() {
             <UserCog size={18} />
             Administrar Usuarios
           </button>
+          
+          <button
+            onClick={() => setVistaActual('contadores')}
+            className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors ${
+              vistaActual === 'contadores'
+                ? 'bg-ricoh-red text-white border-l-4 border-white'
+                : 'text-slate-300 hover:bg-slate-800'
+            }`}
+          >
+            <BarChart3 size={18} />
+            Contadores
+          </button>
         </div>
       </nav>
 
@@ -61,8 +74,10 @@ function App() {
           <ProvisioningPanel showDiscoveryOnly={true} />
         ) : vistaActual === 'aprovisionamiento' ? (
           <ProvisioningPanel showDiscoveryOnly={false} />
-        ) : (
+        ) : vistaActual === 'administracion' ? (
           <AdministracionUsuarios />
+        ) : (
+          <ContadoresModule />
         )}
       </div>
     </div>

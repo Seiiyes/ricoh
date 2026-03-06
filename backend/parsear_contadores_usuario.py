@@ -17,24 +17,49 @@ ADMIN_USER = "admin"
 ADMIN_PASS = ""
 
 def login_to_printer(session, printer_ip):
-    """Login a la impresora"""
-    login_form_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi"
-    form_resp = session.get(login_form_url, timeout=10)
-    token_match = re.search(r'name="wimToken"\s+value="(\d+)"', form_resp.text)
-    login_token = token_match.group(1) if token_match else ""
-    
-    userid_b64 = base64.b64encode(ADMIN_USER.encode()).decode()
-    login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
-    login_data = {
-        'wimToken': login_token,
-        'userid_work': '',
-        'userid': userid_b64,
-        'password_work': '',
-        'password': ADMIN_PASS,
-        'open': '',
-    }
-    
-    session.post(login_url, data=login_data, timeout=10, allow_redirects=True)
+    """Login a la impresora - detecta automáticamente el método correcto"""
+    # Detectar si es la impresora 252 (requiere método especial)
+    if printer_ip == "192.168.91.252":
+        # Método especial para 252
+        auth_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi?open=websys/status/getUserCounter.cgi"
+        auth_resp = session.get(auth_url, timeout=10)
+        
+        soup = BeautifulSoup(auth_resp.text, 'html.parser')
+        wim_token_input = soup.find('input', {'name': 'wimToken'})
+        wim_token = wim_token_input.get('value') if wim_token_input else None
+        
+        login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
+        
+        login_data = {
+            'userid': base64.b64encode('admin'.encode()).decode(),
+            'password': base64.b64encode(''.encode()).decode(),
+            'userid_work': '',
+            'password_work': ''
+        }
+        
+        if wim_token:
+            login_data['wimToken'] = wim_token
+        
+        session.post(login_url, data=login_data, timeout=10)
+    else:
+        # Método estándar para otras impresoras
+        login_form_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi"
+        form_resp = session.get(login_form_url, timeout=10)
+        token_match = re.search(r'name="wimToken"\s+value="(\d+)"', form_resp.text)
+        login_token = token_match.group(1) if token_match else ""
+        
+        userid_b64 = base64.b64encode(ADMIN_USER.encode()).decode()
+        login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
+        login_data = {
+            'wimToken': login_token,
+            'userid_work': '',
+            'userid': userid_b64,
+            'password_work': '',
+            'password': ADMIN_PASS,
+            'open': '',
+        }
+        
+        session.post(login_url, data=login_data, timeout=10, allow_redirects=True)
 
 def parse_user_counter_html(html_content):
     """
@@ -61,66 +86,232 @@ def parse_user_counter_html(html_content):
     table = soup.find('table', class_='adTable')
     
     if not table:
+        # Intentar con tbl_border (otras impresoras)
+        table = soup.find('table', class_='tbl_border')
+    
+    if not table:
         return users
     
     # Buscar todas las filas de datos (skip headers)
     rows = table.find_all('tr')
+    
+    # Detectar formato basado en la primera fila de datos
+    is_252_format = False
+    for row in rows:
+        if row.find('th'):
+            continue
+        cells = row.find_all('td')
+        if cells:
+            # Si tiene 13 celdas, es formato 252
+            # Si tiene 18+ celdas con class='listData', es formato estándar
+            if len(cells) == 13:
+                is_252_format = True
+            break
     
     for row in rows:
         # Skip header rows
         if row.find('th'):
             continue
         
-        cells = row.find_all('td', class_='listData')
+        cells = row.find_all('td')
         
-        if len(cells) < 18:  # Debe tener al menos 18 columnas
-            continue
-        
-        try:
-            user_data = {
-                'codigo_usuario': cells[0].get_text(strip=True),
-                'nombre_usuario': cells[1].get_text(strip=True),
-                'total_impresiones': {
-                    'bn': int(cells[2].get_text(strip=True) or 0),
-                    'color': int(cells[3].get_text(strip=True) or 0)
-                },
-                'copiadora': {
-                    'blanco_negro': int(cells[4].get_text(strip=True) or 0),
-                    'mono_color': int(cells[5].get_text(strip=True) or 0),
-                    'dos_colores': int(cells[6].get_text(strip=True) or 0),
-                    'todo_color': int(cells[7].get_text(strip=True) or 0)
-                },
-                'impresora': {
-                    'blanco_negro': int(cells[8].get_text(strip=True) or 0),
-                    'mono_color': int(cells[9].get_text(strip=True) or 0),
-                    'dos_colores': int(cells[10].get_text(strip=True) or 0),
-                    'color': int(cells[11].get_text(strip=True) or 0)
-                },
-                'escaner': {
-                    'blanco_negro': int(cells[12].get_text(strip=True) or 0),
-                    'todo_color': int(cells[13].get_text(strip=True) or 0)
-                },
-                'fax': {
-                    'blanco_negro': int(cells[14].get_text(strip=True) or 0),
-                    'paginas_transmitidas': int(cells[15].get_text(strip=True) or 0)
-                },
-                'revelado': {
-                    'negro': int(cells[16].get_text(strip=True) or 0),
-                    'color_ymc': int(cells[17].get_text(strip=True) or 0)
+        if is_252_format:
+            # Formato impresora 252 (13 celdas)
+            # Estructura REAL según análisis del HTML:
+            # [0] Código
+            # [1] Nombre
+            # [2] Total B/N
+            # [3] Copiadora B/N
+            # [4] Copiadora Hojas a 2 caras
+            # [5] Copiadora Páginas combinadas
+            # [6] Impresora B/N
+            # [7] Impresora Hojas a 2 caras
+            # [8] Impresora Páginas combinadas
+            # [9] Escáner B/N
+            # [10] Escáner A todo color
+            # [11] Fax B/N
+            # [12] Fax Páginas transmitidas
+            if len(cells) < 13:
+                continue
+            
+            try:
+                codigo = cells[0].get_text(strip=True)
+                nombre = cells[1].get_text(strip=True)
+                total_bn = int(cells[2].get_text(strip=True) or 0)
+                
+                copiadora_bn = int(cells[3].get_text(strip=True) or 0)
+                copiadora_hojas_2_caras = int(cells[4].get_text(strip=True) or 0)
+                copiadora_paginas_combinadas = int(cells[5].get_text(strip=True) or 0)
+                
+                impresora_bn = int(cells[6].get_text(strip=True) or 0)
+                impresora_hojas_2_caras = int(cells[7].get_text(strip=True) or 0)
+                impresora_paginas_combinadas = int(cells[8].get_text(strip=True) or 0)
+                
+                escaner_bn = int(cells[9].get_text(strip=True) or 0)
+                escaner_color = int(cells[10].get_text(strip=True) or 0)
+                fax_bn = int(cells[11].get_text(strip=True) or 0)
+                fax_transmitidas = int(cells[12].get_text(strip=True) or 0)
+                
+                user_data = {
+                    'codigo_usuario': codigo,
+                    'nombre_usuario': nombre,
+                    'total_paginas': total_bn,
+                    'total_impresiones': {
+                        'bn': total_bn,
+                        'color': 0
+                    },
+                    'copiadora': {
+                        'blanco_negro': copiadora_bn,
+                        'mono_color': 0,
+                        'dos_colores': 0,
+                        'todo_color': 0,
+                        'hojas_2_caras': copiadora_hojas_2_caras,
+                        'paginas_combinadas': copiadora_paginas_combinadas
+                    },
+                    'impresora': {
+                        'blanco_negro': impresora_bn,
+                        'mono_color': 0,
+                        'dos_colores': 0,
+                        'color': 0,
+                        'hojas_2_caras': impresora_hojas_2_caras,
+                        'paginas_combinadas': impresora_paginas_combinadas
+                    },
+                    'escaner': {
+                        'blanco_negro': escaner_bn,
+                        'todo_color': escaner_color
+                    },
+                    'fax': {
+                        'blanco_negro': fax_bn,
+                        'paginas_transmitidas': fax_transmitidas
+                    },
+                    'revelado': {
+                        'negro': 0,
+                        'color_ymc': 0
+                    }
                 }
-            }
+                
+                users.append(user_data)
+                
+            except (ValueError, IndexError) as e:
+                continue
+        else:
+            # Formato estándar (18+ celdas con class='listData')
+            cells_with_class = row.find_all('td', class_='listData')
             
-            # Calcular totales
-            user_data['total_paginas'] = (
-                user_data['total_impresiones']['bn'] + 
-                user_data['total_impresiones']['color']
-            )
+            if len(cells_with_class) < 18:  # Debe tener al menos 18 columnas
+                continue
             
-            users.append(user_data)
-            
-        except (ValueError, IndexError) as e:
-            # Skip rows with invalid data
-            continue
+            try:
+                # Estructura REAL según análisis:
+                # [0] Código usuario
+                # [1] Nombre usuario
+                # [2] Total B/N
+                # [3] Total Color
+                # [4] Copiadora B/N
+                # [5] Copiadora Mono Color
+                # [6] Copiadora Dos Colores
+                # [7] Copiadora Todo Color
+                # [8] Copiadora Hojas a 2 caras (si existe)
+                # [9] Copiadora Páginas combinadas (si existe)
+                # [10] Impresora B/N
+                # [11] Impresora Mono Color
+                # [12] Impresora Dos Colores
+                # [13] Impresora Color
+                # [14] Impresora Hojas a 2 caras (si existe)
+                # [15] Impresora Páginas combinadas (si existe)
+                # [16+] Escáner, Fax, Revelado...
+                
+                # Detectar si tiene columnas adicionales (20+ columnas = tiene hojas_2_caras y paginas_combinadas)
+                has_extended_fields = len(cells_with_class) >= 22
+                
+                if has_extended_fields:
+                    # Formato extendido con hojas_2_caras y paginas_combinadas
+                    user_data = {
+                        'codigo_usuario': cells_with_class[0].get_text(strip=True),
+                        'nombre_usuario': cells_with_class[1].get_text(strip=True),
+                        'total_impresiones': {
+                            'bn': int(cells_with_class[2].get_text(strip=True) or 0),
+                            'color': int(cells_with_class[3].get_text(strip=True) or 0)
+                        },
+                        'copiadora': {
+                            'blanco_negro': int(cells_with_class[4].get_text(strip=True) or 0),
+                            'mono_color': int(cells_with_class[5].get_text(strip=True) or 0),
+                            'dos_colores': int(cells_with_class[6].get_text(strip=True) or 0),
+                            'todo_color': int(cells_with_class[7].get_text(strip=True) or 0),
+                            'hojas_2_caras': int(cells_with_class[8].get_text(strip=True) or 0),
+                            'paginas_combinadas': int(cells_with_class[9].get_text(strip=True) or 0)
+                        },
+                        'impresora': {
+                            'blanco_negro': int(cells_with_class[10].get_text(strip=True) or 0),
+                            'mono_color': int(cells_with_class[11].get_text(strip=True) or 0),
+                            'dos_colores': int(cells_with_class[12].get_text(strip=True) or 0),
+                            'color': int(cells_with_class[13].get_text(strip=True) or 0),
+                            'hojas_2_caras': int(cells_with_class[14].get_text(strip=True) or 0),
+                            'paginas_combinadas': int(cells_with_class[15].get_text(strip=True) or 0)
+                        },
+                        'escaner': {
+                            'blanco_negro': int(cells_with_class[16].get_text(strip=True) or 0),
+                            'todo_color': int(cells_with_class[17].get_text(strip=True) or 0)
+                        },
+                        'fax': {
+                            'blanco_negro': int(cells_with_class[18].get_text(strip=True) or 0),
+                            'paginas_transmitidas': int(cells_with_class[19].get_text(strip=True) or 0)
+                        },
+                        'revelado': {
+                            'negro': int(cells_with_class[20].get_text(strip=True) or 0),
+                            'color_ymc': int(cells_with_class[21].get_text(strip=True) or 0)
+                        }
+                    }
+                else:
+                    # Formato estándar sin hojas_2_caras y paginas_combinadas
+                    user_data = {
+                        'codigo_usuario': cells_with_class[0].get_text(strip=True),
+                        'nombre_usuario': cells_with_class[1].get_text(strip=True),
+                        'total_impresiones': {
+                            'bn': int(cells_with_class[2].get_text(strip=True) or 0),
+                            'color': int(cells_with_class[3].get_text(strip=True) or 0)
+                        },
+                        'copiadora': {
+                            'blanco_negro': int(cells_with_class[4].get_text(strip=True) or 0),
+                            'mono_color': int(cells_with_class[5].get_text(strip=True) or 0),
+                            'dos_colores': int(cells_with_class[6].get_text(strip=True) or 0),
+                            'todo_color': int(cells_with_class[7].get_text(strip=True) or 0),
+                            'hojas_2_caras': 0,
+                            'paginas_combinadas': 0
+                        },
+                        'impresora': {
+                            'blanco_negro': int(cells_with_class[8].get_text(strip=True) or 0),
+                            'mono_color': int(cells_with_class[9].get_text(strip=True) or 0),
+                            'dos_colores': int(cells_with_class[10].get_text(strip=True) or 0),
+                            'color': int(cells_with_class[11].get_text(strip=True) or 0),
+                            'hojas_2_caras': 0,
+                            'paginas_combinadas': 0
+                        },
+                        'escaner': {
+                            'blanco_negro': int(cells_with_class[12].get_text(strip=True) or 0),
+                            'todo_color': int(cells_with_class[13].get_text(strip=True) or 0)
+                        },
+                        'fax': {
+                            'blanco_negro': int(cells_with_class[14].get_text(strip=True) or 0),
+                            'paginas_transmitidas': int(cells_with_class[15].get_text(strip=True) or 0)
+                        },
+                        'revelado': {
+                            'negro': int(cells_with_class[16].get_text(strip=True) or 0),
+                            'color_ymc': int(cells_with_class[17].get_text(strip=True) or 0)
+                        }
+                    }
+                
+                # Calcular totales
+                user_data['total_paginas'] = (
+                    user_data['total_impresiones']['bn'] + 
+                    user_data['total_impresiones']['color']
+                )
+                
+                users.append(user_data)
+                
+            except (ValueError, IndexError) as e:
+                # Skip rows with invalid data
+                continue
     
     return users
 

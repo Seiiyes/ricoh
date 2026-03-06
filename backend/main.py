@@ -26,7 +26,7 @@ from db.database import init_db, engine
 from db import Base
 
 # Import API routers
-from api import users_router, printers_router, provisioning_router, discovery_router
+from api import users_router, printers_router, provisioning_router, discovery_router, counters_router
 
 
 # WebSocket connection manager
@@ -127,6 +127,7 @@ app.include_router(users_router)
 app.include_router(printers_router)
 app.include_router(provisioning_router)
 app.include_router(discovery_router)
+app.include_router(counters_router)
 
 
 # Root endpoint
@@ -222,3 +223,4 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+

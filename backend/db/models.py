@@ -1,10 +1,10 @@
 """
 SQLAlchemy ORM Models
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
+from datetime import datetime, date
 import enum
 
 from .database import Base
@@ -92,6 +92,10 @@ class Printer(Base):
     has_scanner = Column(Boolean, default=False)
     has_fax = Column(Boolean, default=False)
     
+    # Counter capabilities
+    tiene_contador_usuario = Column(Boolean, default=True, nullable=False)  # Tiene getUserCounter.cgi
+    usar_contador_ecologico = Column(Boolean, default=False, nullable=False)  # Usar getEcoCounter.cgi para usuarios
+    
     # Toner levels (0-100)
     toner_cyan = Column(Integer, default=0)
     toner_magenta = Column(Integer, default=0)
@@ -148,3 +152,222 @@ class UserPrinterAssignment(Base):
 
     def __repr__(self):
         return f"<UserPrinterAssignment(user_id={self.user_id}, printer_id={self.printer_id})>"
+
+
+class ContadorImpresora(Base):
+    """
+    Contador total de la impresora (getUnificationCounter.cgi)
+    Almacena los contadores totales por impresora
+    """
+    __tablename__ = "contadores_impresora"
+
+    id = Column(Integer, primary_key=True, index=True)
+    printer_id = Column(Integer, ForeignKey("printers.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Contador total
+    total = Column(Integer, default=0, nullable=False)
+    
+    # Copiadora
+    copiadora_bn = Column(Integer, default=0, nullable=False)
+    copiadora_color = Column(Integer, default=0, nullable=False)
+    copiadora_color_personalizado = Column(Integer, default=0, nullable=False)
+    copiadora_dos_colores = Column(Integer, default=0, nullable=False)
+    
+    # Impresora
+    impresora_bn = Column(Integer, default=0, nullable=False)
+    impresora_color = Column(Integer, default=0, nullable=False)
+    impresora_color_personalizado = Column(Integer, default=0, nullable=False)
+    impresora_dos_colores = Column(Integer, default=0, nullable=False)
+    
+    # Fax
+    fax_bn = Column(Integer, default=0, nullable=False)
+    
+    # Enviar/TX Total
+    enviar_total_bn = Column(Integer, default=0, nullable=False)
+    enviar_total_color = Column(Integer, default=0, nullable=False)
+    
+    # Transmisión por fax
+    transmision_fax_total = Column(Integer, default=0, nullable=False)
+    
+    # Envío por escáner
+    envio_escaner_bn = Column(Integer, default=0, nullable=False)
+    envio_escaner_color = Column(Integer, default=0, nullable=False)
+    
+    # Otras funciones
+    otras_a3_dlt = Column(Integer, default=0, nullable=False)
+    otras_duplex = Column(Integer, default=0, nullable=False)
+    
+    # Metadata
+    fecha_lectura = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    printer = relationship("Printer")
+
+    def __repr__(self):
+        return f"<ContadorImpresora(printer_id={self.printer_id}, total={self.total}, fecha={self.fecha_lectura})>"
+
+
+class ContadorUsuario(Base):
+    """
+    Contador por usuario (getUserCounter.cgi o getEcoCounter.cgi)
+    Almacena los contadores individuales por usuario
+    """
+    __tablename__ = "contadores_usuario"
+
+    id = Column(Integer, primary_key=True, index=True)
+    printer_id = Column(Integer, ForeignKey("printers.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Usuario
+    codigo_usuario = Column(String(8), nullable=False, index=True)
+    nombre_usuario = Column(String(100), nullable=False)
+    
+    # Total impresiones
+    total_paginas = Column(Integer, default=0, nullable=False)
+    total_bn = Column(Integer, default=0, nullable=False)
+    total_color = Column(Integer, default=0, nullable=False)
+    
+    # Copiadora (getUserCounter)
+    copiadora_bn = Column(Integer, default=0, nullable=False)
+    copiadora_mono_color = Column(Integer, default=0, nullable=False)
+    copiadora_dos_colores = Column(Integer, default=0, nullable=False)
+    copiadora_todo_color = Column(Integer, default=0, nullable=False)
+    copiadora_hojas_2_caras = Column(Integer, default=0, nullable=False)  # Impresora 252
+    copiadora_paginas_combinadas = Column(Integer, default=0, nullable=False)  # Impresora 252
+    
+    # Impresora (getUserCounter)
+    impresora_bn = Column(Integer, default=0, nullable=False)
+    impresora_mono_color = Column(Integer, default=0, nullable=False)
+    impresora_dos_colores = Column(Integer, default=0, nullable=False)
+    impresora_color = Column(Integer, default=0, nullable=False)
+    impresora_hojas_2_caras = Column(Integer, default=0, nullable=False)  # Impresora 252
+    impresora_paginas_combinadas = Column(Integer, default=0, nullable=False)  # Impresora 252
+    
+    # Escáner (getUserCounter)
+    escaner_bn = Column(Integer, default=0, nullable=False)
+    escaner_todo_color = Column(Integer, default=0, nullable=False)
+    
+    # Fax (getUserCounter)
+    fax_bn = Column(Integer, default=0, nullable=False)
+    fax_paginas_transmitidas = Column(Integer, default=0, nullable=False)
+    
+    # Revelado (getUserCounter)
+    revelado_negro = Column(Integer, default=0, nullable=False)
+    revelado_color_ymc = Column(Integer, default=0, nullable=False)
+    
+    # Métricas ecológicas (getEcoCounter) - almacenadas como texto
+    eco_uso_2_caras = Column(String(50), nullable=True)
+    eco_uso_combinar = Column(String(50), nullable=True)
+    eco_reduccion_papel = Column(String(50), nullable=True)
+    
+    # Tipo de contador usado
+    tipo_contador = Column(String(20), nullable=False, default="usuario")  # "usuario" o "ecologico"
+    
+    # Metadata
+    fecha_lectura = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    printer = relationship("Printer")
+
+    def __repr__(self):
+        return f"<ContadorUsuario(printer_id={self.printer_id}, codigo={self.codigo_usuario}, total={self.total_paginas})>"
+
+
+class CierreMensual(Base):
+    """
+    Cierre de contadores (diario, semanal, mensual, personalizado)
+    Almacena snapshots inmutables para auditoría y comparación
+    """
+    __tablename__ = "cierres_mensuales"
+
+    id = Column(Integer, primary_key=True, index=True)
+    printer_id = Column(Integer, ForeignKey("printers.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Tipo de período (agregado en migración 008)
+    tipo_periodo = Column(String(20), default='mensual', nullable=False)  # diario, semanal, mensual, personalizado
+    
+    # Fechas del período (agregado en migración 008)
+    fecha_inicio = Column(Date, nullable=False)
+    fecha_fin = Column(Date, nullable=False)
+    
+    # Período (mantener para compatibilidad con cierres mensuales)
+    anio = Column(Integer, nullable=False, index=True)
+    mes = Column(Integer, nullable=False, index=True)  # 1-12
+    
+    # Contadores totales al cierre
+    total_paginas = Column(Integer, default=0, nullable=False)
+    total_copiadora = Column(Integer, default=0, nullable=False)
+    total_impresora = Column(Integer, default=0, nullable=False)
+    total_escaner = Column(Integer, default=0, nullable=False)
+    total_fax = Column(Integer, default=0, nullable=False)
+    
+    # Diferencia con cierre anterior
+    diferencia_total = Column(Integer, default=0, nullable=False)
+    diferencia_copiadora = Column(Integer, default=0, nullable=False)
+    diferencia_impresora = Column(Integer, default=0, nullable=False)
+    diferencia_escaner = Column(Integer, default=0, nullable=False)
+    diferencia_fax = Column(Integer, default=0, nullable=False)
+    
+    # Metadata
+    fecha_cierre = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    cerrado_por = Column(String(100), nullable=True)  # Usuario que hizo el cierre
+    notas = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Auditoría (agregado en migración 007)
+    modified_at = Column(DateTime(timezone=True), nullable=True)
+    modified_by = Column(String(100), nullable=True)
+    hash_verificacion = Column(String(64), nullable=True)
+
+    # Relationships
+    printer = relationship("Printer")
+    usuarios = relationship("CierreMensualUsuario", back_populates="cierre", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<CierreMensual(printer_id={self.printer_id}, tipo={self.tipo_periodo}, periodo={self.fecha_inicio} a {self.fecha_fin}, total={self.total_paginas})>"
+
+
+class CierreMensualUsuario(Base):
+    """
+    Snapshot de contadores por usuario al momento del cierre mensual
+    Permite auditoría y facturación sin depender de datos históricos
+    """
+    __tablename__ = "cierres_mensuales_usuarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cierre_mensual_id = Column(Integer, ForeignKey("cierres_mensuales.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Usuario
+    codigo_usuario = Column(String(8), nullable=False, index=True)
+    nombre_usuario = Column(String(100), nullable=False)
+    
+    # Contadores al cierre (snapshot inmutable)
+    total_paginas = Column(Integer, nullable=False)
+    total_bn = Column(Integer, nullable=False)
+    total_color = Column(Integer, nullable=False)
+    
+    # Desglose por función
+    copiadora_bn = Column(Integer, nullable=False)
+    copiadora_color = Column(Integer, nullable=False)
+    impresora_bn = Column(Integer, nullable=False)
+    impresora_color = Column(Integer, nullable=False)
+    escaner_bn = Column(Integer, nullable=False)
+    escaner_color = Column(Integer, nullable=False)
+    fax_bn = Column(Integer, nullable=False)
+    
+    # Consumo del mes (diferencia con mes anterior)
+    consumo_total = Column(Integer, nullable=False)
+    consumo_copiadora = Column(Integer, nullable=False)
+    consumo_impresora = Column(Integer, nullable=False)
+    consumo_escaner = Column(Integer, nullable=False)
+    consumo_fax = Column(Integer, nullable=False)
+    
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    cierre = relationship("CierreMensual", back_populates="usuarios")
+
+    def __repr__(self):
+        return f"<CierreMensualUsuario(cierre_id={self.cierre_mensual_id}, codigo={self.codigo_usuario}, consumo={self.consumo_total})>"

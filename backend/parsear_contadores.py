@@ -16,29 +16,55 @@ PRINTER_IP = "192.168.91.251"
 ADMIN_USER = "admin"
 ADMIN_PASS = ""
 
-def login_to_printer(session):
-    """Login a la impresora"""
-    login_form_url = f"http://{PRINTER_IP}/web/guest/es/websys/webArch/authForm.cgi"
-    form_resp = session.get(login_form_url, timeout=10)
-    token_match = re.search(r'name="wimToken"\s+value="(\d+)"', form_resp.text)
-    login_token = token_match.group(1) if token_match else ""
-    
-    userid_b64 = base64.b64encode(ADMIN_USER.encode()).decode()
-    login_url = f"http://{PRINTER_IP}/web/guest/es/websys/webArch/login.cgi"
-    login_data = {
-        'wimToken': login_token,
-        'userid_work': '',
-        'userid': userid_b64,
-        'password_work': '',
-        'password': ADMIN_PASS,
-        'open': '',
-    }
-    
-    session.post(login_url, data=login_data, timeout=10, allow_redirects=True)
+def login_to_printer(session, printer_ip):
+    """Login a la impresora - detecta automáticamente el método correcto"""
+    # Detectar si es la impresora 252 o 253 (requieren método especial)
+    if printer_ip in ["192.168.91.252", "192.168.91.253"]:
+        # Método especial para 252 y 253
+        auth_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi?open=websys/status/getUnificationCounter.cgi"
+        auth_resp = session.get(auth_url, timeout=10)
+        
+        soup = BeautifulSoup(auth_resp.text, 'html.parser')
+        wim_token_input = soup.find('input', {'name': 'wimToken'})
+        wim_token = wim_token_input.get('value') if wim_token_input else None
+        
+        login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
+        
+        login_data = {
+            'userid': base64.b64encode('admin'.encode()).decode(),
+            'password': base64.b64encode(''.encode()).decode(),
+            'userid_work': '',
+            'password_work': ''
+        }
+        
+        if wim_token:
+            login_data['wimToken'] = wim_token
+        
+        session.post(login_url, data=login_data, timeout=10)
+    else:
+        # Método estándar para otras impresoras
+        login_form_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi"
+        form_resp = session.get(login_form_url, timeout=10)
+        token_match = re.search(r'name="wimToken"\s+value="(\d+)"', form_resp.text)
+        login_token = token_match.group(1) if token_match else ""
+        
+        userid_b64 = base64.b64encode(ADMIN_USER.encode()).decode()
+        login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
+        login_data = {
+            'wimToken': login_token,
+            'userid_work': '',
+            'userid': userid_b64,
+            'password_work': '',
+            'password': ADMIN_PASS,
+            'open': '',
+        }
+        
+        session.post(login_url, data=login_data, timeout=10, allow_redirects=True)
 
 def parse_counter_html(html_content):
     """
     Parsea el HTML de contadores y extrae datos estructurados
+    Usa análisis de contexto para detectar secciones correctamente
     
     Returns:
         dict con estructura de contadores
@@ -79,177 +105,116 @@ def parse_counter_html(html_content):
         }
     }
     
-    # Buscar todas las filas de la tabla
+    # Buscar todas las filas staticProp
     rows = soup.find_all('tr', class_='staticProp')
     
+    # Variable para rastrear la sección actual
     current_section = None
     
     for row in rows:
         cells = row.find_all('td')
-        if len(cells) < 3:
+        
+        # Las filas tienen 5 celdas: ['', 'Label', ':', 'Value', '']
+        if len(cells) < 4:
             continue
         
-        # Extraer texto de las celdas
-        label_cell = cells[1].get_text(strip=True) if len(cells) > 1 else ""
-        value_cell = cells[3].get_text(strip=True) if len(cells) > 3 else ""
+        # Skip fila de "Atrás"
+        label = cells[1].get_text(strip=True)
+        if label == "Atrás":
+            continue
         
-        # Identificar sección actual
-        if "Total" in label_cell and ":" in row.get_text():
-            # Total general
-            try:
-                counters['total'] = int(value_cell)
-            except:
-                pass
+        separator = cells[2].get_text(strip=True)
+        value_text = cells[3].get_text(strip=True)
         
-        # Copiadora
-        elif label_cell == "Blanco y Negro" and current_section == 'copiadora':
-            try:
-                counters['copiadora']['blanco_negro'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "A todo color" and current_section == 'copiadora':
-            try:
-                counters['copiadora']['color'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Color personalizado" and current_section == 'copiadora':
-            try:
-                counters['copiadora']['color_personalizado'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Dos colores" and current_section == 'copiadora':
-            try:
-                counters['copiadora']['dos_colores'] = int(value_cell)
-            except:
-                pass
+        if separator != ":":
+            continue
         
-        # Impresora
-        elif label_cell == "Blanco y Negro" and current_section == 'impresora':
-            try:
-                counters['impresora']['blanco_negro'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "A todo color" and current_section == 'impresora':
-            try:
-                counters['impresora']['color'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Color personalizado" and current_section == 'impresora':
-            try:
-                counters['impresora']['color_personalizado'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Dos colores" and current_section == 'impresora':
-            try:
-                counters['impresora']['dos_colores'] = int(value_cell)
-            except:
-                pass
+        # Convertir valor a entero
+        try:
+            value = int(value_text.replace(",", "").replace(".", ""))
+        except:
+            continue
         
-        # Fax
-        elif label_cell == "Blanco y Negro" and current_section == 'fax':
-            try:
-                counters['fax']['blanco_negro'] = int(value_cell)
-            except:
-                pass
+        # Buscar el elemento de texto inmediatamente anterior que contenga nombre de sección
+        # Buscar en los elementos previos cercanos
+        prev_strings = []
+        for elem in row.find_all_previous(string=True, limit=20):
+            text = str(elem).strip()
+            if text:
+                prev_strings.append(text)
         
-        # Enviar/TX Total
-        elif label_cell == "Blanco y Negro" and current_section == 'enviar_total':
-            try:
-                counters['enviar_total']['blanco_negro'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Color" and current_section == 'enviar_total':
-            try:
-                counters['enviar_total']['color'] = int(value_cell)
-            except:
-                pass
+        # Buscar secciones en los últimos elementos (más cercanos primero)
+        for prev_text in prev_strings:
+            if "Envío por escáner" in prev_text or "Envio por escaner" in prev_text:
+                current_section = 'escaner'
+                break
+            elif "Enviar/TX Total" in prev_text:
+                current_section = 'enviar'
+                break
+            elif "Transmisión por fax" in prev_text or "Transmision por fax" in prev_text:
+                current_section = 'transmision'
+                break
+            elif "Fax" in prev_text and "Transmisión" not in prev_text:
+                current_section = 'fax'
+                break
+            elif "Impresora" in prev_text:
+                current_section = 'impresora'
+                break
+            elif "Copiadora" in prev_text:
+                current_section = 'copiadora'
+                break
+            elif "Otra función" in prev_text or "Otra funcion" in prev_text:
+                current_section = 'otra'
+                break
         
-        # Transmisión por fax
-        elif label_cell == "Total" and current_section == 'transmision_fax':
-            try:
-                counters['transmision_fax']['total'] = int(value_cell)
-            except:
-                pass
+        # Asignar valor según label y sección detectada
+        if label == "Total" and current_section is None:
+            counters['total'] = value
         
-        # Envío por escáner
-        elif label_cell == "Blanco y Negro" and current_section == 'envio_escaner':
-            try:
-                counters['envio_escaner']['blanco_negro'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Color" and current_section == 'envio_escaner':
-            try:
-                counters['envio_escaner']['color'] = int(value_cell)
-            except:
-                pass
+        elif label == "Blanco y Negro":
+            if current_section == 'copiadora':
+                counters['copiadora']['blanco_negro'] = value
+            elif current_section == 'impresora':
+                counters['impresora']['blanco_negro'] = value
+            elif current_section == 'fax':
+                counters['fax']['blanco_negro'] = value
+            elif current_section == 'enviar':
+                counters['enviar_total']['blanco_negro'] = value
+            elif current_section == 'escaner':
+                counters['envio_escaner']['blanco_negro'] = value
         
-        # Otras funciones
-        elif label_cell == "A3/DLT":
-            try:
-                counters['otras_funciones']['a3_dlt'] = int(value_cell)
-            except:
-                pass
-        elif label_cell == "Dúplex":
-            try:
-                counters['otras_funciones']['duplex'] = int(value_cell)
-            except:
-                pass
-    
-    # Detectar secciones por encabezados
-    headers = soup.find_all('div', class_='standard', style=lambda x: x and 'font-weight:bold' in x)
-    sections_text = [h.get_text(strip=True) for h in headers]
-    
-    # Parsear de forma más robusta usando el texto completo
-    text = soup.get_text()
-    
-    # Total
-    match = re.search(r'Total\s*:\s*(\d+)', text)
-    if match:
-        counters['total'] = int(match.group(1))
-    
-    # Copiadora
-    copiadora_section = re.search(r'Copiadora.*?Blanco y Negro\s*:\s*(\d+).*?A todo color\s*:\s*(\d+).*?Color personalizado\s*:\s*(\d+).*?Dos colores\s*:\s*(\d+)', text, re.DOTALL)
-    if copiadora_section:
-        counters['copiadora']['blanco_negro'] = int(copiadora_section.group(1))
-        counters['copiadora']['color'] = int(copiadora_section.group(2))
-        counters['copiadora']['color_personalizado'] = int(copiadora_section.group(3))
-        counters['copiadora']['dos_colores'] = int(copiadora_section.group(4))
-    
-    # Impresora
-    impresora_section = re.search(r'Impresora.*?Blanco y Negro\s*:\s*(\d+).*?A todo color\s*:\s*(\d+).*?Color personalizado\s*:\s*(\d+).*?Dos colores\s*:\s*(\d+)', text, re.DOTALL)
-    if impresora_section:
-        counters['impresora']['blanco_negro'] = int(impresora_section.group(1))
-        counters['impresora']['color'] = int(impresora_section.group(2))
-        counters['impresora']['color_personalizado'] = int(impresora_section.group(3))
-        counters['impresora']['dos_colores'] = int(impresora_section.group(4))
-    
-    # Fax
-    fax_section = re.search(r'Fax.*?Blanco y Negro\s*:\s*(\d+)', text, re.DOTALL)
-    if fax_section:
-        counters['fax']['blanco_negro'] = int(fax_section.group(1))
-    
-    # Enviar/TX Total
-    enviar_section = re.search(r'Enviar/TX Total.*?Blanco y Negro\s*:\s*(\d+).*?Color\s*:\s*(\d+)', text, re.DOTALL)
-    if enviar_section:
-        counters['enviar_total']['blanco_negro'] = int(enviar_section.group(1))
-        counters['enviar_total']['color'] = int(enviar_section.group(2))
-    
-    # Transmisión por fax
-    trans_fax_section = re.search(r'Transmisión por fax.*?Total\s*:\s*(\d+)', text, re.DOTALL)
-    if trans_fax_section:
-        counters['transmision_fax']['total'] = int(trans_fax_section.group(1))
-    
-    # Envío por escáner
-    escaner_section = re.search(r'Envío por escáner.*?Blanco y Negro\s*:\s*(\d+).*?Color\s*:\s*(\d+)', text, re.DOTALL)
-    if escaner_section:
-        counters['envio_escaner']['blanco_negro'] = int(escaner_section.group(1))
-        counters['envio_escaner']['color'] = int(escaner_section.group(2))
-    
-    # Otras funciones
-    otras_section = re.search(r'A3/DLT\s*:\s*(\d+).*?Dúplex\s*:\s*(\d+)', text, re.DOTALL)
-    if otras_section:
-        counters['otras_funciones']['a3_dlt'] = int(otras_section.group(1))
-        counters['otras_funciones']['duplex'] = int(otras_section.group(2))
+        elif label == "A todo color":
+            if current_section == 'copiadora':
+                counters['copiadora']['color'] = value
+            elif current_section == 'impresora':
+                counters['impresora']['color'] = value
+        
+        elif label == "Color personalizado":
+            if current_section == 'copiadora':
+                counters['copiadora']['color_personalizado'] = value
+            elif current_section == 'impresora':
+                counters['impresora']['color_personalizado'] = value
+        
+        elif label == "Dos colores":
+            if current_section == 'copiadora':
+                counters['copiadora']['dos_colores'] = value
+            elif current_section == 'impresora':
+                counters['impresora']['dos_colores'] = value
+        
+        elif label == "Color":
+            if current_section == 'enviar':
+                counters['enviar_total']['color'] = value
+            elif current_section == 'escaner':
+                counters['envio_escaner']['color'] = value
+        
+        elif label == "Total" and current_section == 'transmision':
+            counters['transmision_fax']['total'] = value
+        
+        elif label == "A3/DLT":
+            counters['otras_funciones']['a3_dlt'] = value
+        
+        elif label == "Dúplex":
+            counters['otras_funciones']['duplex'] = value
     
     return counters
 
@@ -264,7 +229,7 @@ def get_printer_counters(printer_ip=PRINTER_IP):
     session.verify = False
     
     # Login
-    login_to_printer(session)
+    login_to_printer(session, printer_ip)
     
     # Obtener contadores
     counter_url = f"http://{printer_ip}/web/entry/es/websys/status/getUnificationCounter.cgi"
@@ -307,16 +272,26 @@ if __name__ == "__main__":
         print(f"\n📋 Copiadora:")
         print(f"   - B/N: {counters['copiadora']['blanco_negro']:,}")
         print(f"   - Color: {counters['copiadora']['color']:,}")
-        print(f"   - Total: {counters['copiadora']['blanco_negro'] + counters['copiadora']['color']:,}")
+        print(f"   - Color Personalizado: {counters['copiadora']['color_personalizado']:,}")
+        print(f"   - Dos Colores: {counters['copiadora']['dos_colores']:,}")
+        # En impresoras a color, el color ya incluye B/N, NO se suman
+        total_cop = max(counters['copiadora']['blanco_negro'], counters['copiadora']['color'])
+        print(f"   - Total: {total_cop:,}")
         print(f"\n🖨️  Impresora:")
         print(f"   - B/N: {counters['impresora']['blanco_negro']:,}")
         print(f"   - Color: {counters['impresora']['color']:,}")
-        print(f"   - Total: {counters['impresora']['blanco_negro'] + counters['impresora']['color']:,}")
+        print(f"   - Color Personalizado: {counters['impresora']['color_personalizado']:,}")
+        print(f"   - Dos Colores: {counters['impresora']['dos_colores']:,}")
+        # En impresoras a color, el color ya incluye B/N, NO se suman
+        total_imp = max(counters['impresora']['blanco_negro'], counters['impresora']['color'])
+        print(f"   - Total: {total_imp:,}")
         print(f"\n📠 Fax: {counters['fax']['blanco_negro']:,}")
         print(f"\n📤 Escáner:")
         print(f"   - B/N: {counters['envio_escaner']['blanco_negro']:,}")
         print(f"   - Color: {counters['envio_escaner']['color']:,}")
-        print(f"   - Total: {counters['envio_escaner']['blanco_negro'] + counters['envio_escaner']['color']:,}")
+        # En impresoras a color, el color ya incluye B/N, NO se suman
+        total_esc = max(counters['envio_escaner']['blanco_negro'], counters['envio_escaner']['color'])
+        print(f"   - Total: {total_esc:,}")
         
     except Exception as e:
         print(f"❌ Error: {e}")

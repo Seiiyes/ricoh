@@ -12,6 +12,27 @@
 - **`backend/SOLUCION_ESCRITURA_FUNCIONES.md`** - Análisis completo del problema de escritura
 - **`backend/API_REVERSE_ENGINEERING_EXITOSO.md`** - Documentación del reverse engineering
 
+### Módulo de Contadores ⭐ NUEVO
+- **`FASE_1_COMPLETADA_FINAL.md`** ⭐ - Resumen ejecutivo de Fase 1 (parsers)
+- **`FASE_2_COMPLETADA.md`** ⭐ - Resumen ejecutivo de Fase 2 (modelos DB)
+- **`FASE_3_COMPLETADA.md`** ⭐ - Resumen ejecutivo de Fase 3 (servicio)
+- **`FASE_4_COMPLETADA.md`** ⭐ - Resumen ejecutivo de Fase 4 (API REST)
+- **`API_CONTADORES.md`** ⭐ - Documentación completa de la API de contadores
+- **`API_CIERRES_MENSUALES.md`** ⭐ - Documentación completa de la API de cierres mensuales
+- **`ANALISIS_CIERRE_MENSUAL.md`** - Análisis exhaustivo del sistema de cierres
+- **`ARQUITECTURA_CIERRES_ANALISIS_COMPLETO.md`** - Arquitectura completa de cierres
+- **`AUDITORIA_BASE_DATOS.md`** - Auditoría completa de base de datos
+- **`ANALISIS_RELACIONES_TABLAS.md`** - Análisis de relaciones entre tablas
+- **`PREPARACION_BASE_DATOS_COMPLETA.md`** - Preparación de BD para cierres
+- **`RIESGOS_Y_MITIGACIONES_CIERRES.md`** - Riesgos y mitigaciones de cierres
+- **`RESUMEN_SNAPSHOT_USUARIOS.md`** - Resumen de snapshot de usuarios
+- **`MODULO_CONTADORES_DESARROLLO.md`** - Documentación técnica completa
+- **`RESULTADOS_PRUEBA_5_IMPRESORAS.md`** - Resultados de pruebas en las 5 impresoras
+- **`RESUMEN_MODULO_CONTADORES.md`** - Resumen final con resultados de pruebas
+- **`VALIDACIONES_INTEGRIDAD_DATOS.md`** - Documentación de validaciones implementadas
+- **`MIGRACION_005_TABLAS_CONTADORES.md`** - Documentación de migración de base de datos
+- **`MIGRACION_005_APLICADA.md`** - Verificación de migración aplicada
+
 ### Guías de Usuario
 - **`backend/HABILITAR_SCAN_MANUAL.md`** ⭐ - Guía paso a paso para habilitar SCAN manualmente
 - **`backend/INTEGRACION_FRONTEND.md`** - Especificaciones de API para frontend
@@ -30,6 +51,49 @@ cd backend
 
 # Test de escritura con Selenium (requiere configuración)
 .\venv\Scripts\python.exe enable_scan_selenium_completo.py
+```
+
+### Scripts de Contadores ⭐ NUEVO
+```bash
+cd backend
+
+# Parsear contadores totales de una impresora
+python parsear_contadores.py
+
+# Parsear contadores por usuario
+python parsear_contadores_usuario.py
+
+# Parsear contador ecológico (para impresoras B/N)
+python parsear_contador_ecologico.py
+
+# Probar las 5 impresoras registradas en la DB
+python probar_5_impresoras.py
+
+# Test completo final (todas las impresoras)
+python test_completo_final.py
+
+# Aplicar migración 005 (tablas de contadores)
+python apply_migration_005.py
+# O usar el script batch:
+run-migration-005.bat
+
+# Aplicar migración 007 (snapshot de usuarios y optimizaciones)
+python apply_migration_007_auto.py
+# O usar el script batch:
+docker exec ricoh-backend python apply_migration_007_auto.py
+
+# Test del servicio de contadores
+venv\Scripts\python.exe test_counter_service.py single
+venv\Scripts\python.exe test_counter_service.py all
+venv\Scripts\python.exe test_counter_service.py close
+
+# Test de cierre mensual con snapshot de usuarios ⭐ NUEVO
+python test_cierre_mensual.py
+# O usar el script batch:
+test-cierre-mensual.bat
+
+# Iniciar servidor API (para probar endpoints)
+venv\Scripts\python.exe main.py
 ```
 
 ### Scripts de Desarrollo
@@ -123,17 +187,35 @@ cd backend
 - Sincronización de usuarios
 - Búsqueda de usuarios específicos
 - API reverse engineering documentado
+- **Módulo de Contadores - Fase 1:** Parsers implementados (3 tipos de contadores)
+- **Módulo de Contadores - Fase 2:** Modelos de base de datos creados
+- **Módulo de Contadores - Fase 3:** Servicio de lectura implementado
+- **Módulo de Contadores - Fase 4:** API REST completa (9 endpoints)
+- **Módulo de Cierres Mensuales - Backend:** ⭐ NUEVO
+  - Migración 007 aplicada (snapshot de usuarios, constraints, índices)
+  - Método `close_month()` con 7 validaciones previas
+  - Snapshot inmutable de usuarios en cada cierre
+  - 3 nuevos endpoints API (usuarios, detalle completo)
+  - Hash SHA256 de verificación
+  - Validación de integridad (suma usuarios vs total impresora)
+  - Script de prueba completo
 
 ### ⚠️ En Progreso
 - Escritura automática de funciones (requiere Selenium)
 - Integración con frontend
 - Sincronización programada
+- **Módulo de Cierres Mensuales - Frontend:** ⭐ EN DESARROLLO
+  - Vista de cierres con calendario visual
+  - Formulario de cierre mensual
+  - Modal de detalle de cierre con usuarios
+  - Comparación entre cierres
 
 ### 📋 Pendiente
 - Configuración de Selenium
-- Implementación de endpoints API
 - UI del frontend
 - Tests automatizados
+- **Módulo de Contadores - Fase 5:** Interfaz frontend para contadores
+- **Módulo de Contadores - Fase 6:** Automatización y tareas programadas
 
 ## 🚀 Flujo de Trabajo Recomendado
 
@@ -170,6 +252,6 @@ Si tienes dudas:
 
 ---
 
-**Última actualización:** 25 de Febrero de 2026  
-**Versión:** 1.0  
-**Estado:** Documentación completa
+**Última actualización:** 3 de Marzo de 2026  
+**Versión:** 1.4  
+**Estado:** Documentación completa + Módulo de Contadores (Fases 1-4) + Cierres Mensuales (Backend completo)

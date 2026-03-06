@@ -188,3 +188,61 @@ Actualiza el frontend para apuntar a `http://localhost:8000`
 - [ ] Implementar WebSockets para escaneos en tiempo real
 - [ ] Agregar caché de dispositivos descubiertos
 - [ ] Implementar health checks periódicos de dispositivos registrados
+
+
+## Testing y Verificación
+
+### Test de Precisión de Contadores de Usuario
+
+Para verificar que los datos del backend coinciden EXACTAMENTE con la web de la impresora:
+
+```bash
+# Windows
+test-user-counters-accuracy.bat <printer_id>
+
+# Linux/Mac
+python test_user_counters_accuracy.py <printer_id>
+```
+
+Ejemplo:
+```bash
+test-user-counters-accuracy.bat 4
+```
+
+Este test:
+- ✅ Lee datos DIRECTOS de la web de la impresora
+- ✅ Lee datos del BACKEND (última lectura en base de datos)
+- ✅ Compara usuario por usuario
+- ✅ Muestra discrepancias detalladas con desglose completo
+- ✅ Calcula porcentaje de precisión
+
+**IMPORTANTE**: Si la precisión es menor a 100%, significa que hay un problema en el parser que debe ser corregido ANTES de usar los datos para contabilidad.
+
+### Otros Tests Disponibles
+
+```bash
+# Test de endpoints de API
+test-api-endpoints.bat
+
+# Test de servicio de contadores
+test-counter-service.bat
+```
+
+## Troubleshooting
+
+### Los datos de usuarios no coinciden con la web de la impresora
+
+1. Ejecutar test de precisión: `test-user-counters-accuracy.bat <printer_id>`
+2. Revisar archivo `INVESTIGACION_DATOS_INCONSISTENTES.md`
+3. Si hay discrepancias, el problema está en el parser (`parsear_contadores_usuario.py`)
+4. Después de corregir, ejecutar lectura manual: `POST /api/counters/read/<printer_id>`
+5. Verificar nuevamente con el test de precisión
+
+### Auto-reload causa datos inconsistentes
+
+El auto-reload ha sido REMOVIDO del frontend. Los datos solo se actualizan:
+- Al cargar la página
+- Al hacer clic en "Lectura Manual"
+- Al navegar entre vistas
+
+Esto asegura que los datos mostrados sean consistentes y no cambien mientras el usuario los está revisando.
