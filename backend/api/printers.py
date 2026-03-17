@@ -8,7 +8,14 @@ from typing import List
 from db.database import get_db
 from db.repository import PrinterRepository
 from db.models import PrinterStatus
-from .schemas import PrinterCreate, PrinterUpdate, PrinterResponse, MessageResponse
+from .schemas import (
+    PrinterCreate, 
+    PrinterUpdate, 
+    PrinterResponse, 
+    MessageResponse,
+    CapabilitiesResponse,
+    CapabilitiesUpdate
+)
 
 router = APIRouter(prefix="/printers", tags=["printers"])
 
@@ -152,3 +159,100 @@ async def search_printers(query: str, db: Session = Depends(get_db)):
     """
     printers = PrinterRepository.search(db, query)
     return printers
+
+
+
+# ============================================================================
+# Printer Capabilities Endpoints
+# ============================================================================
+
+@router.get("/{printer_id}/capabilities", response_model=CapabilitiesResponse)
+async def get_printer_capabilities(printer_id: int, db: Session = Depends(get_db)):
+    """
+    Get printer capabilities
+    
+    Returns the detected or manually configured capabilities for a printer.
+    If no capabilities are set, returns safe defaults (all features enabled).
+    """
+    from models.capabilities import Capabilities
+    
+    printer = PrinterRepository.get_by_id(db, printer_id)
+    if not printer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Printer with ID {printer_id} not found"
+        )
+    
+    # Get capabilities or return safe defaults
+    if printer.capabilities_json:
+        return CapabilitiesResponse(**printer.capabilities_json)
+    else:
+        # Return safe defaults (show all columns for backward compatibility)
+        default_caps = Capabilities.create_default()
+        return CapabilitiesResponse(**default_caps.to_json())
+
+
+@router.put("/{printer_id}/capabilities", response_model=CapabilitiesResponse)
+async def update_printer_capabilities(
+    printer_id: int,
+    capabilities_update: CapabilitiesUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update printer capabilities manually
+    
+    This endpoint allows manual configuration of printer capabilities.
+    Sets manual_override=True to prevent automatic detection from overwriting.
+    """
+    from models.capabilities import Capabilities
+    from datetime import datetime
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    printer = PrinterRepository.get_by_id(db, printer_id)
+    if not printer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Printer with ID {printer_id} not found"
+        )
+    
+    try:
+        # Get current capabilities or create defaults
+        if printer.capabilities_json:
+            current_caps = Capabilities.from_json(printer.capabilities_json)
+        else:
+            current_caps = Capabilities.create_default()
+        
+        # Update only provided fields
+        update_data = capabilities_update.dict(exclude_unset=True)
+        
+        # Create updated capabilities
+        updated_caps_dict = current_caps.to_json()
+        updated_caps_dict.update(update_data)
+        updated_caps_dict['detected_at'] = datetime.utcnow().isoformat() + 'Z'
+        updated_caps_dict['manual_override'] = True
+        
+        # Validate and create Capabilities object
+        updated_caps = Capabilities(**updated_caps_dict)
+        
+        # Update printer
+        printer.update_capabilities(updated_caps.to_json(), manual=True)
+        db.commit()
+        db.refresh(printer)
+        
+        # Log the manual update
+        logger.info(
+            f"Manual capabilities update for printer {printer_id} ({printer.hostname}): "
+            f"{update_data}"
+        )
+        
+        return CapabilitiesResponse(**printer.capabilities_json)
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating capabilities for printer {printer_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update capabilities: {str(e)}"
+        )

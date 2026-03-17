@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CierreMensual, ComparacionCierres } from './types';
+import { UsuarioComparacionRow } from './UsuarioComparacionRow';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -10,7 +11,6 @@ interface ComparacionModalProps {
 }
 
 export const ComparacionModal: React.FC<ComparacionModalProps> = ({
-  printerId,
   cierres,
   onClose
 }) => {
@@ -19,8 +19,9 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
   const [comparacion, setComparacion] = useState<ComparacionCierres | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAllUsers, setShowAllUsers] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<'nombre' | 'codigo' | 'diferencia' | 'consumo1' | 'consumo2'>('diferencia');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     if (cierres.length >= 2) {
@@ -42,9 +43,9 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
     setError(null);
 
     try {
-      // Cargar con todos los usuarios (top_usuarios=1000)
+      // Cargar todos los usuarios sin límite
       const response = await fetch(
-        `${API_BASE}/api/counters/closes/${cierre1Id}/compare/${cierre2Id}?top_usuarios=1000`
+        `${API_BASE}/api/counters/monthly/compare/${cierre1Id}/${cierre2Id}`
       );
 
       if (!response.ok) throw new Error('Error al comparar cierres');
@@ -78,6 +79,21 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
     if (num < 0) return 'text-red-600';
     return 'text-gray-600';
   };
+
+  const handleSort = (field: 'nombre' | 'codigo' | 'diferencia' | 'consumo1' | 'consumo2') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortIcon = ({ active }: { active: boolean }) => (
+    <span className={`ml-1 ${active ? 'text-purple-600' : 'text-gray-300'}`}>
+      {sortDirection === 'asc' ? '↑' : '↓'}
+    </span>
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -170,6 +186,42 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
             </div>
           ) : comparacion ? (
             <>
+              {/* Información de períodos comparados */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Período Base</p>
+                    <p className="font-semibold text-gray-900">
+                      {comparacion.cierre1.tipo_periodo.charAt(0).toUpperCase() + comparacion.cierre1.tipo_periodo.slice(1)}
+                    </p>
+                    <p className="text-gray-600">
+                      {formatDate(comparacion.cierre1.fecha_inicio)}
+                      {comparacion.cierre1.fecha_inicio !== comparacion.cierre1.fecha_fin && 
+                        <> - {formatDate(comparacion.cierre1.fecha_fin)}</>
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total: {formatNumber(comparacion.cierre1.total_paginas)} páginas
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Período Comparado</p>
+                    <p className="font-semibold text-gray-900">
+                      {comparacion.cierre2.tipo_periodo.charAt(0).toUpperCase() + comparacion.cierre2.tipo_periodo.slice(1)}
+                    </p>
+                    <p className="text-gray-600">
+                      {formatDate(comparacion.cierre2.fecha_inicio)}
+                      {comparacion.cierre2.fecha_inicio !== comparacion.cierre2.fecha_fin && 
+                        <> - {formatDate(comparacion.cierre2.fecha_fin)}</>
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total: {formatNumber(comparacion.cierre2.total_paginas)} páginas
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Resumen de diferencias */}
               <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -220,89 +272,22 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                 </div>
               </div>
 
-              {/* Top usuarios con mayor aumento */}
-              {comparacion.top_usuarios_aumento.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    Top Usuarios con Mayor Aumento
-                  </h3>
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Período 1</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Período 2</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Diferencia</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">% Cambio</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {comparacion.top_usuarios_aumento.map((usuario, index) => (
-                          <tr key={usuario.codigo_usuario} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm text-gray-600">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{usuario.nombre_usuario}</td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-600">{formatNumber(usuario.consumo_cierre1)}</td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-900 font-medium">{formatNumber(usuario.consumo_cierre2)}</td>
-                            <td className="px-4 py-3 text-sm text-right text-green-600 font-semibold">
-                              +{formatNumber(usuario.diferencia)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right text-green-600">
-                              +{usuario.porcentaje_cambio.toFixed(1)}%
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {/* Explicación de columnas */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-blue-900">
+                    <p className="font-semibold mb-2">Cómo leer la tabla:</p>
+                    <ul className="space-y-1 text-blue-800">
+                      <li>• <strong>📄 Consumo Período 1/2:</strong> Páginas impresas en cada período con desglose por función</li>
+                      <li>• <strong>📈 Diferencia:</strong> Cambio entre períodos (Período 2 - Período 1) con desglose por función</li>
+                      <li>• Los valores en verde indican aumento, en rojo disminución</li>
+                    </ul>
                   </div>
                 </div>
-              )}
-
-              {/* Top usuarios con mayor disminución */}
-              {comparacion.top_usuarios_disminucion.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                    </svg>
-                    Top Usuarios con Mayor Disminución
-                  </h3>
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Período 1</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Período 2</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Diferencia</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">% Cambio</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {comparacion.top_usuarios_disminucion.slice(0, 10).map((usuario, index) => (
-                          <tr key={usuario.codigo_usuario} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm text-gray-600">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{usuario.nombre_usuario}</td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-900 font-medium">{formatNumber(usuario.consumo_cierre1)}</td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-600">{formatNumber(usuario.consumo_cierre2)}</td>
-                            <td className="px-4 py-3 text-sm text-right text-red-600 font-semibold">
-                              {formatNumber(usuario.diferencia)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right text-red-600">
-                              {usuario.porcentaje_cambio.toFixed(1)}%
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Todos los usuarios */}
               <div>
@@ -311,26 +296,18 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                     <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    Todos los Usuarios ({comparacion.top_usuarios_aumento.length + comparacion.top_usuarios_disminucion.length})
+                    Comparación Detallada por Usuario ({comparacion.top_usuarios_aumento.length + comparacion.top_usuarios_disminucion.length})
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar usuario..."
-                      className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <button
-                      onClick={() => setShowAllUsers(!showAllUsers)}
-                      className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors"
-                    >
-                      {showAllUsers ? 'Ocultar' : 'Mostrar todos'}
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar usuario..."
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
                 </div>
 
-                {showAllUsers && (() => {
+                {(() => {
                   // Combinar todos los usuarios
                   const allUsers = [
                     ...comparacion.top_usuarios_aumento,
@@ -338,38 +315,119 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                   ].filter(u => 
                     u.nombre_usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     u.codigo_usuario.includes(searchTerm)
-                  ).sort((a, b) => Math.abs(b.diferencia) - Math.abs(a.diferencia));
+                  ).sort((a, b) => {
+                    let aVal: string | number;
+                    let bVal: string | number;
+                    
+                    switch (sortField) {
+                      case 'nombre':
+                        aVal = a.nombre_usuario;
+                        bVal = b.nombre_usuario;
+                        break;
+                      case 'codigo':
+                        aVal = a.codigo_usuario;
+                        bVal = b.codigo_usuario;
+                        break;
+                      case 'consumo1':
+                        aVal = a.consumo_cierre1;
+                        bVal = b.consumo_cierre1;
+                        break;
+                      case 'consumo2':
+                        aVal = a.consumo_cierre2;
+                        bVal = b.consumo_cierre2;
+                        break;
+                      case 'diferencia':
+                      default:
+                        aVal = a.diferencia;
+                        bVal = b.diferencia;
+                        break;
+                    }
+                    
+                    if (typeof aVal === 'string' && typeof bVal === 'string') {
+                      return sortDirection === 'asc' 
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                    }
+                    
+                    return sortDirection === 'asc' 
+                      ? (aVal as number) - (bVal as number)
+                      : (bVal as number) - (aVal as number);
+                  });
 
                   return (
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
-                      <div className="max-h-96 overflow-y-auto">
+                      <div className="max-h-[500px] overflow-y-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50 sticky top-0">
                             <tr>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Período 1</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Período 2</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Diferencia</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">% Cambio</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase" rowSpan={2}>#</th>
+                              <th 
+                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100" 
+                                rowSpan={2}
+                                onClick={() => handleSort('nombre')}
+                              >
+                                Usuario {sortField === 'nombre' && <SortIcon active={true} />}
+                              </th>
+                              <th 
+                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100" 
+                                rowSpan={2}
+                                onClick={() => handleSort('codigo')}
+                              >
+                                Código {sortField === 'codigo' && <SortIcon active={true} />}
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-300" colSpan={5}>
+                                📄 Consumo Período 1
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-300" colSpan={5}>
+                                📄 Consumo Período 2
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-300" colSpan={5}>
+                                📈 Diferencia
+                              </th>
+                            </tr>
+                            <tr>
+                              <th 
+                                className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase border-l border-gray-300 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleSort('consumo1')}
+                              >
+                                Total {sortField === 'consumo1' && <SortIcon active={true} />}
+                              </th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Copia</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Impre</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Escán</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Fax</th>
+                              <th 
+                                className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase border-l border-gray-300 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleSort('consumo2')}
+                              >
+                                Total {sortField === 'consumo2' && <SortIcon active={true} />}
+                              </th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Copia</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Impre</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Escán</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Fax</th>
+                              <th 
+                                className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase border-l border-gray-300 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleSort('diferencia')}
+                              >
+                                Total {sortField === 'diferencia' && <SortIcon active={true} />}
+                              </th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Copia</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Impre</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Escán</th>
+                              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Fax</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
                             {allUsers.map((usuario, index) => (
-                              <tr key={usuario.codigo_usuario} className="hover:bg-gray-50">
-                                <td className="px-4 py-3 text-sm text-gray-600">{index + 1}</td>
-                                <td className="px-4 py-3 text-sm text-gray-900">{usuario.nombre_usuario}</td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{usuario.codigo_usuario}</td>
-                                <td className="px-4 py-3 text-sm text-right text-gray-600">{formatNumber(usuario.consumo_cierre1)}</td>
-                                <td className="px-4 py-3 text-sm text-right text-gray-600">{formatNumber(usuario.consumo_cierre2)}</td>
-                                <td className={`px-4 py-3 text-sm text-right font-semibold ${getDiferenciaColor(usuario.diferencia)}`}>
-                                  {formatDiferencia(usuario.diferencia)}
-                                </td>
-                                <td className={`px-4 py-3 text-sm text-right ${getDiferenciaColor(usuario.diferencia)}`}>
-                                  {usuario.porcentaje_cambio >= 0 ? '+' : ''}{usuario.porcentaje_cambio.toFixed(1)}%
-                                </td>
-                              </tr>
+                              <UsuarioComparacionRow
+                                key={usuario.codigo_usuario}
+                                usuario={usuario}
+                                index={index}
+                                formatNumber={formatNumber}
+                                formatDiferencia={formatDiferencia}
+                                getDiferenciaColor={getDiferenciaColor}
+                              />
                             ))}
                           </tbody>
                         </table>
@@ -389,6 +447,47 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
 
         {/* Footer */}
         <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+          {comparacion && (
+            <>
+              <button
+                onClick={() => {
+                  const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel-ricoh`;
+                  window.open(url, '_blank');
+                }}
+                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                title="Exportar en formato Ricoh (52 columnas, 3 hojas)"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Excel Ricoh
+              </button>
+              <button
+                onClick={() => {
+                  const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel`;
+                  window.open(url, '_blank');
+                }}
+                className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Excel Simple
+              </button>
+              <button
+                onClick={() => {
+                  const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}`;
+                  window.open(url, '_blank');
+                }}
+                className="px-4 py-2 text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                CSV
+              </button>
+            </>
+          )}
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"

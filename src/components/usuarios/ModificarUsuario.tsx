@@ -8,13 +8,11 @@ import type { Usuario, ImpresoraUsuario } from '@/types/usuario';
 interface ModificarUsuarioProps {
   usuario: Usuario | null;
   onCerrar: () => void;
-  onGuardar: () => void;
 }
 
 export const ModificarUsuario = ({
   usuario,
   onCerrar,
-  onGuardar,
 }: ModificarUsuarioProps) => {
   const [cargandoDatos, setCargandoDatos] = useState(false);
   const [guardando, setGuardando] = useState(false);

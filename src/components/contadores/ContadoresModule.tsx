@@ -3,12 +3,12 @@ import { DashboardView } from './dashboard/DashboardView';
 import { PrinterDetailView } from './detail/PrinterDetailView';
 import { CierresView } from './cierres/CierresView';
 
-type CounterView = 'dashboard' | 'printer-detail' | 'cierres';
-type Tab = 'dashboard' | 'cierres';
+type CounterView = 'resumen' | 'printer-detail' | 'cierres';
+type Tab = 'resumen' | 'cierres';
 
 export const ContadoresModule: React.FC = () => {
-  const [currentView, setCurrentView] = useState<CounterView>('dashboard');
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [currentView, setCurrentView] = useState<CounterView>('resumen');
+  const [activeTab, setActiveTab] = useState<Tab>('resumen');
   const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
 
   const handleNavigateToPrinter = (printerId: number) => {
@@ -17,7 +17,7 @@ export const ContadoresModule: React.FC = () => {
   };
 
   const handleNavigateBack = () => {
-    setCurrentView(activeTab === 'cierres' ? 'cierres' : 'dashboard');
+    setCurrentView(activeTab === 'cierres' ? 'cierres' : 'resumen');
     setSelectedPrinterId(null);
   };
 
@@ -43,14 +43,14 @@ export const ContadoresModule: React.FC = () => {
           {currentView !== 'printer-detail' && (
             <div className="flex gap-1 border-b border-gray-200">
               <button
-                onClick={() => handleTabChange('dashboard')}
+                onClick={() => handleTabChange('resumen')}
                 className={`px-4 py-2 font-medium text-sm transition-colors ${
-                  activeTab === 'dashboard'
+                  activeTab === 'resumen'
                     ? 'text-red-600 border-b-2 border-red-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Dashboard
+                Resumen
               </button>
               <button
                 onClick={() => handleTabChange('cierres')}
@@ -69,7 +69,7 @@ export const ContadoresModule: React.FC = () => {
 
       {/* Contenido */}
       <div className="flex-1 overflow-auto">
-        {currentView === 'dashboard' && (
+        {currentView === 'resumen' && (
           <DashboardView onNavigateToPrinter={handleNavigateToPrinter} />
         )}
         

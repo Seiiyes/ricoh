@@ -2,6 +2,8 @@
  * Types for the unified close system
  */
 
+import type { PrinterDevice } from '@/types';
+
 export interface CierreMensual {
   id: number;
   printer_id: number;
@@ -52,6 +54,12 @@ export interface CierreMensualUsuario {
 
 export interface CierreMensualDetalle extends CierreMensual {
   usuarios: CierreMensualUsuario[];
+  printer?: PrinterDevice; // Printer info with capabilities
+  // Paginación
+  total_usuarios: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
 }
 
 export interface UsuarioComparacion {
@@ -61,6 +69,32 @@ export interface UsuarioComparacion {
   consumo_cierre2: number;
   diferencia: number;
   porcentaje_cambio: number;
+  total_paginas_cierre1: number | null;
+  total_paginas_cierre2: number | null;
+  // Desglose del consumo en cierre 1
+  consumo_copiadora_cierre1?: number;
+  consumo_impresora_cierre1?: number;
+  consumo_escaner_cierre1?: number;
+  consumo_fax_cierre1?: number;
+  // Desglose del consumo en cierre 2
+  consumo_copiadora_cierre2?: number;
+  consumo_impresora_cierre2?: number;
+  consumo_escaner_cierre2?: number;
+  consumo_fax_cierre2?: number;
+  // Desglose B/N y Color para cierre 1
+  copiadora_bn_cierre1?: number;
+  copiadora_color_cierre1?: number;
+  impresora_bn_cierre1?: number;
+  impresora_color_cierre1?: number;
+  escaner_bn_cierre1?: number;
+  escaner_color_cierre1?: number;
+  // Desglose B/N y Color para cierre 2
+  copiadora_bn_cierre2?: number;
+  copiadora_color_cierre2?: number;
+  impresora_bn_cierre2?: number;
+  impresora_color_cierre2?: number;
+  escaner_bn_cierre2?: number;
+  escaner_color_cierre2?: number;
 }
 
 export interface ComparacionCierres {
@@ -98,9 +132,4 @@ export interface Printer {
 
 export type TipoPeriodo = 'diario' | 'semanal' | 'mensual' | 'personalizado';
 
-export enum EstadoCierre {
-  CERRADO = 'cerrado',
-  PENDIENTE = 'pendiente',
-  FUTURO = 'futuro',
-  FALTA = 'falta'
-}
+export type EstadoCierre = 'cerrado' | 'pendiente' | 'futuro' | 'falta';

@@ -60,6 +60,12 @@ class UserCreate(UserBase):
     """Schema for creating a user"""
     codigo_de_usuario: str = Field(..., min_length=4, max_length=8, description="Numeric authentication code")
     
+    # NEW: Optional printer selection for automatic provisioning
+    printer_ids: Optional[List[int]] = Field(
+        None, 
+        description="List of printer IDs to provision user to"
+    )
+    
     # Network credentials - can be nested or flat
     network_credentials: Optional[NetworkCredentials] = None
     network_username: Optional[str] = Field(None, max_length=255)
@@ -87,6 +93,14 @@ class UserCreate(UserBase):
         """Ensure codigo_de_usuario is numeric"""
         if not v.isdigit():
             raise ValueError("Código de usuario must contain only digits")
+        return v
+    
+    @validator('printer_ids')
+    def validate_printer_ids(cls, v):
+        """Ensure all printer IDs are positive"""
+        if v is not None:
+            if not all(pid > 0 for pid in v):
+                raise ValueError("All printer IDs must be positive integers")
         return v
     
     @validator('smb_path')
@@ -166,6 +180,42 @@ class UserResponse(UserBase):
 
 
 # ============================================================================
+# Printer Capabilities Schemas
+# ============================================================================
+
+class CapabilitiesResponse(BaseModel):
+    """Schema for printer capabilities response"""
+    formato_contadores: str = Field(..., description="Counter format: 'estandar', 'simplificado', 'ecologico'")
+    has_color: bool = Field(..., description="Supports color printing")
+    has_hojas_2_caras: bool = Field(..., description="Supports duplex printing")
+    has_paginas_combinadas: bool = Field(..., description="Supports multiple pages per sheet")
+    has_mono_color: bool = Field(..., description="Supports single color printing")
+    has_dos_colores: bool = Field(..., description="Supports two-color printing")
+    detected_at: str = Field(..., description="ISO 8601 timestamp of detection")
+    manual_override: bool = Field(default=False, description="Manually configured capabilities")
+    
+    class Config:
+        from_attributes = True
+
+
+class CapabilitiesUpdate(BaseModel):
+    """Schema for updating printer capabilities manually"""
+    formato_contadores: Optional[str] = Field(None, description="Counter format")
+    has_color: Optional[bool] = Field(None, description="Supports color printing")
+    has_hojas_2_caras: Optional[bool] = Field(None, description="Supports duplex printing")
+    has_paginas_combinadas: Optional[bool] = Field(None, description="Supports multiple pages per sheet")
+    has_mono_color: Optional[bool] = Field(None, description="Supports single color printing")
+    has_dos_colores: Optional[bool] = Field(None, description="Supports two-color printing")
+    
+    @validator('formato_contadores')
+    def validate_formato(cls, v):
+        """Validate counter format"""
+        if v is not None and v not in ['estandar', 'simplificado', 'ecologico']:
+            raise ValueError("formato_contadores must be 'estandar', 'simplificado', or 'ecologico'")
+        return v
+
+
+# ============================================================================
 # Printer Schemas
 # ============================================================================
 
@@ -231,6 +281,9 @@ class PrinterResponse(PrinterBase):
     notes: Optional[str]
     created_at: datetime
     updated_at: Optional[datetime]
+    
+    # Capabilities
+    capabilities: Optional[CapabilitiesResponse] = Field(None, description="Printer capabilities")
     
     class Config:
         from_attributes = True
@@ -384,3 +437,33 @@ class UpdateUserFunctionsResponse(BaseModel):
     printer_ip: str
     functions_updated: dict
 
+
+
+# ============================================================================
+# Automatic Provisioning Schemas
+# ============================================================================
+
+class PrinterProvisioningResult(BaseModel):
+    """Result of provisioning to a single printer"""
+    printer_id: int
+    hostname: str
+    ip_address: str
+    status: Literal['success', 'failed']
+    error_message: Optional[str] = None
+    retry_attempts: int = 0
+    provisioned_at: Optional[str] = None
+
+
+class ProvisioningResults(BaseModel):
+    """Detailed provisioning results"""
+    overall_success: bool
+    total_printers: int
+    successful_count: int
+    failed_count: int
+    results: List[PrinterProvisioningResult]
+    summary_message: str
+
+
+class UserCreateResponse(UserResponse):
+    """Extended response for user creation with provisioning"""
+    provisioning_results: Optional[ProvisioningResults] = None

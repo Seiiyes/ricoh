@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CierreMensual, CierreMensualDetalle } from './types';
+import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -16,20 +17,33 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<'nombre_usuario' | 'consumo_total'>('consumo_total');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<'nombre_usuario' | 'total_paginas' | 'consumo_total'>('total_paginas');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // Get column visibility based on printer capabilities
+  const { isColumnVisible } = useColumnVisibility(detalle?.printer?.capabilities);
+  
+  // Determine if printer uses ecological format
+  const isEcologicalFormat = detalle?.printer?.capabilities?.formato_contadores === 'ecologico';
 
   useEffect(() => {
     loadDetalle();
-  }, [cierre.id]);
+  }, [cierre.id, currentPage, searchTerm]);
 
   const loadDetalle = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        page_size: '50',
+        ...(searchTerm && { search: searchTerm })
+      });
+
       const response = await fetch(
-        `${API_BASE}/api/counters/monthly/${cierre.id}/detail`
+        `${API_BASE}/api/counters/monthly/${cierre.id}/detail?${params}`
       );
 
       if (!response.ok) throw new Error('Error al cargar detalle');
@@ -45,24 +59,35 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
   };
 
   const formatNumber = (num: number) => num.toLocaleString('es-ES');
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('es-ES', {
+  const formatDate = (dateStr: string, includeTime: boolean = false) => {
+    // Para evitar el desfase de zona horaria con YYYY-MM-DD, reemplazamos guiones por barras 
+    // o forzamos que no se interprete como UTC
+    const date = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+    
+    return date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {})
     });
   };
 
-  const filteredUsuarios = detalle?.usuarios.filter(u =>
-    u.nombre_usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.codigo_usuario.includes(searchTerm)
-  ) || [];
+  const filteredUsuarios = detalle?.usuarios || [];
 
   const sortedUsuarios = [...filteredUsuarios].sort((a, b) => {
-    const aVal = sortField === 'nombre_usuario' ? a.nombre_usuario : a.consumo_total;
-    const bVal = sortField === 'nombre_usuario' ? b.nombre_usuario : b.consumo_total;
+    let aVal: string | number;
+    let bVal: string | number;
+    
+    if (sortField === 'nombre_usuario') {
+      aVal = a.nombre_usuario;
+      bVal = b.nombre_usuario;
+    } else if (sortField === 'total_paginas') {
+      aVal = a.total_paginas;
+      bVal = b.total_paginas;
+    } else {
+      aVal = a.consumo_total;
+      bVal = b.consumo_total;
+    }
     
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortDirection === 'asc' 
@@ -75,7 +100,7 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
       : (bVal as number) - (aVal as number);
   });
 
-  const handleSort = (field: 'nombre_usuario' | 'consumo_total') => {
+  const handleSort = (field: 'nombre_usuario' | 'total_paginas' | 'consumo_total') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -134,26 +159,30 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
                   <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_paginas)}</p>
                   <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_total)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">Copiadora</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_copiadora)}</p>
-                  <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_copiadora)}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">Impresora</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_impresora)}</p>
-                  <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_impresora)}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">Escáner</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_escaner)}</p>
-                  <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_escaner)}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-1">Fax</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_fax)}</p>
-                  <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_fax)}</p>
-                </div>
+                {!isEcologicalFormat && (
+                  <>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs text-gray-600 mb-1">Copiadora</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_copiadora)}</p>
+                      <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_copiadora)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs text-gray-600 mb-1">Impresora</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_impresora)}</p>
+                      <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_impresora)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs text-gray-600 mb-1">Escáner</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_escaner)}</p>
+                      <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_escaner)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs text-gray-600 mb-1">Fax</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatNumber(detalle.total_fax)}</p>
+                      <p className="text-xs text-green-600 mt-1">+{formatNumber(detalle.diferencia_fax)}</p>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Información adicional */}
@@ -184,13 +213,16 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Usuarios ({detalle.usuarios.length})
+                    Usuarios ({detalle.total_usuarios})
                   </h3>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1); // Reset to first page on search
+                      }}
                       placeholder="Buscar usuario..."
                       className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -199,58 +231,167 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
 
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-full divide-y divide-gray-200 text-xs">
                       <thead className="bg-gray-50">
-                        <tr>
-                          <th
-                            onClick={() => handleSort('nombre_usuario')}
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          >
-                            Usuario {sortField === 'nombre_usuario' && (sortDirection === 'asc' ? '↑' : '↓')}
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Código
-                          </th>
-                          <th
-                            onClick={() => handleSort('consumo_total')}
-                            className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          >
-                            Consumo {sortField === 'consumo_total' && (sortDirection === 'asc' ? '↑' : '↓')}
-                          </th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Copiadora
-                          </th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Impresora
-                          </th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Escáner
-                          </th>
-                        </tr>
+                        {isEcologicalFormat ? (
+                          // Tabla simplificada para formato ecológico
+                          <tr className="border-b border-gray-200">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Usuario
+                            </th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Código
+                            </th>
+                            <th
+                              onClick={() => handleSort('total_paginas')}
+                              className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50/50 cursor-pointer hover:bg-blue-100/50"
+                            >
+                              Total {sortField === 'total_paginas' && (sortDirection === 'asc' ? '↑' : '↓')}
+                            </th>
+                            <th
+                              onClick={() => handleSort('consumo_total')}
+                              className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                            >
+                              Consumo {sortField === 'consumo_total' && (sortDirection === 'asc' ? '↑' : '↓')}
+                            </th>
+                          </tr>
+                        ) : (
+                          // Tabla completa para formato estándar y simplificado
+                          <>
+                            <tr className="border-b border-gray-300">
+                              <th rowSpan={2} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Usuario
+                              </th>
+                              <th rowSpan={2} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Código
+                              </th>
+                              <th rowSpan={2}
+                                onClick={() => handleSort('total_paginas')}
+                                className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50/50 cursor-pointer hover:bg-blue-100/50"
+                              >
+                                Total {sortField === 'total_paginas' && (sortDirection === 'asc' ? '↑' : '↓')}
+                              </th>
+                              <th rowSpan={2}
+                                onClick={() => handleSort('consumo_total')}
+                                className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                              >
+                                Consumo {sortField === 'consumo_total' && (sortDirection === 'asc' ? '↑' : '↓')}
+                              </th>
+                              <th colSpan={isColumnVisible('color') ? 2 : 1} className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-slate-100 border-r border-gray-300">
+                                Total
+                              </th>
+                              <th colSpan={isColumnVisible('color') ? 2 : 1} className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50 border-r border-gray-300">
+                                Copiadora
+                              </th>
+                              <th colSpan={isColumnVisible('color') ? 2 : 1} className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50 border-r border-gray-300">
+                                Impresora
+                              </th>
+                              <th colSpan={isColumnVisible('color') ? 2 : 1} className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-purple-50">
+                                Escáner
+                              </th>
+                            </tr>
+                            <tr className="border-b border-gray-200">
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-slate-100">B/N</th>
+                              {isColumnVisible('color') && (
+                                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-slate-100 border-r border-gray-300">Color</th>
+                              )}
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-blue-50">B/N</th>
+                              {isColumnVisible('color') && (
+                                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-blue-50 border-r border-gray-300">Color</th>
+                              )}
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-green-50">B/N</th>
+                              {isColumnVisible('color') && (
+                                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-green-50 border-r border-gray-300">Color</th>
+                              )}
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-purple-50">B/N</th>
+                              {isColumnVisible('color') && (
+                                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase bg-purple-50">Color</th>
+                              )}
+                            </tr>
+                          </>
+                        )}
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {sortedUsuarios.map((usuario) => (
                           <tr key={usuario.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm text-gray-900">{usuario.nombre_usuario}</td>
-                            <td className="px-4 py-3 text-sm text-gray-600">{usuario.codigo_usuario}</td>
-                            <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
+                            <td className="px-3 py-2 text-xs text-gray-900">{usuario.nombre_usuario}</td>
+                            <td className="px-3 py-2 text-xs text-gray-600">{usuario.codigo_usuario}</td>
+                            <td className="px-3 py-2 text-xs text-right font-semibold text-blue-700 bg-blue-50/30">
+                              {formatNumber(usuario.total_paginas)}
+                            </td>
+                            <td className="px-3 py-2 text-xs text-right font-medium text-gray-900">
                               {formatNumber(usuario.consumo_total)}
                             </td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-600">
-                              {formatNumber(usuario.consumo_copiadora)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-600">
-                              {formatNumber(usuario.consumo_impresora)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-600">
-                              {formatNumber(usuario.consumo_escaner)}
-                            </td>
+                            {!isEcologicalFormat && (
+                              <>
+                                <td className="px-3 py-2 text-xs text-right text-gray-600 bg-slate-50">
+                                  {formatNumber(usuario.total_bn)}
+                                </td>
+                                {isColumnVisible('color') && (
+                                  <td className="px-3 py-2 text-xs text-right text-gray-600 bg-slate-50 border-r border-gray-200">
+                                    {formatNumber(usuario.total_color)}
+                                  </td>
+                                )}
+                                <td className="px-3 py-2 text-xs text-right text-gray-600">
+                                  {formatNumber(usuario.copiadora_bn)}
+                                </td>
+                                {isColumnVisible('color') && (
+                                  <td className="px-3 py-2 text-xs text-right text-gray-600 border-r border-gray-200">
+                                    {formatNumber(usuario.copiadora_color)}
+                                  </td>
+                                )}
+                                <td className="px-3 py-2 text-xs text-right text-gray-600">
+                                  {formatNumber(usuario.impresora_bn)}
+                                </td>
+                                {isColumnVisible('color') && (
+                                  <td className="px-3 py-2 text-xs text-right text-gray-600 border-r border-gray-200">
+                                    {formatNumber(usuario.impresora_color)}
+                                  </td>
+                                )}
+                                <td className="px-3 py-2 text-xs text-right text-gray-600">
+                                  {formatNumber(usuario.escaner_bn)}
+                                </td>
+                                {isColumnVisible('color') && (
+                                  <td className="px-3 py-2 text-xs text-right text-gray-600">
+                                    {formatNumber(usuario.escaner_color)}
+                                  </td>
+                                )}
+                              </>
+                            )}
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
+
+                {/* Paginación */}
+                {detalle.total_pages > 1 && (
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Mostrando {((detalle.page - 1) * detalle.page_size) + 1} - {Math.min(detalle.page * detalle.page_size, detalle.total_usuarios)} de {detalle.total_usuarios} usuarios
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={detalle.page === 1}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Anterior
+                      </button>
+                      <span className="text-sm text-gray-600">
+                        Página {detalle.page} de {detalle.total_pages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(detalle.total_pages, p + 1))}
+                        disabled={detalle.page === detalle.total_pages}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {sortedUsuarios.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
@@ -264,6 +405,30 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
 
         {/* Footer */}
         <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+          <button
+            onClick={() => {
+              const url = `${API_BASE}/api/export/cierre/${cierre.id}/excel`;
+              window.open(url, '_blank');
+            }}
+            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Exportar Excel
+          </button>
+          <button
+            onClick={() => {
+              const url = `${API_BASE}/api/export/cierre/${cierre.id}`;
+              window.open(url, '_blank');
+            }}
+            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Exportar CSV
+          </button>
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"

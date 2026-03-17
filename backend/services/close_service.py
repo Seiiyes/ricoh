@@ -104,24 +104,7 @@ class CloseService:
         if fecha_inicio > fecha_actual:
             raise ValueError("No se puede cerrar un período futuro")
         
-        # 6. Para cierres mensuales, validar que el mes esté completo
-        if tipo_periodo == 'mensual':
-            # Verificar que fecha_inicio sea el primer día del mes
-            if fecha_inicio.day != 1:
-                raise ValueError("Un cierre mensual debe iniciar el día 1 del mes")
-            
-            # Verificar que fecha_fin sea el último día del mes
-            ultimo_dia = calendar.monthrange(fecha_inicio.year, fecha_inicio.month)[1]
-            if fecha_fin.day != ultimo_dia:
-                raise ValueError(f"Un cierre mensual debe terminar el día {ultimo_dia} del mes")
-            
-            # No se puede cerrar el mes actual
-            if fecha_inicio.year == fecha_actual.year and fecha_inicio.month == fecha_actual.month:
-                raise ValueError(
-                    f"No se puede cerrar el mes actual ({fecha_inicio.year}-{fecha_inicio.month:02d}). "
-                    f"Debe esperar a que termine el mes."
-                )
-        
+        # 6. No se valida que sea inicio de mes ni secuencia - el usuario decide el rango libremente
         # 7. Obtener contador más cercano a la fecha de fin del período
         # Para cierres diarios, usar el último contador de ese día
         # Para cierres mensuales, usar el último contador del mes
@@ -135,14 +118,8 @@ class CloseService:
         if not ultimo_contador:
             raise ValueError(f"No hay contadores registrados hasta {fecha_fin} para impresora {printer_id}")
         
-        # 8. Validar que el contador sea reciente (máximo 7 días)
-        fecha_lectura_naive = ultimo_contador.fecha_lectura.replace(tzinfo=None) if ultimo_contador.fecha_lectura.tzinfo else ultimo_contador.fecha_lectura
-        dias_antiguedad = (datetime.now() - fecha_lectura_naive).days
-        if dias_antiguedad > 7:
-            raise ValueError(
-                f"El último contador tiene {dias_antiguedad} días de antigüedad. "
-                f"Ejecute una lectura manual antes de cerrar."
-            )
+        # 8. Nota: La validación de antigüedad se eliminó porque el endpoint
+        # ahora lee los contadores automáticamente antes de crear el cierre
         
         # 9. Obtener cierre anterior (el más reciente antes de este período)
         cierre_anterior = db.query(CierreMensual).filter(
@@ -150,25 +127,7 @@ class CloseService:
             CierreMensual.fecha_fin < fecha_inicio
         ).order_by(CierreMensual.fecha_fin.desc()).first()
         
-        # 10. Para cierres mensuales, validar secuencia
-        if tipo_periodo == 'mensual' and validar_secuencia and cierre_anterior:
-            # Verificar que no haya gaps en cierres mensuales
-            if cierre_anterior.tipo_periodo == 'mensual':
-                # Calcular el mes siguiente al cierre anterior
-                if cierre_anterior.mes == 12:
-                    mes_esperado = 1
-                    anio_esperado = cierre_anterior.anio + 1
-                else:
-                    mes_esperado = cierre_anterior.mes + 1
-                    anio_esperado = cierre_anterior.anio
-                
-                # Verificar que este cierre sea el mes siguiente
-                if fecha_inicio.year != anio_esperado or fecha_inicio.month != mes_esperado:
-                    raise ValueError(
-                        f"Debe cerrar {anio_esperado}-{mes_esperado:02d} antes de cerrar "
-                        f"{fecha_inicio.year}-{fecha_inicio.month:02d}"
-                    )
-        
+        # 10. La validación de secuencia mensual se eliminó para permitir cierres libres
         # 11. Detectar reset de contador
         if cierre_anterior and ultimo_contador.total < cierre_anterior.total_paginas:
             raise ValueError(
@@ -271,6 +230,8 @@ class CloseService:
                 ContadorUsuario.printer_id == printer_id
             ).distinct().all()
             
+            print(f"\n📋 Procesando {len(usuarios_codigos)} usuarios únicos...")
+            
             for (codigo,) in usuarios_codigos:
                 consumo = CloseService._calcular_consumo_usuario(
                     db, printer_id, codigo, fecha_inicio, fecha_fin, cierre_anterior
@@ -301,6 +262,8 @@ class CloseService:
                         consumo_fax=consumo['consumo_fax']
                     )
                     usuarios_snapshot.append(usuario_cierre)
+            
+            print(f"✅ {len(usuarios_snapshot)} usuarios procesados para snapshot")
             
             if not usuarios_snapshot:
                 raise ValueError("No hay usuarios para guardar en snapshot")
@@ -372,14 +335,28 @@ class CloseService:
         Returns:
             Dict con información del consumo o None si no hay datos
         """
-        # Obtener contador más reciente del usuario
+        from sqlalchemy import cast, Date
+        
+        # Obtener contador más reciente del usuario DENTRO DEL PERÍODO
+        fecha_fin_datetime = datetime.combine(fecha_fin, datetime.max.time())
+        
         contador_actual = db.query(ContadorUsuario).filter(
             ContadorUsuario.printer_id == printer_id,
-            ContadorUsuario.codigo_usuario == codigo_usuario
+            ContadorUsuario.codigo_usuario == codigo_usuario,
+            ContadorUsuario.fecha_lectura <= fecha_fin_datetime
         ).order_by(ContadorUsuario.fecha_lectura.desc()).first()
         
         if not contador_actual:
             return None
+        
+        # DEBUG: Imprimir valores del contador actual (solo primeros 5 usuarios)
+        if codigo_usuario in ['1717', '5130', '1923', '9930', '2902']:
+            print(f"   Usuario {codigo_usuario} ({contador_actual.nombre_usuario}):")
+            print(f"      fecha_lectura: {contador_actual.fecha_lectura}")
+            print(f"      total_paginas: {contador_actual.total_paginas}")
+            print(f"      total_bn: {contador_actual.total_bn}")
+            print(f"      copiadora_bn: {contador_actual.copiadora_bn}")
+            print(f"      impresora_bn: {contador_actual.impresora_bn}")
         
         # Si hay cierre anterior, obtener contador del usuario en ese cierre
         contador_anterior = None
@@ -420,12 +397,12 @@ class CloseService:
                                  (contador_inicio.escaner_bn + contador_inicio.escaner_todo_color)
                 consumo_fax = contador_actual.fax_bn - contador_inicio.fax_bn
             else:
-                # Solo hay una lectura en el período, usar el total actual como consumo
-                consumo_total = contador_actual.total_paginas
-                consumo_copiadora = contador_actual.copiadora_bn + contador_actual.copiadora_todo_color
-                consumo_impresora = contador_actual.impresora_bn + contador_actual.impresora_color
-                consumo_escaner = contador_actual.escaner_bn + contador_actual.escaner_todo_color
-                consumo_fax = contador_actual.fax_bn
+                # Solo hay una lectura en el período, consumo = 0 (no hay referencia anterior)
+                consumo_total = 0
+                consumo_copiadora = 0
+                consumo_impresora = 0
+                consumo_escaner = 0
+                consumo_fax = 0
         
         return {
             'codigo_usuario': codigo_usuario,
@@ -474,3 +451,160 @@ class CloseService:
             notas=notas,
             validar_secuencia=True
         )
+
+    @staticmethod
+    def comparar_cierres(
+        db: Session,
+        cierre_antiguo_id: int,
+        cierre_reciente_id: int
+    ) -> Dict:
+        """
+        Compara dos cierres (sin importar si son diarios, semanales o mensuales)
+        calculando el consumo (diferencia) tanto general como por usuario.
+        
+        cierre_antiguo_id: El cierre base (inicial)
+        cierre_reciente_id: El cierre final (el más reciente)
+        
+        Retorna el esquema dict compatible con ComparacionCierresResponse.
+        """
+        cierre_antiguo = db.query(CierreMensual).filter(CierreMensual.id == cierre_antiguo_id).first()
+        cierre_reciente = db.query(CierreMensual).filter(CierreMensual.id == cierre_reciente_id).first()
+        
+        if not cierre_antiguo:
+            raise ValueError(f"Cierre base {cierre_antiguo_id} no encontrado")
+        if not cierre_reciente:
+            raise ValueError(f"Cierre final {cierre_reciente_id} no encontrado")
+            
+        if cierre_antiguo.printer_id != cierre_reciente.printer_id:
+            raise ValueError("Los cierres pertenecen a impresoras diferentes.")
+            
+        if cierre_antiguo.fecha_fin >= cierre_reciente.fecha_inicio:
+            # Aunque la validación estricta exigiría cierre_antiguo.fecha_fin < cierre_reciente.fecha_fin
+            # Es importante advertir pero quizas no bloquear si son solapados,
+            # pero por lógica antigua vs reciente:
+            if cierre_antiguo.fecha_cierre >= cierre_reciente.fecha_cierre:
+                # Intercambiar si están al revés
+                cierre_antiguo, cierre_reciente = cierre_reciente, cierre_antiguo
+
+        # Diferencia de totales del equipo (puede ser negativa si hay correcciones)
+        diferencia_total = cierre_reciente.total_paginas - cierre_antiguo.total_paginas
+        diferencia_copiadora = cierre_reciente.total_copiadora - cierre_antiguo.total_copiadora
+        diferencia_impresora = cierre_reciente.total_impresora - cierre_antiguo.total_impresora
+        diferencia_escaner = cierre_reciente.total_escaner - cierre_antiguo.total_escaner
+        diferencia_fax = cierre_reciente.total_fax - cierre_antiguo.total_fax
+        
+        # Diferencia de días
+        dias_entre_cierres = (cierre_reciente.fecha_cierre.date() - cierre_antiguo.fecha_cierre.date()).days
+        
+        # Comparación de usuarios
+        # 1. Armar mapa de usuarios de ambos cierres por codigo_usuario
+        usuarios_antiguos = {u.codigo_usuario: u for u in cierre_antiguo.usuarios}
+        usuarios_recientes = {u.codigo_usuario: u for u in cierre_reciente.usuarios}
+        
+        codigos_unicos = set(usuarios_antiguos.keys()).union(set(usuarios_recientes.keys()))
+        
+        usuarios_comparacion = []
+        for codigo in codigos_unicos:
+            u_antiguo = usuarios_antiguos.get(codigo)
+            u_reciente = usuarios_recientes.get(codigo)
+            
+            nombre = u_reciente.nombre_usuario if u_reciente else u_antiguo.nombre_usuario
+            
+            # Contadores acumulados
+            total_c1 = u_antiguo.total_paginas if u_antiguo else 0
+            total_c2 = u_reciente.total_paginas if u_reciente else 0
+            
+            # B/N y Color acumulados
+            bn_c1 = u_antiguo.total_bn if u_antiguo else 0
+            bn_c2 = u_reciente.total_bn if u_reciente else 0
+            color_c1 = u_antiguo.total_color if u_antiguo else 0
+            color_c2 = u_reciente.total_color if u_reciente else 0
+            
+            # Diferencia (puede ser negativa si hay correcciones)
+            diferencia = total_c2 - total_c1
+            diferencia_bn = bn_c2 - bn_c1
+            diferencia_color = color_c2 - color_c1
+            
+            porcentaje_cambio = 0.0
+            if total_c1 > 0:
+                porcentaje_cambio = round((diferencia / total_c1) * 100, 2)
+            else:
+                porcentaje_cambio = 100.0 if diferencia > 0 else 0.0
+                
+            usuario_data = {
+                "codigo_usuario": codigo,
+                "nombre_usuario": nombre,
+                "consumo_cierre1": total_c1,
+                "consumo_cierre2": total_c2,
+                "diferencia": diferencia,
+                "diferencia_bn": diferencia_bn,
+                "diferencia_color": diferencia_color,
+                "porcentaje_cambio": porcentaje_cambio,
+                
+                "total_paginas_cierre1": total_c1,
+                "total_paginas_cierre2": total_c2,
+                
+                "consumo_copiadora_cierre1": (u_antiguo.copiadora_bn + u_antiguo.copiadora_color) if u_antiguo else 0,
+                "consumo_impresora_cierre1": (u_antiguo.impresora_bn + u_antiguo.impresora_color) if u_antiguo else 0,
+                "consumo_escaner_cierre1": (u_antiguo.escaner_bn + u_antiguo.escaner_color) if u_antiguo else 0,
+                "consumo_fax_cierre1": u_antiguo.fax_bn if u_antiguo else 0,
+                
+                "consumo_copiadora_cierre2": (u_reciente.copiadora_bn + u_reciente.copiadora_color) if u_reciente else 0,
+                "consumo_impresora_cierre2": (u_reciente.impresora_bn + u_reciente.impresora_color) if u_reciente else 0,
+                "consumo_escaner_cierre2": (u_reciente.escaner_bn + u_reciente.escaner_color) if u_reciente else 0,
+                "consumo_fax_cierre2": u_reciente.fax_bn if u_reciente else 0,
+                
+                # Desglose B/N y Color para cierre 1
+                "copiadora_bn_cierre1": u_antiguo.copiadora_bn if u_antiguo else 0,
+                "copiadora_color_cierre1": u_antiguo.copiadora_color if u_antiguo else 0,
+                "impresora_bn_cierre1": u_antiguo.impresora_bn if u_antiguo else 0,
+                "impresora_color_cierre1": u_antiguo.impresora_color if u_antiguo else 0,
+                "escaner_bn_cierre1": u_antiguo.escaner_bn if u_antiguo else 0,
+                "escaner_color_cierre1": u_antiguo.escaner_color if u_antiguo else 0,
+                
+                # Desglose B/N y Color para cierre 2
+                "copiadora_bn_cierre2": u_reciente.copiadora_bn if u_reciente else 0,
+                "copiadora_color_cierre2": u_reciente.copiadora_color if u_reciente else 0,
+                "impresora_bn_cierre2": u_reciente.impresora_bn if u_reciente else 0,
+                "impresora_color_cierre2": u_reciente.impresora_color if u_reciente else 0,
+                "escaner_bn_cierre2": u_reciente.escaner_bn if u_reciente else 0,
+                "escaner_color_cierre2": u_reciente.escaner_color if u_reciente else 0,
+            }
+            usuarios_comparacion.append(usuario_data)
+            
+        # Separar en listas de aumento y disminución
+        usuarios_comparacion = sorted(usuarios_comparacion, key=lambda x: x['diferencia'], reverse=True)
+        top_aumento = [u for u in usuarios_comparacion if u['diferencia'] > 0]
+        top_disminucion = [u for u in usuarios_comparacion if u['diferencia'] <= 0]
+        
+        activos = len([u for u in usuarios_comparacion if u['diferencia'] != 0])
+        promedio = diferencia_total / activos if activos > 0 else 0
+        
+        # Obtener información de la impresora
+        from db.models import Printer
+        printer = db.query(Printer).filter(Printer.id == cierre_antiguo.printer_id).first()
+        
+        return {
+            "cierre1": cierre_antiguo,
+            "cierre2": cierre_reciente,
+            "printer": {
+                "id": printer.id,
+                "hostname": printer.hostname,
+                "ip_address": printer.ip_address,
+                "location": printer.location,
+                "serial_number": printer.serial_number,
+                "has_color": printer.has_color,
+                "has_scanner": printer.has_scanner,
+                "has_fax": printer.has_fax,
+            } if printer else None,
+            "diferencia_total": diferencia_total,
+            "diferencia_copiadora": diferencia_copiadora,
+            "diferencia_impresora": diferencia_impresora,
+            "diferencia_escaner": diferencia_escaner,
+            "diferencia_fax": diferencia_fax,
+            "dias_entre_cierres": abs(dias_entre_cierres),
+            "top_usuarios_aumento": top_aumento,
+            "top_usuarios_disminucion": top_disminucion,
+            "total_usuarios_activos": activos,
+            "promedio_consumo_por_usuario": round(promedio, 2)
+        }

@@ -2,8 +2,11 @@
 Pydantic schemas for Counter API endpoints
 """
 from pydantic import BaseModel, Field, validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime, date
+
+# Import printer schemas for capabilities
+from .schemas import PrinterResponse, CapabilitiesResponse
 
 
 # ============================================================================
@@ -276,13 +279,24 @@ class CierreMensualDetalleResponse(BaseModel):
     
     # Metadata
     fecha_cierre: datetime
+    fecha_inicio: date
+    fecha_fin: date
     cerrado_por: Optional[str]
     notas: Optional[str]
     hash_verificacion: Optional[str]
     created_at: datetime
     
-    # Usuarios del cierre
+    # Printer info with capabilities
+    printer: Optional[PrinterResponse] = None
+    
+    # Usuarios del cierre (paginados)
     usuarios: List[CierreMensualUsuarioResponse]
+    
+    # Paginación
+    total_usuarios: int = 0
+    page: int = 1
+    page_size: int = 50
+    total_pages: int = 1
     
     class Config:
         from_attributes = True
@@ -294,19 +308,60 @@ class CierreMensualDetalleResponse(BaseModel):
 # ============================================================================
 
 class UsuarioComparacion(BaseModel):
-    """Usuario con comparación entre dos cierres"""
+    """Usuario con comparación entre dos cierres
+    
+    Contiene todos los usuarios sin límite artificial.
+    """
     codigo_usuario: str
     nombre_usuario: str
     consumo_cierre1: int
     consumo_cierre2: int
     diferencia: int
     porcentaje_cambio: float
+    
+    # Campos opcionales para vista detallada
+    total_paginas_cierre1: Optional[int] = None  # Contador acumulado en cierre 1
+    total_paginas_cierre2: Optional[int] = None  # Contador acumulado en cierre 2
+    
+    # Desglose del consumo en cierre 1
+    consumo_copiadora_cierre1: Optional[int] = None
+    consumo_impresora_cierre1: Optional[int] = None
+    consumo_escaner_cierre1: Optional[int] = None
+    consumo_fax_cierre1: Optional[int] = None
+    
+    # Desglose del consumo en cierre 2
+    consumo_copiadora_cierre2: Optional[int] = None
+    consumo_impresora_cierre2: Optional[int] = None
+    consumo_escaner_cierre2: Optional[int] = None
+    consumo_fax_cierre2: Optional[int] = None
+    
+    # Desglose B/N y Color para cierre 1
+    copiadora_bn_cierre1: Optional[int] = None
+    copiadora_color_cierre1: Optional[int] = None
+    impresora_bn_cierre1: Optional[int] = None
+    impresora_color_cierre1: Optional[int] = None
+    escaner_bn_cierre1: Optional[int] = None
+    escaner_color_cierre1: Optional[int] = None
+    
+    # Desglose B/N y Color para cierre 2
+    copiadora_bn_cierre2: Optional[int] = None
+    copiadora_color_cierre2: Optional[int] = None
+    impresora_bn_cierre2: Optional[int] = None
+    impresora_color_cierre2: Optional[int] = None
+    escaner_bn_cierre2: Optional[int] = None
+    escaner_color_cierre2: Optional[int] = None
 
 
 class ComparacionCierresResponse(BaseModel):
-    """Response schema for comparing two closes"""
+    """Response schema for comparing two closes
+    
+    Retorna todos los usuarios sin límite artificial.
+    """
     cierre1: CierreMensualResponse
     cierre2: CierreMensualResponse
+    
+    # Información de la impresora
+    printer: Optional[Dict[str, Any]] = None
     
     # Diferencias de totales
     diferencia_total: int
@@ -318,10 +373,39 @@ class ComparacionCierresResponse(BaseModel):
     # Período entre cierres
     dias_entre_cierres: int
     
-    # Top usuarios con mayor cambio
+    # Todos los usuarios con cambio (sin límite)
     top_usuarios_aumento: List[UsuarioComparacion]
     top_usuarios_disminucion: List[UsuarioComparacion]
     
     # Estadísticas
     total_usuarios_activos: int
     promedio_consumo_por_usuario: float
+
+
+
+# ============================================================================
+# Counter with Printer Info Schemas
+# ============================================================================
+
+class ContadorUsuarioWithPrinterResponse(BaseModel):
+    """Response schema for user counter with printer info including capabilities"""
+    # Counter data
+    counter: ContadorUsuarioResponse
+    
+    # Printer info with capabilities
+    printer: PrinterResponse
+    
+    class Config:
+        from_attributes = True
+
+
+class ReadCounterWithCapabilitiesResponse(BaseModel):
+    """Response schema for read counter operation with printer capabilities"""
+    success: bool
+    printer_id: int
+    contador_total: Optional[ContadorImpresoraResponse]
+    usuarios_count: int
+    error: Optional[str]
+    
+    # Printer info with capabilities
+    printer: Optional[PrinterResponse]

@@ -8,6 +8,7 @@ import os
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 from sqlalchemy.orm import Session
+import logging
 
 # Agregar el directorio backend al path para imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,9 +18,17 @@ from db.database import get_db
 from sqlalchemy import func
 
 # Importar parsers
+# NOTA: Estos parsers fueron movidos durante la limpieza
+# Se han creado stubs temporales para que el backend arranque
 from parsear_contadores import get_printer_counters
 from parsear_contadores_usuario import get_all_user_counters
 from parsear_contador_ecologico import get_all_eco_users
+
+# Importar detector de capacidades
+from services.capabilities_detector import CapabilitiesDetector
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class CounterService:
@@ -192,6 +201,7 @@ class CounterService:
         """
         Lee y guarda contadores por usuario de una impresora
         Detecta automáticamente si usar getUserCounter o getEcoCounter
+        También detecta y actualiza las capacidades de la impresora
         
         Args:
             db: Sesión de base de datos
@@ -207,16 +217,20 @@ class CounterService:
         
         try:
             contadores_creados = []
+            users_data = []
             
             # Determinar qué tipo de contador usar
             if printer.tiene_contador_usuario and not printer.usar_contador_ecologico:
                 # Usar contador por usuario estándar
+                from parsear_contadores_usuario import get_all_user_counters
                 users = get_all_user_counters(printer.ip_address)
                 tipo_contador = "usuario"
                 
                 # Validar que retornó una lista
                 if not isinstance(users, list):
                     raise ValueError(f"get_all_user_counters retornó tipo inválido: {type(users)}")
+                
+                users_data = users
                 
                 for user in users:
                     # Validar datos del usuario

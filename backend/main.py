@@ -27,6 +27,7 @@ from db import Base
 
 # Import API routers
 from api import users_router, printers_router, provisioning_router, discovery_router, counters_router
+from api.export import router as export_router
 
 
 # WebSocket connection manager
@@ -128,6 +129,7 @@ app.include_router(printers_router)
 app.include_router(provisioning_router)
 app.include_router(discovery_router)
 app.include_router(counters_router)
+app.include_router(export_router)
 
 
 # Root endpoint

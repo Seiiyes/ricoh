@@ -1,3 +1,0 @@
-@echo off
-echo Recreando cierres con logica corregida...
-docker exec -it ricoh-backend python recrear_cierres.py

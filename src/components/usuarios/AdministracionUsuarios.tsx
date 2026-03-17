@@ -170,10 +170,6 @@ export const AdministracionUsuarios = () => {
     setUsuarioEditar(null);
   };
 
-  const handleGuardarExitoso = () => {
-    cargarUsuarios();
-    handleCerrarModal();
-  };
 
   // Combinar usuarios de DB con usuarios de impresoras
   const todosLosUsuarios = () => {
@@ -477,7 +473,6 @@ export const AdministracionUsuarios = () => {
         <ModificarUsuario
           usuario={usuarioEditar}
           onCerrar={handleCerrarModal}
-          onGuardar={handleGuardarExitoso}
         />
       )}
     </div>

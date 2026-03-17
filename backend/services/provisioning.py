@@ -2,7 +2,7 @@
 Provisioning service for user-printer assignments
 Handles bulk provisioning operations and communication with Ricoh printers
 """
-from typing import List, Dict
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from datetime import datetime
 import logging
@@ -13,6 +13,7 @@ from db.models import User, Printer, UserPrinterAssignment
 from sqlalchemy import and_
 from services.encryption import get_encryption_service
 from services.ricoh_web_client import get_ricoh_web_client
+from services.retry_strategy import RetryStrategy, load_retry_config_from_env, ErrorType
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,7 @@ class ProvisioningService:
         printer_ids: List[int]
     ) -> Dict:
         """
-        Provision a user to multiple printers
-        Sends complete user configuration to each Ricoh printer via SNMP
+        Provision a user to multiple printers with intelligent retry logic.
         
         Args:
             db: Database session
@@ -38,7 +38,8 @@ class ProvisioningService:
             printer_ids: List of printer IDs to assign
             
         Returns:
-            Dict with provisioning results
+            Dict with provisioning results including overall_success, total_printers,
+            successful_count, failed_count, results list, and summary_message
         """
         # Verify user exists
         user = UserRepository.get_by_id(db, user_id)
@@ -52,6 +53,10 @@ class ProvisioningService:
             if not printer:
                 raise ValueError(f"Printer with ID {printer_id} not found")
             printers.append(printer)
+        
+        # Initialize retry strategy
+        retry_config = load_retry_config_from_env()
+        retry_strategy = RetryStrategy(retry_config)
         
         # Decrypt password for provisioning
         encryption_service = get_encryption_service()
@@ -79,68 +84,148 @@ class ProvisioningService:
             }
         }
         
-        # Provision to each printer
+        # Provision to each printer sequentially
         ricoh_client = get_ricoh_web_client()
-        provisioned_count = 0
-        errors = []
+        results = []
         
-        print(f"\n🔄 Iniciando aprovisionamiento a {len(printers)} impresora(s)...")
+        logger.info(f"Starting provisioning to {len(printers)} printer(s)...")
         
         for printer in printers:
-            try:
-                print(f"\n📡 Provisionando a impresora:")
-                print(f"   ID: {printer.id}")
-                print(f"   IP: {printer.ip_address}")
-                print(f"   Hostname: {printer.hostname}")
-                
-                logger.info(f"Provisioning user {user.name} to printer {printer.hostname} ({printer.ip_address})")
-                
-                # Retry logic for busy printers
-                max_retries = 3
-                retry_delay = 5  # seconds
-                success = False
-                
-                for attempt in range(1, max_retries + 1):
-                    if attempt > 1:
-                        print(f"   🔄 Reintento {attempt}/{max_retries} (esperando {retry_delay}s...)")
-                        time.sleep(retry_delay)
-                    
-                    # Send configuration to printer
-                    result = ricoh_client.provision_user(printer.ip_address, ricoh_payload)
-                    
-                    if result is True:
-                        success = True
-                        break
-                    elif result == "BUSY":
-                        print(f"   ⏳ Impresora ocupada, reintentando...")
-                        continue
-                    else:
-                        # Other error, don't retry
-                        break
-                
-                print(f"   Resultado: {'✅ ÉXITO' if success else '❌ FALLO'}")
-                
-                if success:
-                    # Create assignment in database
-                    AssignmentRepository.create(db, user_id, printer.id)
-                    provisioned_count += 1
-                    logger.info(f"✓ User provisioned to {printer.hostname}")
-                else:
-                    errors.append(f"No se pudo provisionar a {printer.hostname} ({printer.ip_address})")
-            except Exception as e:
-                logger.error(f"Error provisioning to {printer.hostname}: {str(e)}")
-                errors.append(f"Error en {printer.hostname}: {str(e)}")
+            result = ProvisioningService._provision_to_single_printer(
+                db=db,
+                user=user,
+                printer=printer,
+                ricoh_payload=ricoh_payload,
+                ricoh_client=ricoh_client,
+                retry_strategy=retry_strategy
+            )
+            results.append(result)
+        
+        # Calculate summary
+        successful = [r for r in results if r['status'] == 'success']
+        failed = [r for r in results if r['status'] == 'failed']
         
         return {
-            "success": provisioned_count > 0,
-            "user_id": user_id,
-            "user_name": user.name,
-            "printers_provisioned": provisioned_count,
-            "printer_ids": [p.id for p in printers[:provisioned_count]],
-            "provisioned_at": datetime.utcnow().isoformat(),
-            "message": f"Usuario '{user.name}' provisionado exitosamente a {provisioned_count}/{len(printers)} impresora(s)",
-            "errors": errors if errors else None
+            "overall_success": len(successful) > 0,
+            "total_printers": len(printers),
+            "successful_count": len(successful),
+            "failed_count": len(failed),
+            "results": results,
+            "summary_message": f"Usuario '{user.name}' provisionado exitosamente a {len(successful)}/{len(printers)} impresora(s)"
         }
+    
+    @staticmethod
+    def _classify_provisioning_result(result) -> Optional[ErrorType]:
+        """
+        Classify provisioning result into error type.
+        
+        Args:
+            result: Return value from ricoh_client.provision_user()
+            
+        Returns:
+            ErrorType if error, None if success
+        """
+        if result is True:
+            return None  # Success
+        elif result == "BUSY":
+            return 'BUSY'
+        elif result == "BADFLOW":
+            return 'BADFLOW'
+        elif result == "TIMEOUT":
+            return 'TIMEOUT'
+        elif result == "CONNECTION":
+            return 'CONNECTION'
+        else:
+            return 'OTHER'  # Generic failure
+    
+    @staticmethod
+    def _format_error_message(error_type: ErrorType, result=None) -> str:
+        """Format user-friendly error message in Spanish"""
+        messages = {
+            'BUSY': 'La impresora está ocupada. El dispositivo está siendo utilizado por otras funciones.',
+            'BADFLOW': 'Error de protección anti-scraping. La sesión con la impresora es inválida.',
+            'TIMEOUT': 'Tiempo de espera agotado al conectar con la impresora.',
+            'CONNECTION': 'No se pudo conectar con la impresora.',
+            'OTHER': 'Error desconocido durante el aprovisionamiento.'
+        }
+        return messages.get(error_type, 'Error desconocido')
+    
+    @staticmethod
+    def _provision_to_single_printer(
+        db: Session,
+        user,
+        printer,
+        ricoh_payload: Dict,
+        ricoh_client,
+        retry_strategy: RetryStrategy
+    ) -> Dict:
+        """
+        Provision user to a single printer with retry logic.
+        
+        Returns:
+            Dict with printer_id, hostname, ip_address, status, error_message, retry_attempts, provisioned_at
+        """
+        logger.info(f"Provisioning user {user.name} to printer {printer.hostname} ({printer.ip_address})")
+        
+        start_time = time.time()
+        attempt = 0
+        last_error_type = None
+        
+        while True:
+            attempt += 1
+            logger.info(f"Attempt {attempt} for printer {printer.ip_address}")
+            
+            # Attempt provisioning
+            result = ricoh_client.provision_user(printer.ip_address, ricoh_payload)
+            
+            # Classify error
+            error_type = ProvisioningService._classify_provisioning_result(result)
+            
+            if error_type is None:
+                # Success!
+                elapsed = time.time() - start_time
+                logger.info(f"✓ User provisioned to {printer.hostname} after {attempt} attempt(s) in {elapsed:.1f}s")
+                
+                # Create assignment in database
+                AssignmentRepository.create(db, user.id, printer.id)
+                
+                return {
+                    "printer_id": printer.id,
+                    "hostname": printer.hostname,
+                    "ip_address": printer.ip_address,
+                    "status": "success",
+                    "error_message": None,
+                    "retry_attempts": attempt - 1,
+                    "provisioned_at": datetime.utcnow().isoformat()
+                }
+            
+            # Handle BADFLOW with session reset
+            if error_type == 'BADFLOW' and attempt == 1:
+                logger.warning(f"BADFLOW detected, resetting session...")
+                ricoh_client.reset_session()
+            
+            # Check if should retry
+            should_retry, delay = retry_strategy.should_retry(error_type, attempt)
+            
+            if not should_retry:
+                elapsed = time.time() - start_time
+                error_msg = ProvisioningService._format_error_message(error_type, result)
+                logger.error(f"✗ Provisioning failed to {printer.hostname} after {attempt} attempts in {elapsed:.1f}s: {error_msg}")
+                
+                return {
+                    "printer_id": printer.id,
+                    "hostname": printer.hostname,
+                    "ip_address": printer.ip_address,
+                    "status": "failed",
+                    "error_message": error_msg,
+                    "retry_attempts": attempt - 1,
+                    "provisioned_at": None
+                }
+            
+            # Wait before retry
+            if delay > 0:
+                logger.info(f"Waiting {delay}s before retry...")
+                time.sleep(delay)
     
     @staticmethod
     def get_user_provisioning_status(db: Session, user_id: int) -> Dict:

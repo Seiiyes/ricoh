@@ -18,13 +18,15 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
   onViewDetalle
 }) => {
   const formatNumber = (num: number) => num.toLocaleString('es-ES');
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-ES');
+  const formatDate = (dateStr: string) => {
+    // Para evitar el desfase de zona horaria con YYYY-MM-DD (que JS asume como UTC)
+    // forzamos la interpretación como hora local añadiendo T00:00:00
+    const date = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+    return date.toLocaleDateString('es-ES');
+  };
 
   console.log('ListaCierres rendered with:', { printer, year, tipoPeriodo, cierresCount: cierres.length });
 
-  const handleCreateClick = (cierre: CierreMensual) => {
-    onCreateCierre(cierre.fecha_inicio, cierre.fecha_fin);
-  };
 
   if (cierres.length === 0) {
     return (
@@ -40,14 +42,14 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
         </p>
         <button
           onClick={() => {
-            // Crear cierre del mes actual
-            const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            onCreateCierre(
-              firstDay.toISOString().split('T')[0],
-              lastDay.toISOString().split('T')[0]
-            );
+            // Crear cierre del día actual
+            const hoy = new Date();
+            const year = hoy.getFullYear();
+            const month = String(hoy.getMonth() + 1).padStart(2, '0');
+            const day = String(hoy.getDate()).padStart(2, '0');
+            const fechaHoy = `${year}-${month}-${day}`;
+            
+            onCreateCierre(fechaHoy, fechaHoy);
           }}
           className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
         >
@@ -114,48 +116,64 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
                 </p>
               </div>
 
-              {/* Totales */}
-              <div className="space-y-2 mb-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total páginas:</span>
-                  <span className="font-semibold text-gray-900">
-                    {formatNumber(cierre.total_paginas)}
-                  </span>
+              {/* Totales Acumulados */}
+              <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-blue-900 uppercase">Total Acumulado</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Consumo período:</span>
-                  <span className={`font-semibold ${
-                    cierre.diferencia_total > 0 ? 'text-green-600' : 'text-gray-400'
-                  }`}>
-                    {cierre.diferencia_total > 0 ? '+' : ''}{formatNumber(cierre.diferencia_total)}
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-blue-700">Total páginas:</span>
+                  <span className="text-2xl font-bold text-blue-900">
+                    {formatNumber(cierre.total_paginas)}
                   </span>
                 </div>
               </div>
 
-              {/* Desglose */}
-              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
-                <div>
-                  <span className="block">Copiadora:</span>
-                  <span className="font-medium text-gray-900">
-                    {formatNumber(cierre.diferencia_copiadora)}
+              {/* Desglose de Totales Acumulados */}
+              <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div className="bg-gray-50 rounded p-2">
+                  <span className="block text-gray-600 mb-1">📋 Copiadora</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatNumber(cierre.total_copiadora)}
                   </span>
                 </div>
-                <div>
-                  <span className="block">Impresora:</span>
-                  <span className="font-medium text-gray-900">
-                    {formatNumber(cierre.diferencia_impresora)}
+                <div className="bg-gray-50 rounded p-2">
+                  <span className="block text-gray-600 mb-1">🖨️ Impresora</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatNumber(cierre.total_impresora)}
                   </span>
                 </div>
-                <div>
-                  <span className="block">Escáner:</span>
-                  <span className="font-medium text-gray-900">
-                    {formatNumber(cierre.diferencia_escaner)}
+                <div className="bg-gray-50 rounded p-2">
+                  <span className="block text-gray-600 mb-1">📷 Escáner</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatNumber(cierre.total_escaner)}
                   </span>
                 </div>
-                <div>
-                  <span className="block">Fax:</span>
-                  <span className="font-medium text-gray-900">
-                    {formatNumber(cierre.diferencia_fax)}
+                <div className="bg-gray-50 rounded p-2">
+                  <span className="block text-gray-600 mb-1">📠 Fax</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatNumber(cierre.total_fax)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Consumo del Período */}
+              <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  <span className="text-xs font-semibold text-green-900 uppercase">Consumo del Período</span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-green-700">Páginas consumidas:</span>
+                  <span className={`text-xl font-bold ${
+                    cierre.diferencia_total > 0 ? 'text-green-600' : 'text-gray-400'
+                  }`}>
+                    {cierre.diferencia_total > 0 ? '+' : ''}{formatNumber(cierre.diferencia_total)}
                   </span>
                 </div>
               </div>
@@ -184,33 +202,50 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
       <div className="bg-white rounded-lg shadow p-4">
         <button
           onClick={() => {
-            // Calcular siguiente período basado en el último cierre
-            const ultimoCierre = cierres[0]; // Asumiendo que están ordenados
-            const fechaFin = new Date(ultimoCierre.fecha_fin);
-            fechaFin.setDate(fechaFin.getDate() + 1);
-            
             let nuevaFechaInicio: Date;
             let nuevaFechaFin: Date;
 
             if (tipoPeriodo === 'diario') {
-              nuevaFechaInicio = fechaFin;
-              nuevaFechaFin = fechaFin;
-            } else if (tipoPeriodo === 'semanal') {
-              nuevaFechaInicio = fechaFin;
-              nuevaFechaFin = new Date(fechaFin);
-              nuevaFechaFin.setDate(nuevaFechaFin.getDate() + 6);
-            } else if (tipoPeriodo === 'mensual') {
-              nuevaFechaInicio = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), 1);
-              nuevaFechaFin = new Date(fechaFin.getFullYear(), fechaFin.getMonth() + 1, 0);
+              // Para cierre diario, usar la fecha actual del sistema (hora local)
+              const hoy = new Date();
+              // Crear fecha en hora local sin conversión UTC
+              const year = hoy.getFullYear();
+              const month = hoy.getMonth();
+              const day = hoy.getDate();
+              nuevaFechaInicio = new Date(year, month, day);
+              nuevaFechaFin = new Date(year, month, day);
             } else {
-              nuevaFechaInicio = fechaFin;
-              nuevaFechaFin = new Date(fechaFin);
-              nuevaFechaFin.setDate(nuevaFechaFin.getDate() + 7);
+              // Para otros tipos, calcular basado en el último cierre
+              const ultimoCierre = cierres[0]; // Asumiendo que están ordenados
+              const fechaFin = new Date(ultimoCierre.fecha_fin);
+              fechaFin.setDate(fechaFin.getDate() + 1);
+              
+              if (tipoPeriodo === 'semanal') {
+                nuevaFechaInicio = fechaFin;
+                nuevaFechaFin = new Date(fechaFin);
+                nuevaFechaFin.setDate(nuevaFechaFin.getDate() + 6);
+              } else if (tipoPeriodo === 'mensual') {
+                nuevaFechaInicio = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), 1);
+                nuevaFechaFin = new Date(fechaFin.getFullYear(), fechaFin.getMonth() + 1, 0);
+              } else {
+                // personalizado
+                nuevaFechaInicio = fechaFin;
+                nuevaFechaFin = new Date(fechaFin);
+                nuevaFechaFin.setDate(nuevaFechaFin.getDate() + 7);
+              }
             }
 
+            // Formatear fecha en formato YYYY-MM-DD usando hora local
+            const formatLocalDate = (date: Date) => {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            };
+
             onCreateCierre(
-              nuevaFechaInicio.toISOString().split('T')[0],
-              nuevaFechaFin.toISOString().split('T')[0]
+              formatLocalDate(nuevaFechaInicio),
+              formatLocalDate(nuevaFechaFin)
             );
           }}
           className="w-full px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"

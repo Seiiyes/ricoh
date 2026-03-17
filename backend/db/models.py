@@ -2,10 +2,13 @@
 SQLAlchemy ORM Models
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Text, Enum
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime, date
 import enum
+import json
+from typing import Optional
 
 from .database import Base
 
@@ -95,6 +98,11 @@ class Printer(Base):
     # Counter capabilities
     tiene_contador_usuario = Column(Boolean, default=True, nullable=False)  # Tiene getUserCounter.cgi
     usar_contador_ecologico = Column(Boolean, default=False, nullable=False)  # Usar getEcoCounter.cgi para usuarios
+    formato_contadores = Column(String(50), default='estandar', nullable=False)  # Formato: 'estandar' (18 cols), 'simplificado' (13 cols), 'ecologico'
+    
+    # Capabilities JSON (new field from migration 010)
+    capabilities_json = Column(JSONB, nullable=True)
+    inconsistency_count = Column(Integer, default=0, nullable=False)
     
     # Toner levels (0-100)
     toner_cyan = Column(Integer, default=0)
@@ -114,6 +122,59 @@ class Printer(Base):
         back_populates="printer",
         cascade="all, delete-orphan"
     )
+
+    @property
+    def capabilities(self) -> Optional[dict]:
+        """
+        Get printer capabilities from capabilities_json field
+        
+        Returns:
+            Optional[dict]: Capabilities dictionary or None if not set
+        """
+        if self.capabilities_json:
+            return self.capabilities_json
+        return None
+    
+    def update_capabilities(self, new_capabilities: dict, manual: bool = False) -> None:
+        """
+        Update printer capabilities with merge logic
+        
+        If manual=False (automatic detection):
+        - Respects manual_override flag (won't update if manual_override=True)
+        - Merges with existing capabilities (preserves True values)
+        
+        If manual=True (manual update):
+        - Always updates capabilities
+        - Sets manual_override=True
+        
+        Args:
+            new_capabilities: New capabilities dictionary
+            manual: Whether this is a manual update
+        """
+        from models.capabilities import Capabilities
+        
+        if manual:
+            # Manual update: always apply and set manual_override
+            new_capabilities['manual_override'] = True
+            self.capabilities_json = new_capabilities
+            self.updated_at = datetime.utcnow()
+        else:
+            # Automatic update: respect manual_override and merge
+            if self.capabilities_json and self.capabilities_json.get('manual_override', False):
+                # Don't update if manual_override is set
+                return
+            
+            if self.capabilities_json:
+                # Merge with existing capabilities
+                existing = Capabilities.from_json(self.capabilities_json)
+                new = Capabilities.from_json(new_capabilities)
+                merged = existing.merge(new)
+                self.capabilities_json = merged.to_json()
+            else:
+                # First time: just set the capabilities
+                self.capabilities_json = new_capabilities
+            
+            self.updated_at = datetime.utcnow()
 
     def __repr__(self):
         return f"<Printer(id={self.id}, hostname='{self.hostname}', ip='{self.ip_address}', status='{self.status}')>"

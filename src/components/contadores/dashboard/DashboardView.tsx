@@ -77,7 +77,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToPrinte
           <div className="flex items-center gap-3">
             <BarChart3 className="text-ricoh-red" size={24} />
             <h1 className="text-xl font-bold text-industrial-gray uppercase tracking-tight">
-              Dashboard de Contadores
+              Resumen de Contadores
             </h1>
           </div>
           <button

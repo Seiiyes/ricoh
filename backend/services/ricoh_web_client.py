@@ -211,7 +211,7 @@ class RicohWebClient:
             logger.error(f"❌ Error durante autenticación: {e}")
             return False
     
-    def provision_user(self, printer_ip: str, user_config: Dict) -> bool:
+    def provision_user(self, printer_ip: str, user_config: Dict):
         """
         Provision a user to a Ricoh printer via web interface
         
@@ -220,7 +220,12 @@ class RicohWebClient:
             user_config: User configuration dictionary
         
         Returns:
-            True if successful, False otherwise
+            True if successful
+            "BUSY" if printer is busy
+            "BADFLOW" if anti-scraping protection triggered
+            "TIMEOUT" if connection timeout
+            "CONNECTION" if connection error
+            False for other errors
         """
         try:
             print(f"\n{'='*70}")
@@ -430,10 +435,10 @@ class RicohWebClient:
                 
         except requests.exceptions.Timeout:
             logger.error(f"✗ Connection timeout to printer at {printer_ip}")
-            return False
+            return "TIMEOUT"
         except requests.exceptions.ConnectionError:
             logger.error(f"✗ Cannot connect to printer at {printer_ip}")
-            return False
+            return "CONNECTION"
         except Exception as e:
             logger.error(f"✗ Error provisioning user to {printer_ip}: {e}")
             return False

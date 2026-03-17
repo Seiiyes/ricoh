@@ -82,7 +82,7 @@ export const PrinterDetailView: React.FC<PrinterDetailViewProps> = ({
             <button
               onClick={onNavigateBack}
               className="text-slate-600 hover:text-slate-900 transition-colors"
-              aria-label="Volver al dashboard"
+              aria-label="Volver al resumen"
             >
               <ArrowLeft size={20} />
             </button>
@@ -124,7 +124,7 @@ export const PrinterDetailView: React.FC<PrinterDetailViewProps> = ({
               onClick={onNavigateBack}
               className="text-ricoh-red hover:underline"
             >
-              Volver al dashboard
+              Volver al resumen
             </button>
           </div>
         ) : (
@@ -133,10 +133,10 @@ export const PrinterDetailView: React.FC<PrinterDetailViewProps> = ({
             <PrinterIdentification printer={printer} counter={counter} />
             
             {/* Counter Breakdown */}
-            <CounterBreakdown counter={counter} />
+            <CounterBreakdown counter={counter} capabilities={printer.capabilities} />
             
             {/* User Counter Table */}
-            <UserCounterTable userCounters={userCounters} />
+            <UserCounterTable userCounters={userCounters} printer={printer} />
           </>
         )}
       </div>

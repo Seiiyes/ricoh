@@ -79,8 +79,8 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
           u.codigo_de_usuario.toLowerCase().includes(busquedaLower) ||
           (u.empresa && u.empresa.toLowerCase().includes(busquedaLower)) ||
           (u.centro_costos && u.centro_costos.toLowerCase().includes(busquedaLower)) ||
-          (u.email && u.email.toLowerCase().includes(busquedaLower)) ||
-          (u.department && u.department.toLowerCase().includes(busquedaLower))
+          (u.empresa && u.empresa.toLowerCase().includes(busquedaLower)) ||
+          (u.centro_costos && u.centro_costos.toLowerCase().includes(busquedaLower))
       );
     }
     

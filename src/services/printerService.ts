@@ -91,16 +91,17 @@ export async function fetchPrinters(): Promise<PrinterDevice[]> {
       ip_address: printer.ip_address,
       status: printer.status,
       location: printer.location,
+      empresa: printer.empresa,
+      serial_number: printer.serial_number,
       toner_levels: {
         cyan: printer.toner_cyan,
         magenta: printer.toner_magenta,
         yellow: printer.toner_yellow,
         black: printer.toner_black,
       },
-      capabilities: {
-        color: printer.has_color,
-        scanner: printer.has_scanner,
-      },
+      has_color: printer.has_color,
+      has_scanner: printer.has_scanner,
+      capabilities: printer.capabilities, // Full capabilities from backend
     }));
   } catch (error) {
     console.error('Failed to fetch printers:', error);

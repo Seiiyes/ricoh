@@ -9,9 +9,10 @@ from typing import List
 import logging
 
 from db.database import get_db
-from db.repository import UserRepository
+from db.repository import UserRepository, PrinterRepository
 from services.encryption import get_encryption_service
-from .schemas import UserCreate, UserUpdate, UserResponse, MessageResponse
+from services.provisioning import ProvisioningService
+from .schemas import UserCreate, UserUpdate, UserResponse, MessageResponse, UserCreateResponse
 
 router = APIRouter(prefix="/users", tags=["users"])
 logger = logging.getLogger(__name__)
@@ -38,10 +39,10 @@ async def debug_user_creation(request: Request):
     return {"received": body.decode('utf-8')}
 
 
-@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=UserCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
-    Create a new user with complete configuration
+    Create a new user with optional automatic provisioning to printers
     Accepts both nested and flat data structures
     """
     import logging
@@ -52,6 +53,17 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     logger.info(f"   Código: {user.codigo_de_usuario}")
     logger.info(f"   Empresa: {user.empresa}")
     logger.info(f"   Centro costos: {user.centro_costos}")
+    
+    # Validate printer IDs if provided
+    if user.printer_ids:
+        logger.info(f"   Printer IDs: {user.printer_ids}")
+        for printer_id in user.printer_ids:
+            printer = PrinterRepository.get_by_id(db, printer_id)
+            if not printer:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Printer with ID {printer_id} not found"
+                )
     
     # Check if codigo_de_usuario already exists
     existing_codigo = UserRepository.get_by_codigo(db, user.codigo_de_usuario)
@@ -116,6 +128,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     encrypted_password = encryption_service.encrypt(raw_password)
     
     try:
+        # Create user in database
         new_user = UserRepository.create(
             db,
             name=user.name,
@@ -137,7 +150,38 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
             centro_costos=user.centro_costos
         )
         logger.info(f"✅ User created successfully: ID={new_user.id}")
-        return new_user
+        
+        # Automatic provisioning if printer IDs provided
+        provisioning_results = None
+        if user.printer_ids:
+            logger.info(f"🔄 Starting automatic provisioning to {len(user.printer_ids)} printer(s)...")
+            try:
+                provisioning_results = ProvisioningService.provision_user_to_printers(
+                    db=db,
+                    user_id=new_user.id,
+                    printer_ids=user.printer_ids
+                )
+                logger.info(f"✅ Provisioning completed: {provisioning_results['successful_count']}/{provisioning_results['total_printers']} successful")
+            except Exception as prov_error:
+                logger.error(f"❌ Provisioning error: {prov_error}")
+                # Don't fail user creation if provisioning fails
+                provisioning_results = {
+                    "overall_success": False,
+                    "total_printers": len(user.printer_ids),
+                    "successful_count": 0,
+                    "failed_count": len(user.printer_ids),
+                    "results": [],
+                    "summary_message": f"Error durante aprovisionamiento: {str(prov_error)}"
+                }
+        
+        # Build response
+        response_data = {
+            **new_user.__dict__,
+            "provisioning_results": provisioning_results
+        }
+        
+        return response_data
+        
     except Exception as e:
         logger.error(f"❌ Error creating user: {e}")
         raise HTTPException(

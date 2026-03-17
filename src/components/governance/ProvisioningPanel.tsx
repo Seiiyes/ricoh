@@ -9,7 +9,7 @@ import { fetchPrinters, createUser, provisionUser, connectWebSocket, updatePrint
 import type { PrinterDevice } from "@/types";
 
 export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscoveryOnly?: boolean }) => {
-  const { logs, addLog, printers, isLoading, setPrinters, setLoading, selectedPrinters, clearSelection } = usePrinterStore();
+  const { printers, isLoading, setPrinters, setLoading, selectedPrinters, clearSelection } = usePrinterStore();
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPrinter, setEditingPrinter] = useState<PrinterDevice | null>(null);
@@ -29,8 +29,6 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
   const [funcFax, setFuncFax] = useState(false);
   const [funcScanner, setFuncScanner] = useState(true); // Default enabled
   const [funcBrowser, setFuncBrowser] = useState(false);
-  
-  const logsEndRef = useRef<HTMLDivElement>(null);
 
   // Extract server from SMB path automatically
   const extractServerFromPath = (path: string): string => {
@@ -48,12 +46,8 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
         setLoading(true);
         const result = await fetchPrinters();
         setPrinters(result);
-        if (result.length > 0) {
-          addLog(`Cargadas ${result.length} impresora(s) desde la base de datos`, 'success');
-        }
       } catch (error) {
         console.error('Error al cargar impresoras:', error);
-        addLog('Error al cargar impresoras desde la base de datos', 'error');
       } finally {
         setLoading(false);
       }
@@ -63,21 +57,13 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
 
     // Connect to WebSocket for real-time logs
     const ws = connectWebSocket((event) => {
-      addLog(event.message, event.type);
+      // WebSocket events - no longer logging to UI
     });
-
-    // Add initial connection log
-    addLog('Sistema listo para configurar usuarios', 'success');
 
     return () => {
       ws.close();
     };
-  }, [setPrinters, setLoading, addLog]);
-
-  // Auto-scroll to bottom when new logs arrive
-  useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
+  }, [setPrinters, setLoading]);
 
   const handleDiscoveryComplete = async () => {
     // Reload printers after discovery
@@ -85,7 +71,6 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
       setLoading(true);
       const result = await fetchPrinters();
       setPrinters(result);
-      addLog(`Equipos actualizados: ${result.length} impresora(s) disponible(s)`, 'success');
     } catch (error) {
       console.error('Error al recargar impresoras:', error);
     } finally {
@@ -101,7 +86,6 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
   const handleSavePrinter = async (printerId: string, updates: any) => {
     try {
       await updatePrinter(parseInt(printerId), updates);
-      addLog(`Impresora actualizada: ${updates.hostname || 'Sin nombre'}`, 'success');
       
       // Reload printers
       const result = await fetchPrinters();
@@ -114,43 +98,35 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
 
   const handleRefreshPrinter = async (printer: PrinterDevice) => {
     try {
-      addLog(`Consultando SNMP para ${printer.hostname}...`, 'info');
       await refreshPrinterSNMP(parseInt(printer.id));
-      addLog(`Datos SNMP actualizados para ${printer.hostname}`, 'success');
       
       // Reload printers
       const result = await fetchPrinters();
       setPrinters(result);
     } catch (error) {
       console.error('Error al refrescar SNMP:', error);
-      addLog(`Error al consultar SNMP: ${error instanceof Error ? error.message : 'Error desconocido'}`, 'error');
     }
   };
 
   const handleProvision = async () => {
     if (!userName.trim() || !userPin.trim()) {
-      addLog('Por favor ingresa nombre de usuario y código de usuario', 'error');
       return;
     }
 
     if (!networkPassword.trim()) {
-      addLog('Por favor ingresa la contraseña de autenticación de carpeta', 'error');
       return;
     }
 
     if (!funcCopier && !funcPrinter && !funcDocumentServer && !funcFax && !funcScanner && !funcBrowser) {
-      addLog('Por favor selecciona al menos una función disponible', 'error');
       return;
     }
 
     if (selectedPrinters.length === 0) {
-      addLog('Por favor selecciona al menos una impresora', 'error');
       return;
     }
 
     try {
       setIsProvisioning(true);
-      addLog(`Creando usuario: ${userName}...`, 'info');
 
       // Create user with new fields
       const smbServer = extractServerFromPath(smbPath);
@@ -176,9 +152,6 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
         },
       });
 
-      addLog(`Usuario creado: ${user.name} (ID: ${user.id})`, 'success');
-      addLog(`Enviando configuración a ${selectedPrinters.length} impresora(s)...`, 'info');
-
       // Convert selected printer IDs to numbers
       const printerIds = selectedPrinters.map(id => {
         // If ID is string like "192-168-1-100", find the actual printer ID
@@ -191,15 +164,11 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
       console.log('🔍 Debug - User ID:', user.id);
 
       if (printerIds.length === 0) {
-        addLog('❌ Error: No se pudieron convertir los IDs de impresoras', 'error');
         return;
       }
 
       // Provision user to printers
       const result = await provisionUser(user.id, printerIds);
-
-      addLog(result.message, 'success');
-      addLog(`✓ Configuración enviada exitosamente`, 'success');
 
       // Clear form
       setUserName('');
@@ -218,7 +187,6 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
 
     } catch (error) {
       console.error('Configuración fallida:', error);
-      addLog(`Error al configurar usuario: ${error instanceof Error ? error.message : 'Error desconocido'}`, 'error');
     } finally {
       setIsProvisioning(false);
     }
@@ -495,28 +463,6 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
               ))
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Bottom: Live Console */}
-      <div className="h-48 bg-industrial-gray text-emerald-400 font-mono text-[11px] p-4 overflow-hidden border-t-4 border-ricoh-red">
-        <div className="flex items-center gap-2 mb-2 text-slate-400 border-b border-slate-700 pb-2">
-          <TerminalIcon size={14} />
-          <span className="uppercase tracking-widest text-[9px]">Registro de Actividad</span>
-        </div>
-        <div className="overflow-y-auto h-32 space-y-1 custom-scrollbar">
-          {logs.length === 0 && <div className="text-slate-600 italic">No hay actividad registrada. Esperando configuración...</div>}
-          {logs.map(log => (
-            <div key={log.id} className="flex gap-3">
-              <span className="text-slate-500">[{log.timestamp}]</span>
-              <span className={
-                log.type === 'error' ? 'text-red-400' : 
-                log.type === 'success' ? 'text-emerald-400' :
-                log.type === 'warning' ? 'text-yellow-400' : ''
-              }>{log.message}</span>
-            </div>
-          ))}
-          <div ref={logsEndRef} />
         </div>
       </div>
 
