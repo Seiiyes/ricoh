@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Save } from 'lucide-react';
+import { Modal, Button, Input } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 
 interface EditPrinterModalProps {
@@ -46,123 +47,73 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-industrial-gray uppercase tracking-tight">
-            Editar Impresora
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Editar Impresora"
+      size="md"
+    >
+      <div className="space-y-4">
+        {/* Hostname */}
+        <Input
+          label="Nombre"
+          value={hostname}
+          onChange={(e) => setHostname(e.target.value)}
+          placeholder="Nombre de la impresora"
+        />
 
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          {/* Hostname */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-              Nombre
-            </label>
-            <input
-              type="text"
-              value={hostname}
-              onChange={(e) => setHostname(e.target.value)}
-              className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
-              placeholder="Nombre de la impresora"
-            />
-          </div>
+        {/* IP Address (read-only) */}
+        <Input
+          label="Dirección IP"
+          value={printer.ip_address}
+          disabled
+        />
 
-          {/* IP Address (read-only) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-              Dirección IP
-            </label>
-            <input
-              type="text"
-              value={printer.ip_address}
-              disabled
-              className="w-full border border-slate-300 rounded px-4 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
-            />
-          </div>
+        {/* Location */}
+        <Input
+          label="Ubicación"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Ej: Oficina Principal - Piso 2"
+        />
 
-          {/* Location */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-              Ubicación
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
-              placeholder="Ej: Oficina Principal - Piso 2"
-            />
-          </div>
+        {/* Empresa */}
+        <Input
+          label="Empresa"
+          value={empresa}
+          onChange={(e) => setEmpresa(e.target.value)}
+          placeholder="Ej: ACME Corp"
+        />
 
-          {/* Empresa */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-              Empresa
-            </label>
-            <input
-              type="text"
-              value={empresa}
-              onChange={(e) => setEmpresa(e.target.value)}
-              className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
-              placeholder="Ej: ACME Corp"
-            />
-          </div>
-
-          {/* Serial Number / ID Máquina */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-              ID Máquina (Serial)
-            </label>
-            <input
-              type="text"
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
-              className="w-full border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
-              placeholder="Ej: E174M210096"
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              💡 No confundir con el hostname. El ID máquina aparece en la web de la impresora.
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !hostname.trim()}
-            className="flex items-center gap-2 bg-ricoh-red text-white px-6 py-2 rounded font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Guardando...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                Guardar
-              </>
-            )}
-          </button>
+        {/* Serial Number / ID Máquina */}
+        <div>
+          <Input
+            label="ID Máquina (Serial)"
+            value={serialNumber}
+            onChange={(e) => setSerialNumber(e.target.value)}
+            placeholder="Ej: E174M210096"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            💡 No confundir con el hostname. El ID máquina aparece en la web de la impresora.
+          </p>
         </div>
       </div>
-    </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-6 border-t border-slate-200 bg-slate-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+        <Button variant="ghost" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button
+          variant="primary"
+          icon={<Save size={16} />}
+          onClick={handleSave}
+          loading={isSaving}
+          disabled={!hostname.trim()}
+        >
+          Guardar
+        </Button>
+      </div>
+    </Modal>
   );
 };

@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui";
 import { Printer, Scan, Pipette, Edit2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrinterStore } from "@/store/usePrinterStore";
@@ -50,28 +51,28 @@ export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onR
         </div>
         <div className="flex items-center gap-2">
           {onRefresh && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<RefreshCw size={14} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onRefresh();
               }}
-              className="p-1.5 hover:bg-slate-200 rounded transition-colors"
               title="Actualizar datos SNMP"
-            >
-              <RefreshCw size={14} className="text-slate-600" />
-            </button>
+            />
           )}
           {onEdit && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Edit2 size={14} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1.5 hover:bg-slate-200 rounded transition-colors"
               title="Editar impresora"
-            >
-              <Edit2 size={14} className="text-slate-600" />
-            </button>
+            />
           )}
           <div className={cn(
             "h-2 w-2 rounded-full",

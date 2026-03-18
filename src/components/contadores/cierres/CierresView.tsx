@@ -4,6 +4,8 @@ import { ListaCierres } from './ListaCierres';
 import { CierreModal } from './CierreModal';
 import { CierreDetalleModal } from './CierreDetalleModal';
 import { ComparacionPage } from './ComparacionPage';
+import { Button, Spinner, Alert } from '@/components/ui';
+import { RefreshCw, Plus, BarChart3 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -107,46 +109,46 @@ export const CierresView: React.FC = () => {
             </select>
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={loadCierres}
-            disabled={!selectedPrinter || loading}
-            className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-1.5 disabled:opacity-40"
+            loading={loading}
+            disabled={!selectedPrinter}
+            icon={<RefreshCw size={16} />}
           >
-            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
             Actualizar
-          </button>
+          </Button>
 
           <div className="flex-1" />
 
           {cierres.length >= 2 && (
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setVistaActual('comparacion')}
-              className="px-4 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+              icon={<BarChart3 size={16} />}
+              className="bg-indigo-600 hover:bg-indigo-700"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
               Comparar cierres ({cierres.length})
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
+            size="sm"
             onClick={() => setCierreModalOpen(true)}
             disabled={!selectedPrinter}
-            className="px-5 py-1.5 bg-red-600 text-white rounded-md text-sm font-bold hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-40"
+            icon={<Plus size={16} />}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
             Crear Cierre
-          </button>
+          </Button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">{error}</div>
+        <Alert variant="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       {!selectedPrinter ? (
@@ -155,8 +157,7 @@ export const CierresView: React.FC = () => {
         </div>
       ) : loading ? (
         <div className="bg-white rounded-lg shadow p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando cierres...</p>
+          <Spinner size="lg" text="Cargando cierres..." />
         </div>
       ) : (
         <ListaCierres

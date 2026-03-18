@@ -3,7 +3,8 @@ import { useUsuarioStore } from '@/store/useUsuarioStore';
 import { obtenerUsuarios } from '@/services/servicioUsuarios';
 import { TablaUsuarios } from './TablaUsuarios';
 import { ModificarUsuario } from './ModificarUsuario';
-import { Users, Search, Loader2, RefreshCw } from 'lucide-react';
+import { Users, Search, RefreshCw } from 'lucide-react';
+import { Button, Input, Spinner } from '@/components/ui';
 import type { Usuario } from '@/types/usuario';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -307,28 +308,29 @@ export const AdministracionUsuarios = () => {
                 />
               )}
 
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<RefreshCw size={14} className={sincronizando ? 'animate-spin' : ''} />}
                 onClick={handleSincronizar}
                 disabled={sincronizando || (modoSincronizacion === 'especifico' && !codigoUsuarioBuscar.trim())}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-full"
               >
-                <RefreshCw size={14} className={sincronizando ? 'animate-spin' : ''} />
                 {sincronizando ? 'Sincronizando...' : modoSincronizacion === 'especifico' ? 'Buscar Usuario' : 'Sincronizar'}
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Barra de búsqueda y filtros */}
           <div className="mt-4 flex gap-4 items-center">
             {/* Búsqueda */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
+            <div className="flex-1">
+              <Input
+                type="search"
                 placeholder="Buscar por nombre, código, empresa o centro de costos..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent text-sm"
+                icon={<Search size={18} />}
               />
             </div>
 
@@ -403,9 +405,8 @@ export const AdministracionUsuarios = () => {
       {/* Contenido principal */}
       <div className="flex-1 overflow-auto p-6">
         {cargando ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400">
-            <Loader2 className="animate-spin mb-3" size={48} />
-            <p className="text-sm">Cargando usuarios...</p>
+          <div className="flex flex-col items-center justify-center h-full">
+            <Spinner size="xl" text="Cargando usuarios..." />
           </div>
         ) : usuariosMostrar.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-400">
@@ -443,25 +444,27 @@ export const AdministracionUsuarios = () => {
             {/* Controles de paginación */}
             {totalPaginas > 1 && (
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPaginaActual(Math.max(1, paginaActual - 1))}
                   disabled={paginaActual === 1}
-                  className="px-3 py-1 text-sm font-bold rounded-lg border border-slate-300 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ← Anterior
-                </button>
+                </Button>
                 
                 <span className="text-sm font-bold text-slate-700">
                   Página {paginaActual} de {totalPaginas}
                 </span>
                 
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPaginaActual(Math.min(totalPaginas, paginaActual + 1))}
                   disabled={paginaActual === totalPaginas}
-                  className="px-3 py-1 text-sm font-bold rounded-lg border border-slate-300 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Siguiente →
-                </button>
+                </Button>
               </div>
             )}
           </div>

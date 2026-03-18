@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Edit2, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Edit2, ChevronDown, ChevronRight } from 'lucide-react';
 import { obtenerIconosPermisos, contarPermisosActivos } from '@/services/servicioUsuarios';
 import { obtenerUsuarioConEquipos } from '@/services/servicioUsuarios';
+import { Button, Badge, Spinner } from '@/components/ui';
 import type { Usuario } from '@/types/usuario';
 import type { EquipoAsignado } from '@/types/usuario';
 
@@ -157,26 +158,22 @@ export const FilaUsuario = ({
 
         {/* Estado */}
         <td className="px-4 py-3 text-center">
-          {usuario.is_active ? (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-              Activo
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-              Inactivo
-            </span>
-          )}
+          <Badge variant={usuario.is_active ? "success" : "error"}>
+            {usuario.is_active ? "Activo" : "Inactivo"}
+          </Badge>
         </td>
 
         {/* Acciones */}
         <td className="px-4 py-3 text-center">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Edit2 size={14} />}
             onClick={onEditar}
-            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-ricoh-red hover:bg-red-50 rounded transition-colors"
+            className="text-ricoh-red hover:bg-red-50"
           >
-            <Edit2 size={14} />
             Editar
-          </button>
+          </Button>
         </td>
       </tr>
 
@@ -234,10 +231,7 @@ export const FilaUsuario = ({
               </h4>
               
               {cargandoEquipos ? (
-                <div className="flex items-center gap-2 text-slate-400 text-sm py-2">
-                  <Loader2 size={16} className="animate-spin" />
-                  Cargando equipos...
-                </div>
+                <Spinner size="sm" text="Cargando equipos..." />
               ) : equipos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {equipos.map((equipo) => (

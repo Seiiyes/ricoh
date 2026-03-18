@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { CierreMensual, CierreMensualDetalle } from './types';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
+import { Modal, Button, Input, Spinner } from '@/components/ui';
+import { Download, FileSpreadsheet } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -29,17 +31,22 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
 
   useEffect(() => {
     loadDetalle();
-  }, [cierre.id, currentPage, searchTerm]);
+  }, [cierre.id]); // Solo recargar cuando cambia el cierre
+
+  // Resetear a página 1 cuando cambia el término de búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const loadDetalle = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      // Cargar TODOS los usuarios sin paginación para que la búsqueda funcione en todos
       const params = new URLSearchParams({
-        page: currentPage.toString(),
-        page_size: '50',
-        ...(searchTerm && { search: searchTerm })
+        page: '1',
+        page_size: '10000' // Número grande para obtener todos los usuarios
       });
 
       const response = await fetch(
@@ -72,7 +79,14 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
     });
   };
 
-  const filteredUsuarios = detalle?.usuarios || [];
+  const filteredUsuarios = (detalle?.usuarios || []).filter(usuario => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      usuario.nombre_usuario.toLowerCase().includes(searchLower) ||
+      usuario.codigo_usuario.toLowerCase().includes(searchLower)
+    );
+  });
 
   const sortedUsuarios = [...filteredUsuarios].sort((a, b) => {
     let aVal: string | number;
@@ -109,42 +123,25 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Detalle del Cierre
-              </h2>
-              <p className="text-sm text-gray-600">
-                {formatDate(cierre.fecha_inicio)}
-                {cierre.fecha_inicio !== cierre.fecha_fin && <> - {formatDate(cierre.fecha_fin)}</>}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+  // Paginación del lado del cliente
+  const pageSize = 50;
+  const totalFilteredUsers = sortedUsuarios.length;
+  const totalPages = Math.ceil(totalFilteredUsers / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedUsuarios = sortedUsuarios.slice(startIndex, endIndex);
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+  return (
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={`Detalle del Cierre - ${formatDate(cierre.fecha_inicio)}`}
+      size="xl"
+    >
+      <div className="space-y-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <Spinner size="lg" text="Cargando detalle..." />
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -215,18 +212,13 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
                   <h3 className="text-lg font-semibold text-gray-900">
                     Usuarios ({detalle.total_usuarios})
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setCurrentPage(1); // Reset to first page on search
-                      }}
-                      placeholder="Buscar usuario..."
-                      className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                  <Input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar usuario..."
+                    className="w-64"
+                  />
                 </div>
 
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -312,7 +304,7 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
                         )}
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {sortedUsuarios.map((usuario) => (
+                        {paginatedUsuarios.map((usuario) => (
                           <tr key={usuario.id} className="hover:bg-gray-50">
                             <td className="px-3 py-2 text-xs text-gray-900">{usuario.nombre_usuario}</td>
                             <td className="px-3 py-2 text-xs text-gray-600">{usuario.codigo_usuario}</td>
@@ -365,37 +357,40 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
                   </div>
                 </div>
 
-                {/* Paginación */}
-                {detalle.total_pages > 1 && (
+                {/* Paginación del lado del cliente */}
+                {totalPages > 1 && (
                   <div className="mt-4 flex items-center justify-between">
                     <div className="text-sm text-gray-600">
-                      Mostrando {((detalle.page - 1) * detalle.page_size) + 1} - {Math.min(detalle.page * detalle.page_size, detalle.total_usuarios)} de {detalle.total_usuarios} usuarios
+                      Mostrando {startIndex + 1} - {Math.min(endIndex, totalFilteredUsers)} de {totalFilteredUsers} usuarios
+                      {searchTerm && ` (filtrados de ${detalle?.total_usuarios || 0} totales)`}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={detalle.page === 1}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={currentPage === 1}
                       >
                         Anterior
-                      </button>
+                      </Button>
                       <span className="text-sm text-gray-600">
-                        Página {detalle.page} de {detalle.total_pages}
+                        Página {currentPage} de {totalPages}
                       </span>
-                      <button
-                        onClick={() => setCurrentPage(p => Math.min(detalle.total_pages, p + 1))}
-                        disabled={detalle.page === detalle.total_pages}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
                       >
                         Siguiente
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
 
-                {sortedUsuarios.length === 0 && (
+                {paginatedUsuarios.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    No se encontraron usuarios
+                    {searchTerm ? `No se encontraron usuarios que coincidan con "${searchTerm}"` : 'No se encontraron usuarios'}
                   </div>
                 )}
               </div>
@@ -403,40 +398,39 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
           ) : null}
         </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
-          <button
+      {/* Footer */}
+      {detalle && (
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<FileSpreadsheet size={16} />}
             onClick={() => {
               const url = `${API_BASE}/api/export/cierre/${cierre.id}/excel`;
               window.open(url, '_blank');
             }}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
             Exportar Excel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<Download size={16} />}
             onClick={() => {
               const url = `${API_BASE}/api/export/cierre/${cierre.id}`;
               window.open(url, '_blank');
             }}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
             Exportar CSV
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
           >
             Cerrar
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 };

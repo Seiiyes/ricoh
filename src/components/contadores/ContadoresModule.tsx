@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { DashboardView } from './dashboard/DashboardView';
 import { PrinterDetailView } from './detail/PrinterDetailView';
 import { CierresView } from './cierres/CierresView';
+import { Tabs } from '@/components/ui';
+import { BarChart3, Calendar } from 'lucide-react';
 
 type CounterView = 'resumen' | 'printer-detail' | 'cierres';
 type Tab = 'resumen' | 'cierres';
@@ -41,28 +43,15 @@ export const ContadoresModule: React.FC = () => {
           
           {/* Pestañas */}
           {currentView !== 'printer-detail' && (
-            <div className="flex gap-1 border-b border-gray-200">
-              <button
-                onClick={() => handleTabChange('resumen')}
-                className={`px-4 py-2 font-medium text-sm transition-colors ${
-                  activeTab === 'resumen'
-                    ? 'text-red-600 border-b-2 border-red-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Resumen
-              </button>
-              <button
-                onClick={() => handleTabChange('cierres')}
-                className={`px-4 py-2 font-medium text-sm transition-colors ${
-                  activeTab === 'cierres'
-                    ? 'text-red-600 border-b-2 border-red-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Cierres
-              </button>
-            </div>
+            <Tabs
+              tabs={[
+                { id: 'resumen', label: 'Resumen', icon: <BarChart3 size={16} /> },
+                { id: 'cierres', label: 'Cierres', icon: <Calendar size={16} /> }
+              ]}
+              activeTab={activeTab}
+              onChange={(tab) => handleTabChange(tab as Tab)}
+              variant="underline"
+            />
           )}
         </div>
       </div>

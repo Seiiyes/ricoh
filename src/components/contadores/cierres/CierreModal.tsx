@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Modal, Button, Input, Alert } from '@/components/ui';
+import { Lock, AlertTriangle } from 'lucide-react';
 
 interface CierreModalProps {
   printerId: number;
@@ -58,30 +60,13 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-        
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Crear Cierre</h2>
-              <p className="text-xs text-gray-500 font-mono">{printerName || `ID: ${printerId}`}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Crear Cierre"
+      size="md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
           
           {/* Fecha del Cierre - Estática */}
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
@@ -95,18 +80,13 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
           </div>
 
           {/* Cerrado por */}
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-              Cerrado por <span className="text-gray-400 font-normal">(opcional)</span>
-            </label>
-            <input
-              type="text"
-              value={cerradoPor}
-              onChange={(e) => setCerradoPor(e.target.value)}
-              placeholder="Nombre del responsable"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-50/30"
-            />
-          </div>
+          <Input
+            label="Cerrado por (opcional)"
+            type="text"
+            value={cerradoPor}
+            onChange={(e) => setCerradoPor(e.target.value)}
+            placeholder="Nombre del responsable"
+          />
 
           {/* Notas */}
           <div>
@@ -123,45 +103,34 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 animate-shake">
-              <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-xs text-red-700">{error}</p>
-            </div>
+            <Alert variant="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
           )}
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-            <div className="flex gap-2">
-              <svg className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p className="text-[10px] text-yellow-800 leading-relaxed">
-                El cierre captura un <strong>snapshot</strong> de los contadores de la impresora y todos sus usuarios al momento actual.
-              </p>
-            </div>
-          </div>
+          <Alert variant="warning">
+            El cierre captura un <strong>snapshot</strong> de los contadores de la impresora y todos sus usuarios al momento actual.
+          </Alert>
 
           {/* Footer Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={onClose}
-              className="px-6 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="primary"
+              loading={loading}
               disabled={loading}
-              className="px-6 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
             >
-              {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {loading ? 'Procesando...' : 'Crear Cierre de Hoy'}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
-  );
+      </Modal>
+    );
 };

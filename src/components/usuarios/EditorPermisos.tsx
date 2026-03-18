@@ -1,7 +1,8 @@
 // Editor de permisos de usuario
 import { useState, useEffect } from 'react';
-import { Loader2, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { actualizarFuncionesEnImpresora } from '@/services/servicioUsuarios';
+import { Button, Alert } from '@/components/ui';
 
 interface Permisos {
   func_copier: boolean;
@@ -162,9 +163,9 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 animate-in slide-in-from-top-2">
-          <p className="text-xs font-bold text-red-800">{error}</p>
-        </div>
+        <Alert variant="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       {/* Grid de permisos */}
@@ -236,23 +237,14 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
       {/* Botón de guardar (solo en modo impresora) */}
       {modoImpresora && hayCambios && (
         <div className="pt-4 border-t">
-          <button
+          <Button
             onClick={handleGuardarEnImpresora}
-            disabled={guardando}
-            className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-black uppercase tracking-wide rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            loading={guardando}
+            icon={<Save size={18} />}
+            className="w-full"
           >
-            {guardando ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                Guardando en impresora...
-              </>
-            ) : (
-              <>
-                <Save size={18} />
-                Guardar en {modoImpresora.printerName}
-              </>
-            )}
-          </button>
+            {guardando ? 'Guardando en impresora...' : `Guardar en ${modoImpresora.printerName}`}
+          </Button>
         </div>
       )}
     </div>

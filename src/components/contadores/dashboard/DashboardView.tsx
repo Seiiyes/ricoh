@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Loader2, BarChart3 } from 'lucide-react';
+import { RefreshCw, BarChart3 } from 'lucide-react';
 import { fetchPrinters } from '@/services/printerService';
 import { fetchLatestCounter, triggerReadAll } from '@/services/counterService';
 import { PrinterCounterCard } from './PrinterCounterCard';
 import { LoadingIndicator } from '../shared/LoadingIndicator';
 import { ErrorHandler } from '../shared/ErrorHandler';
+import { Button } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 import type { TotalCounter } from '@/types/counter';
 
@@ -80,24 +81,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToPrinte
               Resumen de Contadores
             </h1>
           </div>
-          <button
+          <Button
             onClick={handleReadAll}
-            disabled={readingAll || loading}
-            className="flex items-center gap-2 bg-ricoh-red text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            loading={readingAll || loading}
+            icon={<RefreshCw size={14} />}
+            className="rounded-full"
             aria-label="Leer contadores de todas las impresoras"
           >
-            {readingAll ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Leyendo...
-              </>
-            ) : (
-              <>
-                <RefreshCw size={14} />
-                Leer Todas
-              </>
-            )}
-          </button>
+            {readingAll ? 'Leyendo...' : 'Leer Todas'}
+          </Button>
         </div>
       </div>
 

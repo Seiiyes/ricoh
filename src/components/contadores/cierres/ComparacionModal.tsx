@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { CierreMensual, ComparacionCierres } from './types';
 import { UsuarioComparacionRow } from './UsuarioComparacionRow';
+import { Modal, Button, Input, Spinner } from '@/components/ui';
+import { Download } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -96,37 +98,20 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Comparación de Cierres
-              </h2>
-              <p className="text-sm text-gray-600">
-                Compara dos períodos para ver diferencias
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Comparación de Cierres"
+      subtitle="Compara dos períodos para ver diferencias"
+      size="xl"
+      icon={
+        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      }
+    >
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="space-y-6">
           {/* Selectores */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -170,9 +155,7 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
 
           {/* Loading/Error */}
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-            </div>
+            <Spinner size="xl" text="Cargando comparación..." />
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-700">{error}</p>
@@ -298,12 +281,12 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                     </svg>
                     Comparación Detallada por Usuario ({comparacion.top_usuarios_aumento.length + comparacion.top_usuarios_disminucion.length})
                   </h3>
-                  <input
-                    type="text"
+                  <Input
+                    type="search"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar usuario..."
-                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-64"
                   />
                 </div>
 
@@ -443,59 +426,45 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
               </div>
             </>
           ) : null}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
-          {comparacion && (
-            <>
-              <button
-                onClick={() => {
-                  const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel-ricoh`;
-                  window.open(url, '_blank');
-                }}
-                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
-                title="Exportar en formato Ricoh (52 columnas, 3 hojas)"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Excel Ricoh
-              </button>
-              <button
-                onClick={() => {
-                  const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel`;
-                  window.open(url, '_blank');
-                }}
-                className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Excel Simple
-              </button>
-              <button
-                onClick={() => {
-                  const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}`;
-                  window.open(url, '_blank');
-                }}
-                className="px-4 py-2 text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                CSV
-              </button>
-            </>
-          )}
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Cerrar
-          </button>
-        </div>
       </div>
-    </div>
+
+      {/* Footer con botones de exportación */}
+      {comparacion && (
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <Button
+            variant="primary"
+            icon={<Download size={16} />}
+            onClick={() => {
+              const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel-ricoh`;
+              window.open(url, '_blank');
+            }}
+            title="Exportar en formato Ricoh (52 columnas, 3 hojas)"
+          >
+            Excel Ricoh
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Download size={16} />}
+            onClick={() => {
+              const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel`;
+              window.open(url, '_blank');
+            }}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Excel Simple
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Download size={16} />}
+            onClick={() => {
+              const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}`;
+              window.open(url, '_blank');
+            }}
+          >
+            CSV
+          </Button>
+        </div>
+      )}
+    </Modal>
   );
 };

@@ -3,6 +3,7 @@ import { usePrinterStore } from "@/store/usePrinterStore";
 import { PrinterCard } from "../fleet/PrinterCard";
 import { DiscoveryModal } from "../discovery/DiscoveryModal";
 import { EditPrinterModal } from "../fleet/EditPrinterModal";
+import { Button, Input, Alert, Spinner } from "@/components/ui";
 import { Terminal as TerminalIcon, UserPlus, Loader2, Wifi, Send } from "lucide-react";
 import { printerDeviceToCardProps } from "@/utils/printerTransform";
 import { fetchPrinters, createUser, provisionUser, connectWebSocket, updatePrinter, refreshPrinterSNMP } from "@/services/printerService";
@@ -207,50 +208,45 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Información Básica</h3>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Nombre Completo</label>
-                <input 
-                  className="w-full border-b border-slate-200 py-1 focus:border-ricoh-red outline-none text-sm" 
-                  placeholder="Nombre del Usuario"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Código de Usuario</label>
-                <input 
-                  className="w-full border-b border-slate-200 py-1 focus:border-ricoh-red outline-none text-sm font-mono" 
-                  type="text" 
-                  placeholder="1234"
-                  maxLength={8}
-                  value={userPin}
-                  onChange={(e) => setUserPin(e.target.value.replace(/\D/g, ''))}
-                />
-                <p className="text-[9px] text-slate-400">4-8 dígitos numéricos</p>
-              </div>
+              <Input
+                label="Nombre Completo"
+                placeholder="Nombre del Usuario"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                variant="underline"
+              />
+              <Input
+                label="Código de Usuario"
+                type="text"
+                placeholder="1234"
+                maxLength={8}
+                value={userPin}
+                onChange={(e) => setUserPin(e.target.value.replace(/\D/g, ''))}
+                helperText="4-8 dígitos numéricos"
+                variant="underline"
+                className="font-mono"
+              />
             </div>
 
             {/* Network Credentials */}
             <div className="space-y-4">
               <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Autenticación de Carpeta</h3>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Nombre de usuario de inicio de sesión</label>
-                <input 
-                  className="w-full border-b border-slate-200 py-1 focus:border-ricoh-red outline-none text-sm font-mono" 
-                  value={networkUsername}
-                  onChange={(e) => setNetworkUsername(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Contraseña de inicio de sesión</label>
-                <input 
-                  className="w-full border-b border-slate-200 py-1 focus:border-ricoh-red outline-none text-sm font-mono" 
-                  type="password" 
-                  placeholder="Contraseña"
-                  value={networkPassword}
-                  onChange={(e) => setNetworkPassword(e.target.value)}
-                />
-              </div>
+              <Input
+                label="Nombre de usuario de inicio de sesión"
+                value={networkUsername}
+                onChange={(e) => setNetworkUsername(e.target.value)}
+                variant="underline"
+                className="font-mono"
+              />
+              <Input
+                label="Contraseña de inicio de sesión"
+                type="password"
+                placeholder="Contraseña"
+                value={networkPassword}
+                onChange={(e) => setNetworkPassword(e.target.value)}
+                variant="underline"
+                className="font-mono"
+              />
             </div>
 
             {/* Available Functions */}
@@ -373,26 +369,23 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
                   </label>
                 </div>
               </div>
-              <div className="bg-amber-50 border-l-4 border-amber-400 p-3 mt-3">
-                <p className="text-[10px] text-amber-800">
-                  <span className="font-bold">⚠️ Importante:</span> Habilita color en Copiadora/Impresora solo cuando sea necesario. La mayoría de usuarios solo necesitan B/N.
-                </p>
-              </div>
+              <Alert variant="warning" className="mt-3 text-[10px]">
+                <span className="font-bold">⚠️ Importante:</span> Habilita color en Copiadora/Impresora solo cuando sea necesario. La mayoría de usuarios solo necesitan B/N.
+              </Alert>
             </div>
 
             {/* SMB Configuration */}
             <div className="space-y-4">
               <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Carpeta SMB</h3>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Ruta</label>
-                <input 
-                  className="w-full border-b border-slate-200 py-1 focus:border-ricoh-red outline-none text-sm font-mono text-slate-500" 
-                  value={smbPath}
-                  onChange={(e) => setSmbPath(e.target.value)}
-                  placeholder="\\\\10.0.0.5\\scans\\"
-                />
-                <p className="text-[9px] text-slate-400">El servidor y puerto se extraen automáticamente</p>
-              </div>
+              <Input
+                label="Ruta"
+                value={smbPath}
+                onChange={(e) => setSmbPath(e.target.value)}
+                placeholder="\\\\10.0.0.5\\scans\\"
+                helperText="El servidor y puerto se extraen automáticamente"
+                variant="underline"
+                className="font-mono text-slate-500"
+              />
             </div>
           </div>
 
@@ -402,23 +395,17 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             </p>
           </div>
 
-          <button 
-            onClick={handleProvision}
+          <Button
+            variant="secondary"
+            size="md"
+            icon={<Send size={14} />}
+            loading={isProvisioning}
             disabled={isProvisioning || selectedPrinters.length === 0 || !userName.trim() || !userPin.trim() || !networkPassword.trim()}
-            className="w-full bg-industrial-gray text-white py-3 text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            onClick={handleProvision}
+            className="w-full py-3 tracking-widest"
           >
-            {isProvisioning ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Configurando...
-              </>
-            ) : (
-              <>
-                <Send size={14} />
-                Enviar Configuración
-              </>
-            )}
-          </button>
+            {isProvisioning ? 'Configurando...' : 'Enviar Configuración'}
+          </Button>
         </div>
         )}
 
@@ -426,21 +413,22 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
         <div className="flex-1 p-6 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-3 items-center">
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Wifi size={14} />}
                 onClick={() => setIsDiscoveryOpen(true)}
-                className="flex items-center gap-2 bg-ricoh-red text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide hover:bg-red-700 transition-colors"
+                className="rounded-full"
               >
-                <Wifi size={14} />
                 Descubrir Impresoras
-              </button>
+              </Button>
             </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {isLoading ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-400">
-                <Loader2 className="animate-spin mb-3" size={32} />
-                <p className="text-sm">Cargando impresoras...</p>
+              <div className="col-span-full flex items-center justify-center py-16">
+                <Spinner size="lg" text="Cargando impresoras..." />
               </div>
             ) : printers.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-400">

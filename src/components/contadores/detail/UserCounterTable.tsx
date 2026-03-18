@@ -4,6 +4,7 @@ import type { UserCounter } from '@/types/counter';
 import type { PrinterDevice } from '@/types';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 import type { ColumnDefinition } from '@/types/printer';
+import { Input } from '@/components/ui';
 
 interface UserCounterTableProps {
   userCounters: UserCounter[];
@@ -156,17 +157,14 @@ export const UserCounterTable: React.FC<UserCounterTableProps> = ({ userCounters
       <div className="p-4 border-b border-slate-200">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-700">Contadores por Usuario</h2>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Buscar usuario..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red"
-              aria-label="Buscar usuario por nombre o código"
-            />
-          </div>
+          <Input
+            type="search"
+            placeholder="Buscar usuario..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            icon={<Search size={16} />}
+            className="w-64"
+          />
         </div>
       </div>
 

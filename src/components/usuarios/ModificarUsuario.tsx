@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Loader2, AlertCircle, Printer, ShieldCheck, Settings, Globe, Trash2, Plus } from 'lucide-react';
+import { X, Save, AlertCircle, Printer, ShieldCheck, Settings, Globe, Trash2, Plus } from 'lucide-react';
 import { actualizarUsuario, obtenerUsuarioConEquipos, actualizarPermisosAsignacion, crearUsuario, obtenerDetallesUsuarioImpresora, sincronizarUsuarioTodasImpresoras } from '@/services/servicioUsuarios';
 import { EditorPermisos } from './EditorPermisos';
 import { GestorEquipos } from './GestorEquipos';
+import { Button, Alert, Spinner, Input } from '@/components/ui';
 import type { Usuario, ImpresoraUsuario } from '@/types/usuario';
 
 interface ModificarUsuarioProps {
@@ -427,28 +428,25 @@ export const ModificarUsuario = ({
           <div className="flex-1 overflow-y-auto p-8">
 
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="text-red-500" size={20} />
-                <p className="text-sm font-bold text-red-800">{error}</p>
-              </div>
+              <Alert variant="error" onClose={() => setError(null)} className="mb-6">
+                {error}
+              </Alert>
             )}
 
             {exito && (
-              <div className="mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                <ShieldCheck className="text-emerald-500" size={20} />
-                <p className="text-sm font-bold text-emerald-800">Cambios aplicados correctamente</p>
-              </div>
+              <Alert variant="success" className="mb-6">
+                Cambios aplicados correctamente
+              </Alert>
             )}
 
             {sincronizandoImpresoras && (
-              <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                <Loader2 className="animate-spin text-blue-600" size={20} />
+              <Alert variant="info" className="mb-6">
                 <div>
-                  <p className="text-sm font-bold text-blue-800">Sincronizando con todas las impresoras...</p>
-                  <p className="text-xs text-blue-600 mt-1">Actualizando nombre, código, carpeta y credenciales en {impresorasAsignadas.length} equipos</p>
-                  <p className="text-[10px] text-blue-500 mt-0.5 italic">Nota: Empresa y Centro de costos solo se guardan en la base de datos</p>
+                  <p className="text-sm font-bold">Sincronizando con todas las impresoras...</p>
+                  <p className="text-xs mt-1">Actualizando nombre, código, carpeta y credenciales en {impresorasAsignadas.length} equipos</p>
+                  <p className="text-[10px] mt-0.5 italic">Nota: Empresa y Centro de costos solo se guardan en la base de datos</p>
                 </div>
-              </div>
+              </Alert>
             )}
 
             {tabActiva === 'info' && (
@@ -457,16 +455,19 @@ export const ModificarUsuario = ({
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Nombre Completo</label>
-                      <input
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-ricoh-red transition-all"
-                        value={nombre} onChange={e => setNombre(e.target.value)}
+                      <Input
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        className="font-bold"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Código de Usuario</label>
-                      <input
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-mono font-bold outline-none focus:border-ricoh-red transition-all"
-                        value={codigo} onChange={e => setCodigo(e.target.value)} maxLength={8}
+                      <Input
+                        value={codigo}
+                        onChange={(e) => setCodigo(e.target.value)}
+                        maxLength={8}
+                        className="font-mono font-bold"
                       />
                     </div>
                   </div>
@@ -474,16 +475,18 @@ export const ModificarUsuario = ({
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Empresa</label>
-                      <input
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-ricoh-red transition-all"
-                        value={empresa} onChange={e => setEmpresa(e.target.value)}
+                      <Input
+                        value={empresa}
+                        onChange={(e) => setEmpresa(e.target.value)}
+                        className="font-bold"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Centro de costos</label>
-                      <input
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-ricoh-red transition-all"
-                        value={centroCostos} onChange={e => setCentroCostos(e.target.value)}
+                      <Input
+                        value={centroCostos}
+                        onChange={(e) => setCentroCostos(e.target.value)}
+                        className="font-bold"
                       />
                     </div>
                   </div>
@@ -499,17 +502,19 @@ export const ModificarUsuario = ({
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Usuario Autenticación Red</label>
-                      <input
-                        className="w-full bg-slate-100 border-2 border-transparent rounded-xl px-4 py-3 text-sm font-mono text-slate-600 outline-none"
-                        value={usuarioRed} readOnly
+                      <Input
+                        value={usuarioRed}
+                        readOnly
+                        className="bg-slate-100 font-mono text-slate-600"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Ruta de Carpeta Compartida</label>
-                      <input
-                        className="w-full bg-white border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-mono font-bold outline-none focus:border-ricoh-red transition-all"
+                      <Input
                         placeholder="\\servidor\carpeta"
-                        value={carpeta} onChange={e => setCarpeta(e.target.value)}
+                        value={carpeta}
+                        onChange={(e) => setCarpeta(e.target.value)}
+                        className="font-mono font-bold"
                       />
                     </div>
                   </div>
@@ -531,8 +536,7 @@ export const ModificarUsuario = ({
 
                 {cargandoPermisos && (
                   <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-2xl">
-                    <Loader2 className="animate-spin text-blue-600 mb-2" size={32} />
-                    <p className="text-xs font-black text-slate-800 uppercase tracking-widest">Leyendo permisos reales...</p>
+                    <Spinner size="lg" text="Leyendo permisos reales..." className="text-blue-600" />
                     <p className="text-[10px] text-slate-500 font-bold mt-1 italic">Conectando con Ricoh @ {impresoraSeleccionada?.printer_ip}</p>
                   </div>
                 )}
@@ -562,27 +566,31 @@ export const ModificarUsuario = ({
           <div className="px-8 py-5 border-t border-slate-200 bg-white flex items-center justify-between">
             <div>
               {tabActiva === 'permisos' && (
-                <button className="flex items-center gap-2 text-red-600 text-xs font-bold hover:bg-red-50 px-4 py-2 rounded-xl transition-all">
-                  <Trash2 size={16} /> Quitar de este equipo
-                </button>
+                <Button
+                  variant="ghost"
+                  icon={<Trash2 size={16} />}
+                  className="text-red-600 hover:bg-red-50"
+                >
+                  Quitar de este equipo
+                </Button>
               )}
             </div>
 
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="ghost"
                 onClick={onCerrar}
-                className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-all"
               >
                 Cerrar
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleGuardarTerminal}
-                disabled={guardando || cargandoDatos}
-                className="bg-blue-600 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-[0.15em] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50"
+                loading={guardando || cargandoDatos}
+                icon={<Save size={16} />}
+                className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/20"
               >
-                {guardando ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                 {tabActiva === 'permisos' ? 'Aplicar en Impresora' : 'Guardar Ajustes'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

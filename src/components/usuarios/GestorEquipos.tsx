@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Printer, Trash2, Plus } from 'lucide-react';
+import { Printer, Trash2, Plus } from 'lucide-react';
 import { fetchPrinters } from '@/services/printerService';
 import { asignarEquipos } from '@/services/servicioUsuarios';
+import { Button, Spinner } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 
 interface GestorEquiposProps {
@@ -100,8 +101,7 @@ export const GestorEquipos = ({
 
       {cargando ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-100">
-          <Loader2 className="animate-spin text-ricoh-red mb-3" size={32} />
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Consultando equipos Ricoh...</span>
+          <Spinner size="lg" text="Consultando equipos Ricoh..." className="text-ricoh-red" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,13 +124,14 @@ export const GestorEquipos = ({
                       <p className="text-xs font-black text-slate-800 truncate">{equipo.hostname}</p>
                       <p className="text-[10px] font-mono text-slate-500">{equipo.ip_address}</p>
                     </div>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleToggleEquipo(parseInt(equipo.id))}
-                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      icon={<Trash2 size={16} />}
+                      className="text-slate-300 hover:text-red-500 hover:bg-red-50"
                       title="Quitar acceso"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    />
                   </div>
                 ))
               )}
@@ -172,14 +173,22 @@ export const GestorEquipos = ({
             <p className="text-xs font-bold text-white uppercase tracking-widest">Tienes cambios en los equipos</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleCancelarCambios} className="text-xs font-bold text-slate-400 hover:text-white px-4 py-2">Descartar</button>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelarCambios}
+              className="text-slate-400 hover:text-white"
+            >
+              Descartar
+            </Button>
+            <Button
               onClick={handleGuardarCambios}
-              disabled={guardando}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-xl transition-all disabled:opacity-50"
+              loading={guardando}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-500"
             >
               {guardando ? 'Procesando...' : 'Aplicar Cambios'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

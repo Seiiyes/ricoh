@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Wifi, AlertCircle, Loader2 } from 'lucide-react';
 import { scanPrinters, registerDiscoveredPrinters } from '@/services/printerService';
+import { Modal, Button, Input, Spinner } from '@/components/ui';
 
 interface DiscoveredDevice {
   hostname: string;
@@ -161,60 +162,36 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <Wifi className="text-ricoh-red" size={24} />
-            <div>
-              <h2 className="text-lg font-bold text-industrial-gray uppercase tracking-tight">
-                Descubrimiento de Red
-              </h2>
-              <p className="text-xs text-slate-500">Escanear y registrar impresoras Ricoh</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Descubrimiento de Red"
+      size="xl"
+    >
+      <div className="space-y-6">
           {/* Scan Controls */}
-          <div className="mb-6">
+          <div>
             <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
               Rango de IP (Notación CIDR)
             </label>
             <div className="flex gap-3">
-              <input
+              <Input
                 type="text"
                 value={ipRange}
                 onChange={(e) => setIpRange(e.target.value)}
                 placeholder="192.168.91.0/24"
-                className="flex-1 border border-slate-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
                 disabled={isScanning}
+                className="flex-1"
               />
-              <button
-                onClick={handleScan}
+              <Button
+                variant="primary"
+                icon={isScanning ? <Loader2 size={16} /> : <Wifi size={16} />}
+                loading={isScanning}
                 disabled={isScanning}
-                className="flex items-center gap-2 bg-ricoh-red text-white px-6 py-2 rounded font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleScan}
               >
-                {isScanning ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Escaneando...
-                  </>
-                ) : (
-                  <>
-                    <Wifi size={16} />
-                    Escanear Red
-                  </>
-                )}
-              </button>
+                {isScanning ? 'Escaneando...' : 'Escanear Red'}
+              </Button>
             </div>
             
             {/* Manual Add Button */}
@@ -232,56 +209,41 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="text-sm font-bold text-blue-900 mb-3">Agregar Impresora por IP</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">
-                      Dirección IP
-                    </label>
-                    <input
-                      type="text"
-                      value={manualIP}
-                      onChange={(e) => setManualIP(e.target.value)}
-                      placeholder="192.168.91.250"
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      disabled={isCheckingManual}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">
-                      Puerto SNMP
-                    </label>
-                    <input
-                      type="text"
-                      value={manualPort}
-                      onChange={(e) => setManualPort(e.target.value)}
-                      placeholder="161"
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      disabled={isCheckingManual}
-                    />
-                  </div>
+                  <Input
+                    label="Dirección IP"
+                    type="text"
+                    value={manualIP}
+                    onChange={(e) => setManualIP(e.target.value)}
+                    placeholder="192.168.91.250"
+                    disabled={isCheckingManual}
+                  />
+                  <Input
+                    label="Puerto SNMP"
+                    type="text"
+                    value={manualPort}
+                    onChange={(e) => setManualPort(e.target.value)}
+                    placeholder="161"
+                    disabled={isCheckingManual}
+                  />
                 </div>
-                <button
-                  onClick={handleManualAdd}
+                <Button
+                  variant="primary"
+                  icon={isCheckingManual ? <Loader2 size={16} /> : undefined}
+                  loading={isCheckingManual}
                   disabled={isCheckingManual || !manualIP}
-                  className="mt-3 w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm uppercase tracking-wide hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleManualAdd}
+                  className="mt-3 w-full"
                 >
-                  {isCheckingManual ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Verificando...
-                    </>
-                  ) : (
-                    'Agregar Impresora'
-                  )}
-                </button>
+                  {isCheckingManual ? 'Verificando...' : 'Agregar Impresora'}
+                </Button>
               </div>
             )}
           </div>
 
           {/* Results */}
           {isScanning && (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-              <Loader2 size={48} className="animate-spin mb-4" />
-              <p className="text-sm">Escaneando la red en busca de impresoras...</p>
+            <div className="flex flex-col items-center justify-center py-12">
+              <Spinner size="lg" text="Escaneando la red en busca de impresoras..." />
             </div>
           )}
 
@@ -325,18 +287,13 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
                       {/* Device Info */}
                       <div className="flex-1 space-y-2">
                         {/* Hostname editable */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                            Nombre
-                          </label>
-                          <input
-                            type="text"
-                            value={device.editedHostname || device.hostname}
-                            onChange={(e) => updateDeviceField(device.ip_address, 'editedHostname', e.target.value)}
-                            className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
-                            placeholder="Nombre de la impresora"
-                          />
-                        </div>
+                        <Input
+                          label="Nombre"
+                          type="text"
+                          value={device.editedHostname || device.hostname}
+                          onChange={(e) => updateDeviceField(device.ip_address, 'editedHostname', e.target.value)}
+                          placeholder="Nombre de la impresora"
+                        />
 
                         {/* IP Address */}
                         <p className="text-xs text-slate-500 font-mono">
@@ -344,18 +301,13 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
                         </p>
 
                         {/* Location editable */}
-                        <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                            Ubicación
-                          </label>
-                          <input
-                            type="text"
-                            value={device.editedLocation || ''}
-                            onChange={(e) => updateDeviceField(device.ip_address, 'editedLocation', e.target.value)}
-                            className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red"
-                            placeholder="Ej: Oficina Principal - Piso 2"
-                          />
-                        </div>
+                        <Input
+                          label="Ubicación"
+                          type="text"
+                          value={device.editedLocation || ''}
+                          onChange={(e) => updateDeviceField(device.ip_address, 'editedLocation', e.target.value)}
+                          placeholder="Ej: Oficina Principal - Piso 2"
+                        />
 
                         {/* Model and capabilities */}
                         <div className="flex gap-4 text-xs text-slate-600">
@@ -379,36 +331,28 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
               </div>
             </div>
           )}
-        </div>
-
+        
         {/* Footer */}
         {discoveredDevices.length > 0 && (
-          <div className="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
-            <button
+          <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+            <Button
+              variant="ghost"
               onClick={onClose}
-              className="px-6 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 transition-colors"
             >
               Cancelar
-            </button>
-            <button
-              onClick={handleRegister}
+            </Button>
+            <Button
+              variant="secondary"
+              icon={isRegistering ? <Loader2 size={16} /> : undefined}
+              loading={isRegistering}
               disabled={selectedDevices.size === 0 || isRegistering}
-              className="flex items-center gap-2 bg-industrial-gray text-white px-6 py-2 rounded font-bold text-sm uppercase tracking-wide hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleRegister}
             >
-              {isRegistering ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Registrando...
-                </>
-              ) : (
-                <>
-                  Registrar {selectedDevices.size} Impresora(s)
-                </>
-              )}
-            </button>
+              {isRegistering ? 'Registrando...' : `Registrar ${selectedDevices.size} Impresora(s)`}
+            </Button>
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 };

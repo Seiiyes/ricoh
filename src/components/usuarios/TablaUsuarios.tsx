@@ -56,28 +56,30 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
     }
   };
 
+  // Ordenar usuarios según el campo y dirección seleccionados
   const usuariosOrdenados = [...usuarios].sort((a, b) => {
     if (!campoOrden || !direccionOrden) return 0;
 
     const valorA = obtenerValorOrden(a, campoOrden);
     const valorB = obtenerValorOrden(b, campoOrden);
-
-    if (valorA < valorB) return direccionOrden === 'asc' ? -1 : 1;
-    if (valorA > valorB) return direccionOrden === 'asc' ? 1 : -1;
-    return 0;
+    const comparacion = valorA < valorB ? -1 : valorA > valorB ? 1 : 0;
+    
+    return direccionOrden === 'asc' ? comparacion : -comparacion;
   });
 
+  // Componente para mostrar el icono de ordenamiento
   const IconoOrden = ({ campo }: { campo: CampoOrden }) => {
-    if (campoOrden !== campo) {
-      return <ArrowUpDown size={14} className="opacity-40" />;
-    }
-    if (direccionOrden === 'asc') {
-      return <ArrowUp size={14} className="text-ricoh-red" />;
-    }
-    if (direccionOrden === 'desc') {
-      return <ArrowDown size={14} className="text-ricoh-red" />;
-    }
-    return <ArrowUpDown size={14} className="opacity-40" />;
+    const esActivo = campoOrden === campo;
+    const icono = !esActivo || !direccionOrden ? ArrowUpDown :
+                  direccionOrden === 'asc' ? ArrowUp : ArrowDown;
+    const Icon = icono;
+    
+    return (
+      <Icon 
+        size={14} 
+        className={esActivo ? "text-ricoh-red" : "opacity-40"} 
+      />
+    );
   };
 
   return (
