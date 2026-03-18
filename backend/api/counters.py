@@ -321,7 +321,7 @@ def get_close_detail(
     Args:
         cierre_id: ID del cierre
         page: Número de página (default: 1)
-        page_size: Tamaño de página (default: 50, max: 200)
+        page_size: Tamaño de página (default: 50, sin límite máximo)
         search: Búsqueda por nombre o código de usuario
     """
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
@@ -347,8 +347,7 @@ def get_close_detail(
     # Get total count
     total_usuarios = usuarios_query.count()
     
-    # Apply pagination
-    page_size = min(page_size, 200)  # Max 200 per page
+    # Apply pagination (sin límite máximo para permitir cargar todos los usuarios)
     offset = (page - 1) * page_size
     usuarios = usuarios_query.order_by(
         CierreMensualUsuario.total_paginas.desc()

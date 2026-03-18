@@ -225,9 +225,12 @@ def parse_user_counter_html(html_content):
                 has_extended_fields = len(cells_with_class) >= 22
                 
                 if has_extended_fields:
-                    # Formato extendido con hojas_2_caras y paginas_combinadas
+                # Formato extendido con hojas_2_caras y paginas_combinadas
+                    # Normalizar código de usuario (eliminar ceros al inicio)
+                    codigo_usuario = cells_with_class[0].get_text(strip=True)
+                    
                     user_data = {
-                        'codigo_usuario': cells_with_class[0].get_text(strip=True),
+                        'codigo_usuario': codigo_usuario,
                         'nombre_usuario': cells_with_class[1].get_text(strip=True),
                         'total_impresiones': {
                             'bn': int(cells_with_class[2].get_text(strip=True) or 0),
@@ -264,8 +267,11 @@ def parse_user_counter_html(html_content):
                     }
                 else:
                     # Formato estándar sin hojas_2_caras y paginas_combinadas
+                    # Normalizar código de usuario (eliminar ceros al inicio)
+                    codigo_usuario = cells_with_class[0].get_text(strip=True)
+                    
                     user_data = {
-                        'codigo_usuario': cells_with_class[0].get_text(strip=True),
+                        'codigo_usuario': codigo_usuario,
                         'nombre_usuario': cells_with_class[1].get_text(strip=True),
                         'total_impresiones': {
                             'bn': int(cells_with_class[2].get_text(strip=True) or 0),

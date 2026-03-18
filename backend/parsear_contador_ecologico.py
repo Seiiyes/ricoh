@@ -93,9 +93,11 @@ def parse_eco_counter_html(html_content):
             
             if len(cells) >= 11:
                 try:
+                    codigo_usuario = cells[1].get_text(strip=True)
+                    
                     user_data = {
                         'numero_registro': cells[0].get_text(strip=True),
-                        'codigo_usuario': cells[1].get_text(strip=True),
+                        'codigo_usuario': codigo_usuario,
                         'nombre_usuario': cells[2].get_text(strip=True),
                         'total_paginas_actual': int(cells[3].get_text(strip=True) or 0),
                         'total_paginas_anterior': int(cells[4].get_text(strip=True) or 0),

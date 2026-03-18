@@ -45,9 +45,21 @@ interface Props {
   sortKey: string;
   sortDir: 'asc' | 'desc';
   hasColor: boolean;
+  hasCopier?: boolean;
+  hasPrinter?: boolean;
+  hasScanner?: boolean;
 }
 
-export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort, sortKey, sortDir, hasColor }) => {
+export const TablaComparacionSimplificada: React.FC<Props> = ({ 
+  usuarios, 
+  onSort, 
+  sortKey, 
+  sortDir, 
+  hasColor,
+  hasCopier = true,
+  hasPrinter = true,
+  hasScanner = true,
+}) => {
   const fmt = (n: number) => n.toLocaleString('es-ES');
   const fmtDiff = (n: number) => {
     if (n === 0) return '0';
@@ -57,6 +69,10 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort
     n > 0 ? 'text-emerald-600 font-semibold' : 
     n < 0 ? 'text-red-500 font-semibold' : 
     'text-gray-400';
+  
+  // Calcular número de columnas por sección
+  const functionsCount = [hasCopier, hasPrinter, hasScanner].filter(Boolean).length;
+  const colsPerSection = hasColor ? (functionsCount * 2) : functionsCount;
 
   const SortIcon = ({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) => (
     <span className={`ml-1 inline-flex flex-col leading-none ${active ? 'text-current' : 'text-gray-300'}`}>
@@ -85,13 +101,13 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort
             >
               Código <SortIcon active={sortKey === 'codigo'} dir={sortDir} />
             </th>
-            <th colSpan={hasColor ? 7 : 4} className="px-4 py-3 text-center text-sm font-bold text-blue-900 bg-blue-50 border-x border-gray-300">
+            <th colSpan={colsPerSection + 1} className="px-4 py-3 text-center text-sm font-bold text-blue-900 bg-blue-50 border-x border-gray-300">
               Período Base (Contadores Acumulados)
             </th>
-            <th colSpan={hasColor ? 7 : 4} className="px-4 py-3 text-center text-sm font-bold text-purple-900 bg-purple-50 border-x border-gray-300">
+            <th colSpan={colsPerSection + 1} className="px-4 py-3 text-center text-sm font-bold text-purple-900 bg-purple-50 border-x border-gray-300">
               Período Comparado (Contadores Acumulados)
             </th>
-            <th colSpan={hasColor ? 7 : 4} className="px-4 py-3 text-center text-sm font-bold text-emerald-900 bg-emerald-50 border-l-2 border-gray-400">
+            <th colSpan={colsPerSection + 1} className="px-4 py-3 text-center text-sm font-bold text-emerald-900 bg-emerald-50 border-l-2 border-gray-400">
               Consumo del Período (Diferencias)
             </th>
           </tr>
@@ -105,15 +121,21 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort
             >
               Total <SortIcon active={sortKey === 'total1'} dir={sortDir} />
             </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-blue-800 bg-blue-50/50 border-l border-gray-200">
-              📋 Copiadora
-            </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-blue-800 bg-blue-50/50 border-l border-gray-200">
-              🖨️ Impresora
-            </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-blue-800 bg-blue-50/50 border-l border-gray-200">
-              📷 Escáner
-            </th>
+            {hasCopier && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-blue-800 bg-blue-50/50 border-l border-gray-200">
+                📋 Copiadora
+              </th>
+            )}
+            {hasPrinter && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-blue-800 bg-blue-50/50 border-l border-gray-200">
+                🖨️ Impresora
+              </th>
+            )}
+            {hasScanner && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-blue-800 bg-blue-50/50 border-l border-gray-200">
+                📷 Escáner
+              </th>
+            )}
             
             {/* Comparado */}
             <th 
@@ -123,15 +145,21 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort
             >
               Total <SortIcon active={sortKey === 'total2'} dir={sortDir} />
             </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-purple-800 bg-purple-50/50 border-l border-gray-200">
-              📋 Copiadora
-            </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-purple-800 bg-purple-50/50 border-l border-gray-200">
-              🖨️ Impresora
-            </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-purple-800 bg-purple-50/50 border-l border-gray-200 border-r border-gray-300">
-              📷 Escáner
-            </th>
+            {hasCopier && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-purple-800 bg-purple-50/50 border-l border-gray-200">
+                📋 Copiadora
+              </th>
+            )}
+            {hasPrinter && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-purple-800 bg-purple-50/50 border-l border-gray-200">
+                🖨️ Impresora
+              </th>
+            )}
+            {hasScanner && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-purple-800 bg-purple-50/50 border-l border-gray-200 border-r border-gray-300">
+                📷 Escáner
+              </th>
+            )}
             
             {/* Diferencias */}
             <th 
@@ -141,100 +169,124 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort
             >
               Total <SortIcon active={sortKey === 'diferencia'} dir={sortDir} />
             </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
-              📋 Copiadora
-            </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
-              🖨️ Impresora
-            </th>
-            <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
-              📷 Escáner
-            </th>
+            {hasCopier && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
+                📋 Copiadora
+              </th>
+            )}
+            {hasPrinter && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
+                🖨️ Impresora
+              </th>
+            )}
+            {hasScanner && (
+              <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
+                📷 Escáner
+              </th>
+            )}
           </tr>
           {/* Fila 3: B/N y Color */}
           <tr className="border-b-2 border-gray-300">
             {/* Base - Copiadora */}
-            {hasColor ? (
-              <>
+            {hasCopier && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
+              )
             )}
             {/* Base - Impresora */}
-            {hasColor ? (
-              <>
+            {hasPrinter && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
+              )
             )}
             {/* Base - Escáner */}
-            {hasColor ? (
-              <>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-r border-gray-300">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200 border-r border-gray-300">B/N</th>
+            {hasScanner && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-r border-gray-300">Color</th>
+                </>
+              ) : (
+                <th className="px-2 py-1 text-center text-[10px] font-medium text-blue-700 bg-blue-50/30 border-l border-gray-200 border-r border-gray-300">B/N</th>
+              )
             )}
             
             {/* Comparado - Copiadora */}
-            {hasColor ? (
-              <>
+            {hasCopier && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
+              )
             )}
             {/* Comparado - Impresora */}
-            {hasColor ? (
-              <>
+            {hasPrinter && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
+              )
             )}
             {/* Comparado - Escáner */}
-            {hasColor ? (
-              <>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-r border-gray-300">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200 border-r border-gray-300">B/N</th>
+            {hasScanner && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-r border-gray-300">Color</th>
+                </>
+              ) : (
+                <th className="px-2 py-1 text-center text-[10px] font-medium text-purple-700 bg-purple-50/30 border-l border-gray-200 border-r border-gray-300">B/N</th>
+              )
             )}
             
             {/* Diferencias - Copiadora */}
-            {hasColor ? (
-              <>
+            {hasCopier && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l-2 border-gray-400">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l-2 border-gray-400">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l-2 border-gray-400">B/N</th>
+              )
             )}
             {/* Diferencias - Impresora */}
-            {hasColor ? (
-              <>
+            {hasPrinter && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l border-gray-200">B/N</th>
+              )
             )}
             {/* Diferencias - Escáner */}
-            {hasColor ? (
-              <>
+            {hasScanner && (
+              hasColor ? (
+                <>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l border-gray-200">B/N</th>
+                  <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30">Color</th>
+                </>
+              ) : (
                 <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l border-gray-200">B/N</th>
-                <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30">Color</th>
-              </>
-            ) : (
-              <th className="px-2 py-1 text-center text-[10px] font-medium text-emerald-700 bg-emerald-50/30 border-l border-gray-200">B/N</th>
+              )
             )}
           </tr>
         </thead>
@@ -259,68 +311,104 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({ usuarios, onSort
                   <div className="text-sm font-bold text-blue-900">{fmt(u.consumo_cierre1 || 0)}</div>
                 </td>
                 {/* Copiadora */}
-                <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-l border-gray-200">{fmt(u.copiadora_bn_cierre1 || 0)}</td>
-                {hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10">{fmt(u.copiadora_color_cierre1 || 0)}</td>}
+                {hasCopier && (
+                  <>
+                    <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-l border-gray-200">{fmt(u.copiadora_bn_cierre1 || 0)}</td>
+                    {hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10">{fmt(u.copiadora_color_cierre1 || 0)}</td>}
+                  </>
+                )}
                 {/* Impresora */}
-                <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-l border-gray-200">{fmt(u.impresora_bn_cierre1 || 0)}</td>
-                {hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10">{fmt(u.impresora_color_cierre1 || 0)}</td>}
+                {hasPrinter && (
+                  <>
+                    <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-l border-gray-200">{fmt(u.impresora_bn_cierre1 || 0)}</td>
+                    {hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10">{fmt(u.impresora_color_cierre1 || 0)}</td>}
+                  </>
+                )}
                 {/* Escáner */}
-                <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-l border-gray-200">{fmt(u.escaner_bn_cierre1 || 0)}</td>
-                {hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-r border-gray-300">{fmt(u.escaner_color_cierre1 || 0)}</td>}
-                {!hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-r border-gray-300" style={{display: 'none'}}></td>}
+                {hasScanner && (
+                  <>
+                    <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-l border-gray-200">{fmt(u.escaner_bn_cierre1 || 0)}</td>
+                    {hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-r border-gray-300">{fmt(u.escaner_color_cierre1 || 0)}</td>}
+                    {!hasColor && <td className="px-2 py-3 text-center text-xs bg-blue-50/10 border-r border-gray-300" style={{display: 'none'}}></td>}
+                  </>
+                )}
                 
                 {/* PERÍODO COMPARADO */}
                 <td className="px-3 py-3 text-center border-l border-gray-300 bg-purple-50/20">
                   <div className="text-sm font-bold text-purple-900">{fmt(u.consumo_cierre2 || 0)}</div>
                 </td>
                 {/* Copiadora */}
-                <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-l border-gray-200">{fmt(u.copiadora_bn_cierre2 || 0)}</td>
-                {hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10">{fmt(u.copiadora_color_cierre2 || 0)}</td>}
+                {hasCopier && (
+                  <>
+                    <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-l border-gray-200">{fmt(u.copiadora_bn_cierre2 || 0)}</td>
+                    {hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10">{fmt(u.copiadora_color_cierre2 || 0)}</td>}
+                  </>
+                )}
                 {/* Impresora */}
-                <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-l border-gray-200">{fmt(u.impresora_bn_cierre2 || 0)}</td>
-                {hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10">{fmt(u.impresora_color_cierre2 || 0)}</td>}
+                {hasPrinter && (
+                  <>
+                    <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-l border-gray-200">{fmt(u.impresora_bn_cierre2 || 0)}</td>
+                    {hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10">{fmt(u.impresora_color_cierre2 || 0)}</td>}
+                  </>
+                )}
                 {/* Escáner */}
-                <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-l border-gray-200">{fmt(u.escaner_bn_cierre2 || 0)}</td>
-                {hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-r border-gray-300">{fmt(u.escaner_color_cierre2 || 0)}</td>}
-                {!hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-r border-gray-300" style={{display: 'none'}}></td>}
+                {hasScanner && (
+                  <>
+                    <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-l border-gray-200">{fmt(u.escaner_bn_cierre2 || 0)}</td>
+                    {hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-r border-gray-300">{fmt(u.escaner_color_cierre2 || 0)}</td>}
+                    {!hasColor && <td className="px-2 py-3 text-center text-xs bg-purple-50/10 border-r border-gray-300" style={{display: 'none'}}></td>}
+                  </>
+                )}
                 
                 {/* DIFERENCIAS */}
                 <td className={`px-3 py-3 text-center border-l-2 border-gray-400 bg-emerald-50/20 ${diffColor(u.diferencia)}`}>
                   <div className="text-sm font-bold">{fmtDiff(u.diferencia)}</div>
                 </td>
                 {/* Copiadora */}
-                <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difCopiaBN || 0)}`}>
-                  {fmtDiff(u.difCopiaBN || 0)}
-                </td>
-                {hasColor && (
-                  <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 ${diffColor(u.difCopiaColor || 0)}`}>
-                    {fmtDiff(u.difCopiaColor || 0)}
-                  </td>
+                {hasCopier && (
+                  <>
+                    <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difCopiaBN || 0)}`}>
+                      {fmtDiff(u.difCopiaBN || 0)}
+                    </td>
+                    {hasColor && (
+                      <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 ${diffColor(u.difCopiaColor || 0)}`}>
+                        {fmtDiff(u.difCopiaColor || 0)}
+                      </td>
+                    )}
+                  </>
                 )}
                 {/* Impresora */}
-                <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difImpreBN || 0)}`}>
-                  {fmtDiff(u.difImpreBN || 0)}
-                </td>
-                {hasColor && (
-                  <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 ${diffColor(u.difImpreColor || 0)}`}>
-                    {fmtDiff(u.difImpreColor || 0)}
-                  </td>
+                {hasPrinter && (
+                  <>
+                    <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difImpreBN || 0)}`}>
+                      {fmtDiff(u.difImpreBN || 0)}
+                    </td>
+                    {hasColor && (
+                      <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 ${diffColor(u.difImpreColor || 0)}`}>
+                        {fmtDiff(u.difImpreColor || 0)}
+                      </td>
+                    )}
+                  </>
                 )}
                 {/* Escáner */}
-                <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difEscanBN || 0)}`}>
-                  {fmtDiff(u.difEscanBN || 0)}
-                </td>
-                {hasColor && (
-                  <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 ${diffColor(u.difEscanColor || 0)}`}>
-                    {fmtDiff(u.difEscanColor || 0)}
-                  </td>
+                {hasScanner && (
+                  <>
+                    <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difEscanBN || 0)}`}>
+                      {fmtDiff(u.difEscanBN || 0)}
+                    </td>
+                    {hasColor && (
+                      <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 ${diffColor(u.difEscanColor || 0)}`}>
+                        {fmtDiff(u.difEscanColor || 0)}
+                      </td>
+                    )}
+                  </>
                 )}
               </tr>
             );
           })}
           {usuarios.length === 0 && (
             <tr>
-              <td colSpan={hasColor ? 23 : 14} className="text-center py-12">
+              <td colSpan={2 + (colsPerSection + 1) * 3} className="text-center py-12">
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
                     <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

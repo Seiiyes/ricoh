@@ -238,7 +238,7 @@ class CounterService:
                     
                     contador = ContadorUsuario(
                         printer_id=printer_id,
-                        codigo_usuario=user['codigo_usuario'],
+                        codigo_usuario=str(user['codigo_usuario']),
                         nombre_usuario=user['nombre_usuario'],
                         
                         # Totales
@@ -301,7 +301,7 @@ class CounterService:
                     
                     contador = ContadorUsuario(
                         printer_id=printer_id,
-                        codigo_usuario=user['codigo_usuario'],
+                        codigo_usuario=str(user['codigo_usuario']),
                         nombre_usuario=user['nombre_usuario'],
                         
                         # Totales (solo tenemos total_paginas_actual)

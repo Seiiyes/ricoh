@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CierreMensual, ComparacionCierres } from './types';
 import { TablaComparacionSimplificada } from './TablaComparacionSimplificada';
+import { Button, Input, Spinner, Alert } from '@/components/ui';
+import { ArrowLeft, RefreshCw, Download, FileSpreadsheet, FileText } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 const ROWS_PER_PAGE = 25;
@@ -58,13 +60,51 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
     finally { setLoading(false); }
   };
 
-  // Detectar capacidades de la impresora
+  // Detectar capacidades de la impresora y funciones con datos
   const printerCapabilities = useMemo(() => {
-    if (!comparacion?.printer) return { has_color: true, has_scanner: true, has_fax: true };
+    if (!comparacion?.printer) return { 
+      has_color: true, 
+      has_scanner: true, 
+      has_fax: true,
+      has_copier: true,
+      has_printer: true,
+      has_scanner_data: true,
+    };
+    
+    // Detectar si hay datos reales en cada función
+    const allUsers = [...comparacion.top_usuarios_aumento, ...comparacion.top_usuarios_disminucion];
+    
+    // Función helper para verificar si un valor es mayor a 0
+    const hasValue = (val: any) => val != null && val > 0;
+    
+    const hasCopierData = allUsers.some(u => 
+      hasValue(u.copiadora_bn_cierre1) || 
+      hasValue(u.copiadora_color_cierre1) ||
+      hasValue(u.copiadora_bn_cierre2) || 
+      hasValue(u.copiadora_color_cierre2)
+    );
+    
+    const hasPrinterData = allUsers.some(u => 
+      hasValue(u.impresora_bn_cierre1) || 
+      hasValue(u.impresora_color_cierre1) ||
+      hasValue(u.impresora_bn_cierre2) || 
+      hasValue(u.impresora_color_cierre2)
+    );
+    
+    const hasScannerData = allUsers.some(u => 
+      hasValue(u.escaner_bn_cierre1) || 
+      hasValue(u.escaner_color_cierre1) ||
+      hasValue(u.escaner_bn_cierre2) || 
+      hasValue(u.escaner_color_cierre2)
+    );
+    
     return {
       has_color: comparacion.printer.has_color ?? true,
       has_scanner: comparacion.printer.has_scanner ?? true,
       has_fax: comparacion.printer.has_fax ?? true,
+      has_copier: hasCopierData,
+      has_printer: hasPrinterData,
+      has_scanner_data: hasScannerData,
     };
   }, [comparacion]);
 
@@ -142,10 +182,14 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
 
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <button onClick={onVolver} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onVolver}
+          icon={<ArrowLeft size={16} />}
+        >
           Volver a Cierres
-        </button>
+        </Button>
         <div className="h-5 w-px bg-gray-300" />
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -221,20 +265,27 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
               </select>
             </div>
             
-            <button onClick={loadComparacion} disabled={!cierre1Id || !cierre2Id || loading}
-              className="mt-6 px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm transition-all hover:shadow-md">
-              {loading
-                ? <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
+            <Button
+              size="sm"
+              onClick={loadComparacion}
+              loading={loading}
+              disabled={!cierre1Id || !cierre2Id}
+              icon={<RefreshCw size={16} />}
+              className="mt-6"
+            >
               Comparar
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto">
         {error ? (
-          <div className="p-6"><div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">{error}</div></div>
+          <div className="p-6">
+            <Alert variant="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          </div>
         ) : !comparacion ? (
           <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Selecciona dos períodos para ver la comparación</div>
         ) : (
@@ -243,11 +294,11 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
             <div className="p-6 pb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: 'Total páginas', val: comparacion.diferencia_total, icon: '📄' },
-                  { label: 'Copiadora', val: comparacion.diferencia_copiadora, icon: '📋' },
-                  { label: 'Impresora', val: comparacion.diferencia_impresora, icon: '🖨️' },
-                  { label: 'Escáner', val: comparacion.diferencia_escaner, icon: '📷' },
-                ].map(({ label, val, icon }) => (
+                  { label: 'Total páginas', val: comparacion.diferencia_total, icon: '📄', show: true },
+                  { label: 'Copiadora', val: comparacion.diferencia_copiadora, icon: '📋', show: printerCapabilities.has_copier },
+                  { label: 'Impresora', val: comparacion.diferencia_impresora, icon: '🖨️', show: printerCapabilities.has_printer },
+                  { label: 'Escáner', val: comparacion.diferencia_escaner, icon: '📷', show: printerCapabilities.has_scanner_data },
+                ].filter(item => item.show).map(({ label, val, icon }) => (
                   <div key={label} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-medium text-gray-600">{label}</p>
@@ -294,16 +345,13 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                      </div>
-                      <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        placeholder="Buscar usuario o código..."
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-64 shadow-sm" />
-                    </div>
+                    <Input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar usuario o código..."
+                      className="w-64"
+                    />
                   </div>
                 </div>
 
@@ -315,6 +363,9 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                     sortKey={sortKey}
                     sortDir={sortDir}
                     hasColor={printerCapabilities.has_color}
+                    hasCopier={printerCapabilities.has_copier}
+                    hasPrinter={printerCapabilities.has_printer}
+                    hasScanner={printerCapabilities.has_scanner_data}
                   />
                 </div>
 
@@ -402,43 +453,43 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                     {comparacion && (
                       <div className="flex items-center gap-2 ml-2">
                         <div className="h-4 w-px bg-gray-300"></div>
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => {
                             const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel-ricoh`;
                             window.open(url, '_blank');
                           }}
-                          className="px-3 py-1.5 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+                          icon={<FileSpreadsheet size={14} />}
+                          className="bg-blue-600 hover:bg-blue-700"
                           title="Exportar en formato Ricoh (52 columnas, 3 hojas)"
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
                           Excel Ricoh
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => {
                             const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel`;
                             window.open(url, '_blank');
                           }}
-                          className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors flex items-center gap-1.5"
+                          icon={<Download size={14} />}
+                          className="bg-green-600 hover:bg-green-700"
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
                           Excel Simple
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => {
                             const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}`;
                             window.open(url, '_blank');
                           }}
-                          className="px-3 py-1.5 text-xs text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-1.5"
+                          icon={<FileText size={14} />}
+                          className="bg-indigo-600 hover:bg-indigo-700"
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
                           CSV
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
