@@ -179,6 +179,15 @@ class UserResponse(UserBase):
         from_attributes = True
 
 
+class UserListResponse(BaseModel):
+    """Schema for paginated user list response"""
+    items: List[UserResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 # ============================================================================
 # Printer Capabilities Schemas
 # ============================================================================
@@ -253,7 +262,7 @@ class PrinterUpdate(BaseModel):
     """Schema for updating a printer"""
     hostname: Optional[str] = Field(None, min_length=1, max_length=255)
     location: Optional[str] = Field(None, max_length=255)
-    empresa: Optional[str] = Field(None, max_length=255)
+    empresa_id: Optional[int] = None  # ID de la empresa a asignar
     serial_number: Optional[str] = Field(None, max_length=100)
     status: Optional[Literal['online', 'offline', 'error', 'maintenance']] = None
     toner_cyan: Optional[int] = Field(None, ge=0, le=100)
@@ -266,7 +275,8 @@ class PrinterUpdate(BaseModel):
 class PrinterResponse(PrinterBase):
     """Schema for printer response"""
     id: int
-    empresa: Optional[str]
+    empresa: Optional[str] = None  # Will be populated from empresa relationship
+    empresa_id: Optional[int] = None  # ID de la empresa
     status: str
     detected_model: Optional[str]
     serial_number: Optional[str]
@@ -285,8 +295,30 @@ class PrinterResponse(PrinterBase):
     # Capabilities
     capabilities: Optional[CapabilitiesResponse] = Field(None, description="Printer capabilities")
     
+    @validator('empresa', pre=True, always=True)
+    def serialize_empresa(cls, v):
+        """Convert Empresa object to string (razon_social)"""
+        if v is None:
+            return None
+        # If it's already a string, return it
+        if isinstance(v, str):
+            return v
+        # If it's an Empresa object, return razon_social
+        if hasattr(v, 'razon_social'):
+            return v.razon_social
+        return str(v)
+    
     class Config:
         from_attributes = True
+
+
+class PrinterListResponse(BaseModel):
+    """Schema for paginated printer list response"""
+    items: List[PrinterResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
 # ============================================================================
@@ -467,3 +499,11 @@ class ProvisioningResults(BaseModel):
 class UserCreateResponse(UserResponse):
     """Extended response for user creation with provisioning"""
     provisioning_results: Optional[ProvisioningResults] = None
+
+
+class UpdateAssignmentRequest(BaseModel):
+    """Request schema for updating assignment permissions"""
+    user_id: int = Field(..., gt=0, description="User ID")
+    printer_id: int = Field(..., gt=0, description="Printer ID")
+    permissions: dict = Field(..., description="Permissions dictionary")
+    entry_index: Optional[str] = Field(None, description="Entry index in printer")

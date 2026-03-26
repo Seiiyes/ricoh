@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
@@ -13,28 +13,46 @@ from .counter_schemas import (
 )
 from services.counter_service import CounterService
 from services.close_service import CloseService
+from middleware.auth_middleware import get_current_user
+from services.company_filter_service import CompanyFilterService
 
 router = APIRouter(
     prefix="/api/counters",
     tags=["counters"]
 )
 
-@router.get("/printer/{printer_id}", response_model=ContadorImpresoraResponse)
-def get_latest_counter(printer_id: int, db: Session = Depends(get_db)):
+@router.get("/printer/{printer_id}", response_model=ContadorImpresoraResponse, status_code=status.HTTP_200_OK)
+async def get_latest_counter(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener el último contador total de una impresora"""
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
     contador = CounterService.get_latest_counter(db, printer_id)
     if not contador:
-        raise HTTPException(status_code=404, detail=f"No hay contadores para la impresora {printer_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No hay contadores para la impresora {printer_id}")
     return contador
 
-@router.get("/users/{printer_id}", response_model=List[ContadorUsuarioResponse])
-def get_user_counters_latest(printer_id: int, db: Session = Depends(get_db)):
+@router.get("/users/{printer_id}", response_model=List[ContadorUsuarioResponse], status_code=status.HTTP_200_OK)
+async def get_user_counters_latest(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener los últimos contadores por usuario de una impresora"""
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
     return CounterService.get_user_counters_latest(db, printer_id)
 
 
-@router.get("/latest/{printer_id}")
-def get_latest_counters_with_printer(printer_id: int, db: Session = Depends(get_db)):
+@router.get("/latest/{printer_id}", status_code=status.HTTP_200_OK)
+async def get_latest_counters_with_printer(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Obtener los últimos contadores por usuario junto con información de la impresora
     
@@ -47,7 +65,11 @@ def get_latest_counters_with_printer(printer_id: int, db: Session = Depends(get_
     # Get printer
     printer = db.query(Printer).filter(Printer.id == printer_id).first()
     if not printer:
-        raise HTTPException(status_code=404, detail=f"Impresora {printer_id} no encontrada")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+    
+    # Validar acceso a la impresora
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
     # Get latest user counters
     counters = CounterService.get_user_counters_latest(db, printer_id)
@@ -90,25 +112,131 @@ def get_latest_counters_with_printer(printer_id: int, db: Session = Depends(get_
     }
 
 
-@router.get("/printer/{printer_id}/history", response_model=List[ContadorImpresoraResponse])
-def get_history(printer_id: int, limit: int = Query(100, ge=1, le=1000), db: Session = Depends(get_db)):
+@router.get("/printer/{printer_id}/history", response_model=List[ContadorImpresoraResponse], status_code=status.HTTP_200_OK)
+async def get_history(printer_id: int, limit: int = Query(100, ge=1, le=1000), db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener el histórico de contadores de una impresora"""
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
     contadores = db.query(ContadorImpresora).filter(
         ContadorImpresora.printer_id == printer_id
     ).order_by(ContadorImpresora.fecha_lectura.desc()).limit(limit).all()
     return contadores
 
-@router.post("/read/{printer_id}", response_model=ReadCounterResponse)
-def read_counter(printer_id: int, db: Session = Depends(get_db)):
+# IMPORTANTE: /read-all debe estar ANTES de /read/{printer_id} para evitar conflictos de rutas
+@router.post("/read-all", status_code=status.HTTP_200_OK)
+async def read_all_counters(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    """
+    Ejecutar lectura manual de contadores de TODAS las impresoras activas
+    
+    Retorna un resumen de lecturas exitosas y fallidas.
+    Solo lee impresoras a las que el usuario tiene acceso.
+    """
+    try:
+        print(f"\n{'='*80}")
+        print(f"📖 INICIANDO LECTURA DE TODAS LAS IMPRESORAS")
+        print(f"{'='*80}\n")
+        
+        # Obtener todas las impresoras activas con acceso del usuario
+        query = db.query(Printer).filter(Printer.status != 'offline')
+        
+        # Aplicar filtro de empresa
+        query = CompanyFilterService.apply_filter(query, current_user)
+        
+        printers = query.all()
+        print(f"📊 Total de impresoras a leer: {len(printers)}")
+        
+        if not printers:
+            return {
+                "success": True,
+                "message": "No hay impresoras disponibles para leer",
+                "successful": 0,
+                "failed": 0,
+                "total": 0,
+                "results": []
+            }
+        
+        results = []
+        successful = 0
+        failed = 0
+        
+        for printer in printers:
+            try:
+                print(f"📖 Leyendo impresora {printer.id}: {printer.hostname}")
+                
+                # Leer contador total
+                contador_total = CounterService.read_printer_counters(db, printer.id)
+                print(f"✅ Contador total leído para {printer.hostname}: {contador_total.total if contador_total else 'None'}")
+                
+                # Leer contadores de usuarios si aplica
+                usuarios_count = 0
+                if printer.tiene_contador_usuario or printer.usar_contador_ecologico:
+                    contadores_usuarios = CounterService.read_user_counters(db, printer.id)
+                    usuarios_count = len(contadores_usuarios)
+                    print(f"✅ Contadores de usuarios leídos para {printer.hostname}: {usuarios_count}")
+                
+                results.append({
+                    "printer_id": printer.id,
+                    "printer_name": printer.hostname,
+                    "success": True,
+                    "usuarios_count": usuarios_count,
+                    "error": None
+                })
+                successful += 1
+                print(f"✅ Lectura exitosa para {printer.hostname}")
+                
+            except Exception as e:
+                print(f"❌ Error leyendo {printer.hostname}: {str(e)}")
+                results.append({
+                    "printer_id": printer.id,
+                    "printer_name": printer.hostname,
+                    "success": False,
+                    "usuarios_count": 0,
+                    "error": str(e)
+                })
+                failed += 1
+        
+        print(f"\n{'='*80}")
+        print(f"📊 RESUMEN FINAL:")
+        print(f"   Total: {len(printers)}")
+        print(f"   Exitosas: {successful}")
+        print(f"   Fallidas: {failed}")
+        print(f"{'='*80}\n")
+        
+        return {
+            "success": True,
+            "message": f"Lectura completada: {successful} exitosas, {failed} fallidas",
+            "successful": successful,
+            "failed": failed,
+            "total": len(printers),
+            "results": results
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al leer contadores: {str(e)}"
+        )
+
+@router.post("/read/{printer_id}", response_model=ReadCounterResponse, status_code=status.HTTP_200_OK)
+async def read_counter(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Ejecutar lectura manual de contadores de una impresora (TOTAL + USUARIOS)"""
     try:
-        # Leer contador total
-        contador_total = CounterService.read_printer_counters(db, printer_id)
-        
-        # Obtener info de impresora para saber si leer usuarios
+        # Obtener info de impresora y validar acceso
         printer = db.query(Printer).filter(Printer.id == printer_id).first()
         if not printer:
-            raise HTTPException(status_code=404, detail="Impresora no encontrada")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+        
+        if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+        
+        # Leer contador total
+        contador_total = CounterService.read_printer_counters(db, printer_id)
             
         contadores_usuarios = []
         if printer.tiene_contador_usuario or printer.usar_contador_ecologico:
@@ -134,11 +262,19 @@ def read_counter(printer_id: int, db: Session = Depends(get_db)):
 # ENDPOINTS DE CIERRES MENSUALES
 # ============================================================================
 
-@router.post("/monthly", response_model=CierreMensualResponse)
-def create_monthly_close(request: CierreMensualRequest, db: Session = Depends(get_db)):
+@router.post("/monthly", response_model=CierreMensualResponse, status_code=status.HTTP_201_CREATED)
+async def create_monthly_close(request: CierreMensualRequest, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Crea un cierre mensual (compatibilidad retroactiva)
     """
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == request.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {request.printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
     try:
         cierre = CloseService.close_month_helper(
             db=db,
@@ -150,12 +286,12 @@ def create_monthly_close(request: CierreMensualRequest, db: Session = Depends(ge
         )
         return cierre
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@router.post("/close", response_model=CierreMensualResponse)
-def create_close(request: CierreRequest, db: Session = Depends(get_db)):
+@router.post("/close", response_model=CierreMensualResponse, status_code=status.HTTP_201_CREATED)
+async def create_close(request: CierreRequest, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Crea un cierre de contadores para cualquier período
     
@@ -169,10 +305,13 @@ def create_close(request: CierreRequest, db: Session = Depends(get_db)):
     - **cerrado_por**: Usuario que realiza el cierre (opcional)
     - **notas**: Notas adicionales (opcional)
     """
-    # Verificar que la impresora existe
+    # Verificar que la impresora existe y validar acceso
     printer = db.query(Printer).filter(Printer.id == request.printer_id).first()
     if not printer:
-        raise HTTPException(status_code=404, detail=f"Impresora {request.printer_id} no encontrada")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {request.printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
     try:
         # PASO 1: Leer contadores actuales de la impresora
@@ -191,7 +330,7 @@ def create_close(request: CierreRequest, db: Session = Depends(get_db)):
         contador_total = CounterService.read_printer_counters(db, request.printer_id)
         if not contador_total:
             raise HTTPException(
-                status_code=500, 
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail=f"Error al leer contador total de la impresora"
             )
         print(f"✅ Contador total leído: {contador_total.total} páginas")
@@ -239,45 +378,80 @@ def create_close(request: CierreRequest, db: Session = Depends(get_db)):
         
     except ValueError as e:
         print(f"❌ Error de validación: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         print(f"❌ Error inesperado: {str(e)}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error al crear cierre: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al crear cierre: {str(e)}")
 
-@router.get("/monthly", response_model=List[CierreMensualResponse])
-def list_closes(printer_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly", response_model=List[CierreMensualResponse], status_code=status.HTTP_200_OK)
+async def list_closes(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtiene todos los cierres de una impresora"""
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
     cierres = db.query(CierreMensual).filter(
         CierreMensual.printer_id == printer_id
     ).order_by(CierreMensual.fecha_inicio.desc()).all()
     return cierres
 
-@router.get("/monthly/{printer_id}", response_model=List[CierreMensualResponse])
-def get_monthly_closes_by_printer(printer_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly/{printer_id}", response_model=List[CierreMensualResponse], status_code=status.HTTP_200_OK)
+async def get_monthly_closes_by_printer(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtiene cierres de una impresora (compatibilidad endpoints antiguos)"""
-    return list_closes(printer_id, db)
+    return await list_closes(printer_id, db, current_user)
 
-@router.get("/monthly/compare/{cierre1_id}/{cierre2_id}", response_model=ComparacionCierresResponse)
-def compare_closes(cierre1_id: int, cierre2_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly/compare/{cierre1_id}/{cierre2_id}", response_model=ComparacionCierresResponse, status_code=status.HTTP_200_OK)
+async def compare_closes(cierre1_id: int, cierre2_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Compara dos cierres entre sí.
     El cierre1 debe ser el más antiguo y el cierre2 el más reciente.
     """
+    # Validar acceso a ambos cierres
+    cierre1 = db.query(CierreMensual).filter(CierreMensual.id == cierre1_id).first()
+    cierre2 = db.query(CierreMensual).filter(CierreMensual.id == cierre2_id).first()
+    
+    if not cierre1 or not cierre2:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Uno o ambos cierres no encontrados")
+    
+    # Validar que ambos cierres pertenecen a la misma impresora
+    if cierre1.printer_id != cierre2.printer_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Los cierres deben ser de la misma impresora")
+    
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == cierre1.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
     try:
         resultado = CloseService.comparar_cierres(db, cierre1_id, cierre2_id)
         return resultado
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.get("/monthly/{printer_id}/{year}/{month}", response_model=CierreMensualResponse)
-def get_monthly_close_specific(printer_id: int, year: int, month: int, db: Session = Depends(get_db)):
+def get_monthly_close_specific(printer_id: int, year: int, month: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtiene un cierre mensual específico"""
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=404, detail=f"Impresora {printer_id} no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta impresora")
+    
     cierre = db.query(CierreMensual).filter(
         CierreMensual.printer_id == printer_id,
         CierreMensual.anio == year,
@@ -290,30 +464,47 @@ def get_monthly_close_specific(printer_id: int, year: int, month: int, db: Sessi
         
     return cierre
 
-@router.get("/monthly/close/{cierre_id}", response_model=CierreMensualResponse)
-def get_close_by_id(cierre_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly/close/{cierre_id}", response_model=CierreMensualResponse, status_code=status.HTTP_200_OK)
+async def get_close_by_id(cierre_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtiene un cierre por su ID"""
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     if not cierre:
-        raise HTTPException(status_code=404, detail="Cierre no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
+    
+    # Validar acceso a la impresora del cierre
+    printer = db.query(Printer).filter(Printer.id == cierre.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
     return cierre
 
-@router.get("/monthly/{cierre_id}/users", response_model=List[CierreMensualUsuarioResponse])
-def get_close_users(cierre_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly/{cierre_id}/users", response_model=List[CierreMensualUsuarioResponse], status_code=status.HTTP_200_OK)
+async def get_close_users(cierre_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtiene los usuarios de un cierre"""
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     if not cierre:
-        raise HTTPException(status_code=404, detail="Cierre no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
+    
+    # Validar acceso a la impresora del cierre
+    printer = db.query(Printer).filter(Printer.id == cierre.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
         
     return cierre.usuarios
 
-@router.get("/monthly/{cierre_id}/detail", response_model=CierreMensualDetalleResponse)
-def get_close_detail(
+@router.get("/monthly/{cierre_id}/detail", response_model=CierreMensualDetalleResponse, status_code=status.HTTP_200_OK)
+async def get_close_detail(
     cierre_id: int, 
     page: int = 1,
     page_size: int = 50,
     search: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Obtiene el detalle completo de un cierre con paginación
@@ -326,10 +517,17 @@ def get_close_detail(
     """
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     if not cierre:
-        raise HTTPException(status_code=404, detail="Cierre no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
     
     # Get printer with capabilities
     printer = db.query(Printer).filter(Printer.id == cierre.printer_id).first()
+    
+    # Validar acceso a la impresora del cierre
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
     
     # Query usuarios with pagination and search
     usuarios_query = db.query(CierreMensualUsuario).filter(
@@ -387,8 +585,8 @@ def get_close_detail(
     return response
 
 
-@router.get("/monthly/compare/{cierre1_id}/{cierre2_id}/verificar")
-def verificar_coherencia_comparativo(cierre1_id: int, cierre2_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly/compare/{cierre1_id}/{cierre2_id}/verificar", status_code=status.HTTP_200_OK)
+async def verificar_coherencia_comparativo(cierre1_id: int, cierre2_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Verifica la coherencia del comparativo entre dos cierres
     Comprueba que la suma de B/N + COLOR de usuarios = diferencia del contador general
@@ -397,7 +595,15 @@ def verificar_coherencia_comparativo(cierre1_id: int, cierre2_id: int, db: Sessi
     cierre2 = db.query(CierreMensual).filter(CierreMensual.id == cierre2_id).first()
     
     if not cierre1 or not cierre2:
-        raise HTTPException(status_code=404, detail="Uno o ambos cierres no encontrados")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Uno o ambos cierres no encontrados")
+    
+    # Validar acceso a la impresora
+    printer = db.query(Printer).filter(Printer.id == cierre1.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
     # Diferencia del contador general
     diff_total_contador = cierre2.total_paginas - cierre1.total_paginas
@@ -483,8 +689,8 @@ def verificar_coherencia_comparativo(cierre1_id: int, cierre2_id: int, db: Sessi
     }
 
 
-@router.get("/monthly/{cierre_id}/suma-usuarios")
-def obtener_suma_usuarios(cierre_id: int, db: Session = Depends(get_db)):
+@router.get("/monthly/{cierre_id}/suma-usuarios", status_code=status.HTTP_200_OK)
+async def obtener_suma_usuarios(cierre_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Obtiene la suma de total_paginas de todos los usuarios de un cierre
     y la compara con el total_paginas del contador general
@@ -492,7 +698,15 @@ def obtener_suma_usuarios(cierre_id: int, db: Session = Depends(get_db)):
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     
     if not cierre:
-        raise HTTPException(status_code=404, detail="Cierre no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
+    
+    # Validar acceso a la impresora del cierre
+    printer = db.query(Printer).filter(Printer.id == cierre.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
     
     suma_usuarios = sum(u.total_paginas for u in cierre.usuarios)
     

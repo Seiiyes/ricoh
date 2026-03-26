@@ -61,6 +61,12 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
   obtenerUsuariosFiltrados: () => {
     const { usuarios, busqueda, filtroEstado } = get();
     
+    // Asegurar que usuarios es un array
+    if (!Array.isArray(usuarios)) {
+      console.error('usuarios no es un array:', usuarios);
+      return [];
+    }
+    
     let filtrados = usuarios;
     
     // Filtrar por estado

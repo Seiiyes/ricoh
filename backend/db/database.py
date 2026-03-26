@@ -12,14 +12,22 @@ DATABASE_URL = os.getenv(
     "postgresql://ricoh_admin:ricoh_secure_2024@localhost:5432/ricoh_fleet"
 )
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,  # Verify connections before using
-    pool_size=10,
-    max_overflow=20,
-    echo=False  # Set to True for SQL query logging
-)
+# Create SQLAlchemy engine with appropriate settings
+# SQLite doesn't support pool_size and max_overflow parameters
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=False  # Set to True for SQL query logging
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,  # Verify connections before using
+        pool_size=10,
+        max_overflow=20,
+        echo=False  # Set to True for SQL query logging
+    )
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

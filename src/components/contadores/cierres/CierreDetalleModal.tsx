@@ -3,8 +3,9 @@ import { CierreMensual, CierreMensualDetalle } from './types';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 import { Modal, Button, Input, Spinner } from '@/components/ui';
 import { Download, FileSpreadsheet } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import closeService from '@/services/closeService';
+import exportService from '@/services/exportService';
+import { parseApiError } from '@/utils/errorHandler';
 
 interface CierreDetalleModalProps {
   cierre: CierreMensual;
@@ -44,22 +45,11 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
 
     try {
       // Cargar TODOS los usuarios sin paginación para que la búsqueda funcione en todos
-      const params = new URLSearchParams({
-        page: '1',
-        page_size: '10000' // Número grande para obtener todos los usuarios
-      });
-
-      const response = await fetch(
-        `${API_BASE}/api/counters/monthly/${cierre.id}/detail?${params}`
-      );
-
-      if (!response.ok) throw new Error('Error al cargar detalle');
-
-      const data = await response.json();
+      const data = await closeService.getCloseDetail(cierre.id, 1, 10000);
       setDetalle(data);
     } catch (err: any) {
       console.error('Error loading detalle:', err);
-      setError(err.message);
+      setError(parseApiError(err, 'Error al cargar detalle'));
     } finally {
       setLoading(false);
     }
@@ -405,9 +395,13 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
             variant="outline"
             size="sm"
             icon={<FileSpreadsheet size={16} />}
-            onClick={() => {
-              const url = `${API_BASE}/api/export/cierre/${cierre.id}/excel`;
-              window.open(url, '_blank');
+            onClick={async () => {
+              try {
+                await exportService.exportCierreExcel(cierre.id);
+              } catch (error: any) {
+                console.error('Error al exportar:', error);
+                alert(error.message || 'Error al exportar archivo');
+              }
             }}
           >
             Exportar Excel
@@ -416,9 +410,13 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
             variant="outline"
             size="sm"
             icon={<Download size={16} />}
-            onClick={() => {
-              const url = `${API_BASE}/api/export/cierre/${cierre.id}`;
-              window.open(url, '_blank');
+            onClick={async () => {
+              try {
+                await exportService.exportCierreCSV(cierre.id);
+              } catch (error: any) {
+                console.error('Error al exportar:', error);
+                alert(error.message || 'Error al exportar archivo');
+              }
             }}
           >
             Exportar CSV

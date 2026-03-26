@@ -1,325 +1,288 @@
 ---
 inclusion: auto
-priority: high
 ---
 
-# 🎓 Lecciones Aprendidas - Contexto Automático
+# Lecciones Aprendidas - Ricoh Suite
 
-Este documento se carga automáticamente en cada conversación para evitar repetir errores pasados.
+Este documento contiene lecciones aprendidas de errores pasados para evitar repetirlos en el futuro.
 
----
+## 🚨 Reglas Críticas de Autenticación
 
-## ⚠️ ERRORES CRÍTICOS A EVITAR
+### SIEMPRE usar apiClient para requests autenticados
 
-### 1. Importaciones en Python/FastAPI
-**Error:** Usar módulos sin importarlos primero  
-**Ejemplo:** Usar `counter_schemas.CierreMensualResponse` sin `from . import counter_schemas`
-
-**Reglas:**
-- ✅ SIEMPRE importar módulos antes de usarlos
-- ✅ Usar imports relativos en FastAPI: `from . import module`
-- ✅ Verificar imports al agregar nuevos endpoints
-- ✅ Ejecutar linter antes de commit
-
-**Referencia:** `.kiro/lessons-learned/001-error-importacion-api.md`
-
----
-
-### 2. Lógica de Negocio - Primer Caso
-**Error:** Asumir que siempre hay datos previos  
-**Ejemplo:** Poner consumo = 0 cuando no hay cierre anterior
-
-**Reglas:**
-- ✅ SIEMPRE probar el "primer caso" (sin datos históricos)
-- ✅ Validar que los cálculos funcionen sin datos previos
-- ✅ No asumir que existe un registro anterior
-- ✅ Documentar casos especiales en el código
-
-**Código correcto para primer cierre:**
-```python
-if cierre_anterior:
-    # Calcular diferencia
-    consumo = actual - anterior
-else:
-    # Primer cierre: buscar inicio del período
-    contador_inicio = buscar_inicio_periodo()
-    if contador_inicio:
-        consumo = actual - contador_inicio
-    else:
-        # Solo una lectura: usar total acumulado
-        consumo = actual
-```
-
-**Referencia:** `.kiro/lessons-learned/002-consumo-usuarios-cero.md`
-
----
-
-### 3. Rutas en FastAPI - Orden y Ambigüedad
-**Error:** Definir rutas ambiguas que entran en conflicto  
-**Ejemplo:** `/closes/{printer_id}` y `/closes/{cierre_id}` en el mismo router
-
-**Reglas:**
-- ✅ Rutas específicas ANTES que rutas generales
-- ✅ Evitar rutas con el mismo patrón y tipo de parámetro
-- ✅ Usar prefijos diferentes para recursos diferentes
-- ✅ Probar cada endpoint individualmente
-
-**Patrones correctos:**
-```python
-# ✅ CORRECTO - Rutas diferentes
-@router.get("/closes/{printer_id}")  # Lista
-@router.get("/monthly/{close_id}/detail")  # Detalle
-
-# ✅ CORRECTO - Específica primero
-@router.get("/closes/latest")  # Más específica
-@router.get("/closes/{close_id}")  # Más general
-
-# ❌ INCORRECTO - Ambiguo
-@router.get("/closes/{printer_id}")
-@router.get("/closes/{close_id}")  # Nunca se ejecuta
-```
-
-**Referencia:** `.kiro/lessons-learned/003-conflicto-rutas-fastapi.md`
-
----
-
-### 4. Rutas de API en Frontend
-**Error:** Asumir prefijos en rutas sin verificar  
-**Ejemplo:** Usar `/api/printers` cuando el endpoint es `/printers`
-
-**Reglas:**
-- ✅ SIEMPRE verificar rutas reales del backend
-- ✅ Consultar documentación de API antes de implementar
-- ✅ Usar constantes para rutas (no hardcodear)
-- ✅ Probar rutas en navegador/curl antes de integrar
-
-**Patrón correcto:**
+**NUNCA hacer esto:**
 ```typescript
-// ✅ CORRECTO - Usar constantes
-export const API_ROUTES = {
-  PRINTERS: '/printers',  // Sin /api
-  COUNTERS: '/api/counters/closes',  // Con /api
-};
-
-// Uso
-fetch(`${API_BASE}${API_ROUTES.PRINTERS}`)
+const response = await fetch(`${API_BASE_URL}/endpoint`);
 ```
 
-**Referencia:** `.kiro/lessons-learned/004-ruta-incorrecta-api.md`
-
----
-
-### 5. Validación de Datos Disponibles
-**Error:** Procesar sin verificar que existan datos necesarios  
-**Ejemplo:** Crear cierre sin verificar que hay lecturas de usuarios
-
-**Reglas:**
-- ✅ SIEMPRE validar que existan datos antes de procesar
-- ✅ Mostrar advertencias claras cuando faltan datos
-- ✅ Documentar limitaciones del sistema
-- ✅ Ofrecer alternativas cuando no hay datos
-
-**Validación recomendada:**
-```python
-def validar_datos_disponibles(db, printer_id, fecha):
-    lecturas = db.query(ContadorUsuario).filter(
-        ContadorUsuario.printer_id == printer_id,
-        ContadorUsuario.fecha_lectura == fecha
-    ).count()
-    
-    if lecturas == 0:
-        raise ValueError(
-            f"No hay lecturas de usuarios para {fecha}. "
-            "Ejecute sincronización antes de crear cierre."
-        )
-```
-
-**Referencia:** `.kiro/lessons-learned/005-falta-datos-usuarios.md`
-
----
-
-## 🎯 CHECKLIST ANTES DE IMPLEMENTAR
-
-### Backend (Python/FastAPI)
-- [ ] Todos los módulos están importados
-- [ ] Lógica funciona sin datos previos (primer caso)
-- [ ] Rutas no son ambiguas
-- [ ] Validaciones de datos existen
-- [ ] Tests incluyen casos extremos
-- [ ] Linter ejecutado sin errores
-
-### Frontend (TypeScript/React)
-- [ ] Rutas de API verificadas con backend
-- [ ] Constantes usadas para rutas
-- [ ] Manejo de errores implementado
-- [ ] Estados de carga manejados
-- [ ] Validaciones de datos en UI
-
-### Base de Datos
-- [ ] Datos necesarios existen
-- [ ] Migraciones probadas
-- [ ] Índices optimizados
-- [ ] Constraints validados
-
----
-
-## 📚 PATRONES RECOMENDADOS
-
-### 1. Imports en Python
-```python
-# ✅ CORRECTO
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from typing import List, Optional
-
-from db.database import get_db
-from db.models import Model1, Model2
-from services.service import Service
-from . import schemas  # Import relativo
-```
-
-### 2. Validación de Datos
-```python
-# ✅ CORRECTO
-def procesar_datos(db, id):
-    # Validar que existe
-    registro = db.query(Model).filter(Model.id == id).first()
-    if not registro:
-        raise HTTPException(404, "No encontrado")
-    
-    # Validar datos relacionados
-    if not registro.datos_relacionados:
-        raise HTTPException(400, "Faltan datos relacionados")
-    
-    # Procesar
-    return procesar(registro)
-```
-
-### 3. Rutas en FastAPI
-```python
-# ✅ CORRECTO - Sin ambigüedad
-@router.get("/resources/{resource_id}")
-def get_resource(resource_id: int):
-    pass
-
-@router.get("/resources/{resource_id}/details")
-def get_resource_details(resource_id: int):
-    pass
-```
-
-### 4. Constantes en Frontend
+**SIEMPRE hacer esto:**
 ```typescript
-// ✅ CORRECTO
-// src/config/api.ts
-export const API_BASE = 'http://localhost:8000';
-export const API_ROUTES = {
-  PRINTERS: '/printers',
-  COUNTERS: {
-    LIST: '/api/counters/closes',
-    DETAIL: '/api/counters/monthly',
+import apiClient from './apiClient';
+const response = await apiClient.get('/endpoint');
+```
+
+**Razón:** `apiClient` tiene interceptores que:
+- Agregan automáticamente el token JWT
+- Renuevan el token cuando expira (401/403)
+- Redirigen a login si el token es inválido
+- Manejan errores de forma consistente
+
+### Servicios que DEBEN usar apiClient
+
+Todos estos servicios ya están actualizados:
+- ✅ `src/services/printerService.ts`
+- ✅ `src/services/servicioUsuarios.ts`
+- ✅ `src/services/counterService.ts`
+- ✅ `src/services/authService.ts`
+- ✅ `src/services/empresaService.ts`
+- ✅ `src/services/adminUserService.ts`
+
+### Componentes que DEBEN usar apiClient
+
+Todos estos componentes ya están actualizados:
+- ✅ `src/components/contadores/cierres/CierresView.tsx`
+- ✅ `src/components/contadores/cierres/ComparacionPage.tsx`
+- ✅ `src/components/contadores/cierres/CierreModal.tsx`
+- ✅ `src/components/contadores/cierres/CierreDetalleModal.tsx`
+- ✅ `src/components/contadores/cierres/ComparacionModal.tsx`
+- ✅ `src/components/discovery/DiscoveryModal.tsx`
+- ✅ `src/components/usuarios/AdministracionUsuarios.tsx`
+
+Si creas un nuevo servicio o componente, DEBE usar `apiClient`.
+
+## 🔄 Manejo de Errores 403
+
+### Error 403 es NORMAL cuando el token expira
+
+El flujo correcto es:
+1. Token expira (30 minutos)
+2. Backend retorna 403 Forbidden
+3. Interceptor detecta 403
+4. Interceptor renueva el token automáticamente
+5. Interceptor reintenta el request con el nuevo token
+6. Usuario ve los datos correctamente
+
+**NO es un bug** ver un 403 momentáneo en la consola. Es el comportamiento esperado.
+
+### Cuándo preocuparse por 403
+
+Solo preocuparse si:
+- El usuario es redirigido a login (significa que el refresh token también expiró)
+- El 403 persiste y no se recupera automáticamente
+- El interceptor no está funcionando
+
+## 🐳 Docker y Dependencias
+
+### SIEMPRE reconstruir contenedores después de cambios en requirements
+
+**Cuando cambies `backend/requirements.txt`:**
+```bash
+docker-compose down
+docker-compose build --no-cache backend
+docker-compose up -d
+```
+
+**Cuando cambies `package.json`:**
+```bash
+npm install
+# Si estás en Docker, reconstruir el contenedor frontend también
+```
+
+### Verificar que el backend esté corriendo antes de diagnosticar CORS
+
+CORS errors son síntomas, no causas. Si ves un error CORS:
+1. Verificar logs del backend: `docker-compose logs backend --tail=50`
+2. Verificar que el backend esté respondiendo: `curl http://localhost:8000/`
+3. Verificar que las dependencias estén instaladas
+
+## 📦 Schemas Pydantic y Relaciones
+
+### Cuando cambies un campo de string a relación
+
+Si cambias:
+```python
+# ANTES
+empresa: str
+
+# DESPUÉS
+empresa: Mapped["Empresa"] = relationship("Empresa")
+```
+
+Debes actualizar el schema Pydantic:
+```python
+class PrinterResponse(PrinterBase):
+    empresa: Optional[str] = None
+    
+    @validator('empresa', pre=True, always=True)
+    def serialize_empresa(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return v
+        if hasattr(v, 'razon_social'):
+            return v.razon_social
+        return str(v)
+```
+
+## 🔐 Validaciones de Importación
+
+### NUNCA importar desde módulos que no existen
+
+**Antes de importar:**
+```typescript
+import axios from 'axios';
+```
+
+**Verificar que esté en package.json:**
+```json
+{
+  "dependencies": {
+    "axios": "^1.7.9"
   }
-};
-
-// Uso
-const url = `${API_BASE}${API_ROUTES.PRINTERS}`;
+}
 ```
 
----
-
-## 🚨 SEÑALES DE ALERTA
-
-Si ves alguno de estos patrones, DETENTE y revisa:
-
-### Backend
-- ❌ Usar variable sin importar módulo
-- ❌ Asumir que existe registro anterior
-- ❌ Dos rutas con mismo patrón
-- ❌ Procesar sin validar datos
-- ❌ No manejar caso "vacío" o "primero"
-
-### Frontend
-- ❌ Hardcodear rutas de API
-- ❌ No manejar errores de fetch
-- ❌ Asumir que datos siempre existen
-- ❌ No validar respuestas de API
-
-### General
-- ❌ No probar casos extremos
-- ❌ No documentar limitaciones
-- ❌ No ejecutar linter
-- ❌ No leer logs de error
-
----
-
-## 💡 PRINCIPIOS CLAVE
-
-1. **Validar antes de procesar** - Nunca asumir que los datos existen
-2. **Probar casos extremos** - Primer caso, último caso, caso vacío
-3. **Ser explícito** - Imports claros, rutas específicas, validaciones obvias
-4. **Documentar limitaciones** - Si algo no funciona en ciertos casos, documentarlo
-5. **Leer los logs** - Los errores suelen ser muy claros sobre qué falta
-
----
-
-## 📖 DOCUMENTACIÓN COMPLETA
-
-Para más detalles sobre cada error, consultar:
-- `.kiro/lessons-learned/README.md` - Índice completo
-- `.kiro/lessons-learned/001-*.md` - Lecciones individuales
-
----
-
-**Última actualización:** 4 de marzo de 2026  
-**Mantenido por:** Sistema Kiro  
-**Revisión:** Cada vez que se documenta un nuevo error
-
-
-
----
-
-### 6. Comparación Usando Campo Incorrecto
-**Error:** Usar `total_paginas` en lugar de `consumo_total` en comparaciones  
-**Ejemplo:** Comparar contadores acumulados en lugar de consumos del período
-
-**Reglas:**
-- ✅ SIEMPRE entender qué representa cada campo
-- ✅ `total_paginas` = contador acumulado (siempre crece)
-- ✅ `consumo_total` = consumo del período (puede variar)
-- ✅ Para comparaciones entre cierres, usar `consumo_total`
-- ✅ Documentar diferencias entre campos similares
-
-**Diferencia clave:**
-```python
-# ❌ INCORRECTO - Compara contadores acumulados
-consumo1 = u1.total_paginas  # 1,000 (acumulado)
-consumo2 = u2.total_paginas  # 1,050 (acumulado)
-diferencia = 50  # No refleja el consumo real del período
-
-# ✅ CORRECTO - Compara consumos del período
-consumo1 = u1.consumo_total  # 1,000 (consumió ese día)
-consumo2 = u2.consumo_total  # 50 (consumió ese día)
-diferencia = -950  # Refleja que consumió menos
+**Si no está, instalarlo:**
+```bash
+npm install axios
 ```
 
-**Cuándo usar cada campo:**
-- `consumo_total` → Comparar períodos, ver cambios
-- `total_paginas` → Ver contador total, calcular diferencias manualmente
+## 🎯 Patrones a Seguir
 
-**Referencia:** `.kiro/lessons-learned/006-comparacion-campo-incorrecto.md`
+### Manejo de errores en servicios
+
+```typescript
+export async function miServicio(): Promise<Data> {
+  try {
+    const response = await apiClient.get('/endpoint');
+    return response.data;
+  } catch (error: any) {
+    console.error('Error en miServicio:', error);
+    const detail = error.response?.data?.detail || error.message || 'Error genérico';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+  }
+}
+```
+
+### Parámetros de query con apiClient
+
+```typescript
+// CORRECTO
+const response = await apiClient.get('/endpoint', {
+  params: {
+    skip: 0,
+    limit: 100,
+    filter: 'value'
+  }
+});
+
+// INCORRECTO (no usar URLSearchParams manualmente)
+const params = new URLSearchParams();
+params.append('skip', '0');
+const response = await fetch(`${API_BASE_URL}/endpoint?${params}`);
+```
+
+### Requests con body
+
+```typescript
+// GET
+const response = await apiClient.get('/endpoint');
+
+// POST
+const response = await apiClient.post('/endpoint', { data: 'value' });
+
+// PUT
+const response = await apiClient.put('/endpoint', { data: 'value' });
+
+// DELETE con body
+const response = await apiClient.delete('/endpoint', {
+  data: { id: 123 }
+});
+
+// PATCH
+const response = await apiClient.patch('/endpoint', { field: 'value' });
+```
+
+## 📝 Documentación
+
+### SIEMPRE documentar errores encontrados
+
+Cuando encuentres un error:
+1. Agregar a `docs/ERRORES_Y_SOLUCIONES.md`
+2. Incluir: síntoma, causa, solución, prevención
+3. Actualizar `docs/ESTADO_ACTUAL_PROYECTO.md`
+4. Actualizar este archivo de lecciones aprendidas
+
+## 🧪 Testing
+
+### Probar endpoints en Swagger antes de integrar
+
+Antes de crear un servicio frontend:
+1. Ir a http://localhost:8000/docs
+2. Probar el endpoint manualmente
+3. Verificar que retorna los datos esperados
+4. Verificar que la autenticación funciona
+5. Luego crear el servicio frontend
+
+## 🔍 Debugging
+
+### Orden de debugging cuando hay múltiples errores
+
+1. **Backend logs**: `docker-compose logs backend --tail=50`
+2. **Dependencias**: Verificar que estén instaladas
+3. **Configuración**: CORS, env vars, etc.
+4. **Código**: Schemas, servicios, componentes
+
+### Comandos útiles
+
+```bash
+# Ver logs del backend
+docker-compose logs backend --tail=100
+docker-compose logs -f backend  # tiempo real
+
+# Reconstruir backend
+docker-compose down
+docker-compose build --no-cache backend
+docker-compose up -d
+
+# Verificar estado de contenedores
+docker-compose ps
+
+# Entrar al contenedor
+docker exec -it ricoh-backend bash
+
+# Verificar dependencias instaladas
+docker exec -it ricoh-backend pip list | grep bcrypt
+
+# Probar endpoint manualmente
+curl -X GET http://localhost:8000/printers/ \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## ⚠️ Errores Comunes a Evitar
+
+1. ❌ Usar `fetch` directamente en lugar de `apiClient` (servicios Y componentes)
+2. ❌ No reconstruir Docker después de cambiar requirements.txt
+3. ❌ No actualizar schemas Pydantic cuando cambias relaciones
+4. ❌ Importar módulos sin verificar que estén en package.json
+5. ❌ Diagnosticar CORS sin verificar logs del backend primero
+6. ❌ No documentar errores encontrados
+7. ❌ Asumir que un 403 es un bug (puede ser token expirado)
+8. ❌ Definir `API_BASE` o `API_URL` en componentes (usar apiClient directamente)
+
+## ✅ Checklist Antes de Commit
+
+- [ ] Todos los servicios usan `apiClient` (no `fetch`)
+- [ ] Todos los componentes usan `apiClient` (no `fetch`)
+- [ ] No hay variables `API_BASE` o `API_URL` en componentes
+- [ ] Dependencias agregadas a package.json/requirements.txt
+- [ ] Schemas Pydantic actualizados si cambiaste relaciones
+- [ ] Errores documentados en `docs/ERRORES_Y_SOLUCIONES.md`
+- [ ] Tests ejecutados y pasando
+- [ ] Endpoints probados en Swagger
+- [ ] Docker reconstruido si cambiaste dependencias
 
 ---
 
-## 🚨 SEÑALES DE ALERTA ACTUALIZADAS
-
-### Backend
-- ❌ Usar variable sin importar módulo
-- ❌ Asumir que existe registro anterior
-- ❌ Dos rutas con mismo patrón
-- ❌ Procesar sin validar datos
-- ❌ No manejar caso "vacío" o "primero"
-- ❌ Usar campo incorrecto en comparaciones ⭐ NUEVO
-- ❌ No entender diferencia entre campos similares ⭐ NUEVO
-
----
-
-**Última actualización:** 9 de marzo de 2026
+**Última actualización:** 20 de Marzo de 2026  
+**Mantenido por:** Equipo de Desarrollo Ricoh Suite

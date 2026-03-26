@@ -325,6 +325,14 @@ class RicohWebClient:
             carpeta_smb = user_config.get('carpeta_smb', {})
             network_password = user_config.get('contrasena_inicio_sesion', '')
             
+            # Si no hay contraseña, usar "Temporal2021" por defecto
+            if not network_password:
+                network_password = 'Temporal2021'
+                logger.info(f"⚠️  No se proporcionó contraseña, usando 'Temporal2021' por defecto")
+            
+            # Determinar si se debe marcar como actualizada la contraseña
+            is_password_updated = 'true' if network_password else 'false'
+            
             # Build form data matching EXACTLY the working browser request
             # Use the entryIndexIn that the printer assigned in the form
             form_data = [
@@ -340,7 +348,7 @@ class RicohWebClient:
                 ('wayTo', 'adrsList.cgi'),
                 ('isSelfPasswordEditMode', 'false'),
                 ('isLocalAuthPasswordUpdated', 'false'),
-                ('isFolderAuthPasswordUpdated', 'false'),  # Always false when no password
+                ('isFolderAuthPasswordUpdated', is_password_updated),  # true si hay contraseña
                 ('entryIndexIn', entry_index),  # Use the index assigned by the printer
                 ('entryNameIn', user_config.get('nombre', '')),
                 ('entryDisplayNameIn', user_config.get('nombre', '')),
@@ -370,10 +378,11 @@ class RicohWebClient:
                 ('folderPathNameIn', carpeta_smb.get('ruta', '')),
             ])
             
-            # Only add password fields if password is provided
-            if network_password:
-                form_data.append(('folderAuthPasswordIn', network_password))
-                form_data.append(('folderAuthPasswordConfirmIn', network_password))
+            # Always add password fields (using Temporal2021 if not provided)
+            form_data.append(('folderAuthPasswordIn', network_password))
+            form_data.append(('folderAuthPasswordConfirmIn', network_password))
+            
+            logger.info(f"🔐 Contraseña de carpeta configurada: {'***' if network_password else '(vacía)'}")
             
             # Step 5: Send POST IMMEDIATELY (no delays!)
             url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
@@ -1038,24 +1047,45 @@ class RicohWebClient:
                     return False
 
                 logger.info(f"   {len(html_checkboxes)} checkboxes encontrados")
+                
+                # Log de TODOS los checkboxes disponibles
+                all_checkbox_values = [cb.get('value', '') for cb in html_checkboxes]
+                logger.info(f"   Checkboxes disponibles: {all_checkbox_values}")
+                
+                logger.info(f"   Permisos solicitados: {permissions}")
 
                 # 5. Determinar qué funciones activar según permisos solicitados
                 active_funcs = []
+                excluded_funcs = []
                 for cb in html_checkboxes:
                     val = cb.get('value', '').upper()
                     is_needed = False
 
                     # Mapeo basado en valores reales de Ricoh
                     if 'COPY' in val:
-                        if any(x in val for x in ['FC', 'FULL', 'COLOR']):
-                            if permissions.get('copiadora_color'): is_needed = True
-                        elif any(x in val for x in ['BW', 'TC', 'MC']):
-                            if permissions.get('copiadora'): is_needed = True
+                        # FC = Full Color (A todo color)
+                        # TC = Two Colors (Dos colores) 
+                        # MC = Multi Color (Color personalizado)
+                        # BW = Black & White (Blanco y negro)
+                        if any(x in val for x in ['FC', 'FULL', 'COLOR', 'TC', 'MC']):
+                            # Solo incluir funciones de color si copiadora_color está habilitado
+                            if permissions.get('copiadora_color'):
+                                is_needed = True
+                            # Si copiadora_color=False, explícitamente NO incluir (is_needed queda False)
+                        elif 'BW' in val:
+                            # Incluir funciones B/N si copiadora está habilitado
+                            if permissions.get('copiadora'):
+                                is_needed = True
                     elif 'PRT' in val or 'PRINT' in val:
                         if any(x in val for x in ['FC', 'FULL', 'COLOR']):
-                            if permissions.get('impresora_color'): is_needed = True
+                            # Solo incluir funciones de color si impresora_color está habilitado
+                            if permissions.get('impresora_color'):
+                                is_needed = True
+                            # Si impresora_color=False, explícitamente NO incluir (is_needed queda False)
                         elif 'BW' in val:
-                            if permissions.get('impresora'): is_needed = True
+                            # Incluir funciones B/N si impresora está habilitado
+                            if permissions.get('impresora'):
+                                is_needed = True
                     elif 'SCAN' in val:
                         if permissions.get('escaner'): is_needed = True
                     elif any(x in val for x in ['DBX', 'DOC_SERVER', 'DOCSERVER']):
@@ -1067,6 +1097,13 @@ class RicohWebClient:
 
                     if is_needed:
                         active_funcs.append(cb.get('value'))
+                    else:
+                        # Registrar funciones que se están excluyendo explícitamente
+                        if 'COPY' in val or 'PRT' in val or 'PRINT' in val:
+                            excluded_funcs.append(cb.get('value'))
+
+                logger.info(f"   Funciones a ACTIVAR ({len(active_funcs)}): {active_funcs}")
+                logger.info(f"   Funciones a DESACTIVAR ({len(excluded_funcs)}): {excluded_funcs}")
 
                 # 6. Obtener información del usuario para campos obligatorios
                 user_name_input = soup.find('input', {'name': 'entryNameIn'})

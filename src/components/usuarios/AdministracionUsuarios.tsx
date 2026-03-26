@@ -6,8 +6,8 @@ import { ModificarUsuario } from './ModificarUsuario';
 import { Users, Search, RefreshCw } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
 import type { Usuario } from '@/types/usuario';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import discoveryService from '@/services/discoveryService';
+import { parseApiError } from '@/utils/errorHandler';
 
 export const AdministracionUsuarios = () => {
   const {
@@ -56,106 +56,40 @@ export const AdministracionUsuarios = () => {
     try {
       setSincronizando(true);
 
-      // Construir URL con parámetros
-      let url = `${API_URL}/discovery/sync-users-from-printers`;
-      const params = new URLSearchParams();
-      
-      if (modoSincronizacion === 'especifico' && codigoUsuarioBuscar.trim()) {
-        params.append('user_code', codigoUsuarioBuscar.trim());
-      }
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
+      // Determinar si se debe buscar un usuario específico
+      const userCode = modoSincronizacion === 'especifico' && codigoUsuarioBuscar.trim() 
+        ? codigoUsuarioBuscar.trim() 
+        : undefined;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      console.log('🔍 Sincronizando con parámetros:', { 
+        modo: modoSincronizacion, 
+        userCode 
       });
 
-      if (!response.ok) {
-        throw new Error('Error al sincronizar usuarios');
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        setUsuariosImpresora(data.users || []);
-
-        // Debug: ver estructura de datos
-        console.log('📊 Total usuarios recibidos:', data.users?.length);
-        console.log('📊 Primeros 3 usuarios:', data.users?.slice(0, 3));
-        console.log('📊 Primer usuario completo:', data.users?.[0]);
-        console.log('📊 Impresoras del primer usuario:', data.users?.[0]?.impresoras);
-
-        // Verificar cuántos usuarios tienen impresoras
-        const usuariosConImpresoras = data.users?.filter((u: any) => u.impresoras && u.impresoras.length > 0) || [];
-        console.log('📊 Usuarios con impresoras:', usuariosConImpresoras.length);
-        console.log('📊 Ejemplo usuario con impresoras:', usuariosConImpresoras[0]);
-
-        // Estadísticas de distribución de impresoras
-        const distribucion = data.users?.reduce((acc: any, u: any) => {
-          const numImpresoras = u.impresoras?.length || 0;
-          acc[numImpresoras] = (acc[numImpresoras] || 0) + 1;
-          return acc;
-        }, {});
-        console.log('📊 Distribución de impresoras por usuario:', distribucion);
-
-        // Buscar usuarios en múltiples impresoras
-        const usuariosMultiples = data.users?.filter((u: any) => u.impresoras && u.impresoras.length > 1) || [];
-        console.log('📊 Usuarios en múltiples impresoras:', usuariosMultiples.length);
-        if (usuariosMultiples.length > 0) {
-          console.log('📊 Ejemplo usuario en múltiples impresoras:', usuariosMultiples[0]);
+      const response = await discoveryService.syncUsersFromPrinters(userCode);
+      
+      console.log('🔄 Respuesta de sincronización:', response);
+      console.log('📊 Usuarios sincronizados:', response.users?.length || 0);
+      
+      if (response.success) {
+        alert(response.message);
+        
+        // Recargar usuarios de la base de datos
+        await cargarUsuarios();
+        
+        // Actualizar usuarios de impresoras con la respuesta
+        if (response.users && Array.isArray(response.users)) {
+          console.log('✅ Actualizando estado con usuarios de impresoras:', response.users.length);
+          setUsuariosImpresora(response.users);
+        } else {
+          console.warn('⚠️ No se recibieron usuarios en la respuesta');
         }
-
-        // Mostrar resumen detallado
-        let mensaje = `✅ ${data.message}\n\n`;
-        mensaje += `📊 Resumen:\n`;
-        mensaje += `• Total usuarios únicos: ${data.total_usuarios_unicos}\n`;
-        mensaje += `• En base de datos: ${data.usuarios_en_db}\n`;
-        mensaje += `• Solo en impresoras: ${data.usuarios_solo_impresoras}\n\n`;
-
-        if (data.printers_scanned && data.printers_scanned.length > 0) {
-          mensaje += `🖨️ Impresoras escaneadas:\n`;
-          data.printers_scanned.forEach((p: any) => {
-            if (p.error) {
-              mensaje += `• ${p.hostname} (${p.ip}): ❌ Error\n`;
-            } else if (p.skipped) {
-              mensaje += `• ${p.hostname} (${p.ip}): ⏭️ Omitida (${p.reason})\n`;
-            } else {
-              mensaje += `• ${p.hostname} (${p.ip}): ${p.users_count} usuarios\n`;
-            }
-          });
-        }
-
-        if (data.errors && data.errors.length > 0) {
-          mensaje += `\n⚠️ Errores:\n`;
-          data.errors.forEach((err: string) => {
-            mensaje += `• ${err}\n`;
-          });
-        }
-
-        alert(mensaje);
       } else {
-        alert(`⚠️ ${data.message}`);
+        alert('Error al sincronizar usuarios');
       }
-
     } catch (error: any) {
-      console.error('Error sincronizando usuarios:', error);
-      
-      // Mensaje de error más descriptivo
-      let errorMsg = '❌ Error al sincronizar usuarios desde las impresoras\n\n';
-      
-      if (error.message) {
-        errorMsg += `Detalle: ${error.message}\n`;
-      }
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorMsg += '\n⚠️ Posible causa: El servidor backend no está corriendo.\n';
-        errorMsg += 'Verifica que el backend esté activo en http://localhost:8000';
-      }
-      
-      alert(errorMsg);
+      console.error('Error al sincronizar:', error);
+      alert(parseApiError(error, 'Error al sincronizar usuarios desde impresoras'));
     } finally {
       setSincronizando(false);
     }

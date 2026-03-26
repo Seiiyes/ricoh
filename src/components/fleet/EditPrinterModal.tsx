@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, EmpresaAutocomplete } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 
 interface EditPrinterModalProps {
@@ -14,6 +14,7 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
   const [hostname, setHostname] = useState('');
   const [location, setLocation] = useState('');
   const [empresa, setEmpresa] = useState('');
+  const [empresaId, setEmpresaId] = useState<number | undefined>(undefined);
   const [serialNumber, setSerialNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -22,6 +23,7 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
       setHostname(printer.hostname);
       setLocation(printer.location || '');
       setEmpresa(printer.empresa || '');
+      setEmpresaId(printer.empresa_id);
       setSerialNumber(printer.serial_number || '');
     }
   }, [printer]);
@@ -34,7 +36,7 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
       await onSave(printer.id, {
         hostname,
         location: location || null,
-        empresa: empresa || null,
+        empresa_id: empresaId || null,
         serial_number: serialNumber || null,
       });
       onClose();
@@ -78,11 +80,14 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
         />
 
         {/* Empresa */}
-        <Input
+        <EmpresaAutocomplete
           label="Empresa"
           value={empresa}
-          onChange={(e) => setEmpresa(e.target.value)}
-          placeholder="Ej: ACME Corp"
+          onChange={(value, id) => {
+            setEmpresa(value);
+            setEmpresaId(id);
+          }}
+          placeholder="Buscar o seleccionar empresa..."
         />
 
         {/* Serial Number / ID Máquina */}

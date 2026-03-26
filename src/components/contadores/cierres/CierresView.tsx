@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { CierreMensual, Printer } from './types';
+import { CierreMensual } from './types';
 import { ListaCierres } from './ListaCierres';
 import { CierreModal } from './CierreModal';
 import { CierreDetalleModal } from './CierreDetalleModal';
 import { ComparacionPage } from './ComparacionPage';
 import { Button, Spinner, Alert } from '@/components/ui';
 import { RefreshCw, Plus, BarChart3 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import closeService from '@/services/closeService';
+import apiClient from '@/services/apiClient';
+import { parseApiError } from '@/utils/errorHandler';
 
 export const CierresView: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -35,12 +36,12 @@ export const CierresView: React.FC = () => {
 
   const loadPrinters = async () => {
     try {
-      const response = await fetch(`${API_BASE}/printers`);
-      if (!response.ok) throw new Error('Error al cargar impresoras');
-      const data = await response.json();
+      const response = await apiClient.get('/printers/');
+      const data = response.data.items || response.data;
       setPrinters(data);
       if (data.length > 0 && !selectedPrinter) setSelectedPrinter(data[0].id);
-    } catch {
+    } catch (error) {
+      console.error('Error al cargar impresoras:', error);
       setError('Error al cargar impresoras');
     }
   };
@@ -50,13 +51,11 @@ export const CierresView: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ year: selectedYear.toString(), limit: '500' });
-      const response = await fetch(`${API_BASE}/api/counters/monthly/${selectedPrinter}?${params}`);
-      if (!response.ok) throw new Error('Error al cargar cierres');
-      const data = await response.json();
+      const data = await closeService.getClosesByPrinter(selectedPrinter);
       setCierres(data);
     } catch (err: any) {
-      setError(err.message || 'Error al cargar cierres');
+      console.error('Error al cargar cierres:', err);
+      setError(parseApiError(err, 'Error al cargar cierres'));
     } finally {
       setLoading(false);
     }

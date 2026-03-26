@@ -17,15 +17,14 @@ from db.models import Printer, ContadorImpresora, ContadorUsuario, CierreMensual
 from db.database import get_db
 from sqlalchemy import func
 
-# Importar parsers
-# NOTA: Estos parsers fueron movidos durante la limpieza
-# Se han creado stubs temporales para que el backend arranque
-from parsear_contadores import get_printer_counters
-from parsear_contadores_usuario import get_all_user_counters
-from parsear_contador_ecologico import get_all_eco_users
+# Importar parsers desde services/parsers
+from services.parsers import get_printer_counters, get_all_user_counters, get_all_eco_users
 
 # Importar detector de capacidades
 from services.capabilities_detector import CapabilitiesDetector
+
+# Importar servicio de validación
+from services.validation_service import ValidationService
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -33,96 +32,6 @@ logger = logging.getLogger(__name__)
 
 class CounterService:
     """Servicio para lectura y almacenamiento de contadores"""
-    
-    @staticmethod
-    def validate_counter_data(counters: Dict) -> None:
-        """
-        Valida que los datos de contadores sean consistentes
-        
-        Args:
-            counters: Dict con datos de contadores
-            
-        Raises:
-            ValueError: Si los datos son inconsistentes
-        """
-        if counters is None:
-            raise ValueError("Datos de contadores son None")
-        
-        if not isinstance(counters, dict):
-            raise ValueError(f"Datos de contadores tienen tipo inválido: {type(counters)}")
-        
-        # Validar campos requeridos
-        required_fields = ['total', 'copiadora', 'impresora', 'fax', 'enviar_total', 
-                          'transmision_fax', 'envio_escaner', 'otras_funciones']
-        
-        for field in required_fields:
-            if field not in counters:
-                raise ValueError(f"Campo requerido '{field}' no encontrado en contadores")
-        
-        # Validar que los valores sean numéricos
-        if not isinstance(counters['total'], int):
-            raise ValueError(f"Campo 'total' debe ser int, es {type(counters['total'])}")
-        
-        # Validar consistencia: total debe ser >= suma de copiadora + impresora
-        suma_minima = (
-            counters['copiadora'].get('blanco_negro', 0) +
-            counters['copiadora'].get('color', 0) +
-            counters['impresora'].get('blanco_negro', 0) +
-            counters['impresora'].get('color', 0)
-        )
-        
-        # Permitir total=0 solo si todos los contadores son 0
-        if counters['total'] == 0 and suma_minima > 0:
-            raise ValueError(
-                f"Inconsistencia: total=0 pero suma de contadores={suma_minima}. "
-                "Los datos del parser son incorrectos."
-            )
-        
-        # Advertencia si el total es menor que la suma (puede pasar en algunos modelos)
-        if counters['total'] > 0 and counters['total'] < suma_minima:
-            # No lanzar error, solo advertencia en logs
-            # Algunos modelos de impresoras pueden tener esta inconsistencia
-            pass
-    
-    @staticmethod
-    def validate_user_counter_data(user: Dict, tipo: str) -> None:
-        """
-        Valida que los datos de contador de usuario sean consistentes
-        
-        Args:
-            user: Dict con datos de usuario
-            tipo: "usuario" o "ecologico"
-            
-        Raises:
-            ValueError: Si los datos son inconsistentes
-        """
-        if user is None:
-            raise ValueError("Datos de usuario son None")
-        
-        if not isinstance(user, dict):
-            raise ValueError(f"Datos de usuario tienen tipo inválido: {type(user)}")
-        
-        # Validar campos requeridos comunes
-        if 'codigo_usuario' not in user:
-            raise ValueError("Campo 'codigo_usuario' no encontrado")
-        
-        if 'nombre_usuario' not in user:
-            raise ValueError("Campo 'nombre_usuario' no encontrado")
-        
-        # Validar según tipo
-        if tipo == "usuario":
-            if 'total_paginas' not in user:
-                raise ValueError("Campo 'total_paginas' no encontrado en contador usuario")
-            
-            if not isinstance(user['total_paginas'], int):
-                raise ValueError(f"Campo 'total_paginas' debe ser int, es {type(user['total_paginas'])}")
-        
-        elif tipo == "ecologico":
-            if 'total_paginas_actual' not in user:
-                raise ValueError("Campo 'total_paginas_actual' no encontrado en contador ecológico")
-            
-            if not isinstance(user['total_paginas_actual'], int):
-                raise ValueError(f"Campo 'total_paginas_actual' debe ser int, es {type(user['total_paginas_actual'])}")
     
     @staticmethod
     def read_printer_counters(db: Session, printer_id: int) -> Optional[ContadorImpresora]:
@@ -145,8 +54,8 @@ class CounterService:
             # Leer contadores usando el parser
             counters = get_printer_counters(printer.ip_address)
             
-            # Validar datos antes de guardar
-            CounterService.validate_counter_data(counters)
+            # Validar datos antes de guardar usando ValidationService
+            ValidationService.validate_counter_data(counters)
             
             # Crear registro en base de datos
             contador = ContadorImpresora(
@@ -222,7 +131,7 @@ class CounterService:
             # Determinar qué tipo de contador usar
             if printer.tiene_contador_usuario and not printer.usar_contador_ecologico:
                 # Usar contador por usuario estándar
-                from parsear_contadores_usuario import get_all_user_counters
+                from services.parsers import get_all_user_counters
                 users = get_all_user_counters(printer.ip_address)
                 tipo_contador = "usuario"
                 
@@ -233,8 +142,8 @@ class CounterService:
                 users_data = users
                 
                 for user in users:
-                    # Validar datos del usuario
-                    CounterService.validate_user_counter_data(user, tipo_contador)
+                    # Validar datos del usuario usando ValidationService
+                    ValidationService.validate_user_counter_data(user, tipo_contador)
                     
                     contador = ContadorUsuario(
                         printer_id=printer_id,
@@ -296,8 +205,8 @@ class CounterService:
                     raise ValueError(f"users no es una lista: {type(users)}")
                 
                 for user in users:
-                    # Validar datos del usuario
-                    CounterService.validate_user_counter_data(user, tipo_contador)
+                    # Validar datos del usuario usando ValidationService
+                    ValidationService.validate_user_counter_data(user, tipo_contador)
                     
                     contador = ContadorUsuario(
                         printer_id=printer_id,

@@ -3,7 +3,7 @@ import { X, Save, AlertCircle, Printer, ShieldCheck, Settings, Globe, Trash2, Pl
 import { actualizarUsuario, obtenerUsuarioConEquipos, actualizarPermisosAsignacion, crearUsuario, obtenerDetallesUsuarioImpresora, sincronizarUsuarioTodasImpresoras } from '@/services/servicioUsuarios';
 import { EditorPermisos } from './EditorPermisos';
 import { GestorEquipos } from './GestorEquipos';
-import { Button, Alert, Spinner, Input } from '@/components/ui';
+import { Button, Alert, Spinner, Input, EmpresaAutocomplete } from '@/components/ui';
 import type { Usuario, ImpresoraUsuario } from '@/types/usuario';
 
 interface ModificarUsuarioProps {
@@ -474,11 +474,11 @@ export const ModificarUsuario = ({
 
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Empresa</label>
-                      <Input
+                      <EmpresaAutocomplete
+                        label="Empresa"
                         value={empresa}
-                        onChange={(e) => setEmpresa(e.target.value)}
-                        className="font-bold"
+                        onChange={setEmpresa}
+                        placeholder="Buscar o seleccionar empresa..."
                       />
                     </div>
                     <div className="space-y-2">

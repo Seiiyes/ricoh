@@ -7,6 +7,7 @@ interface PrinterDevice {
   status: 'online' | 'offline';
   location?: string;
   empresa?: string;
+  empresa_id?: number;
   serial_number?: string;
   toner_levels: { cyan: number; magenta: number; yellow: number; black: number };
   capabilities?: PrinterCapabilities;

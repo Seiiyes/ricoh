@@ -12,14 +12,46 @@ import json
 import logging
 from datetime import datetime
 from typing import List
+import asyncio
 
 # Configure logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
-    level=logging.DEBUG if os.getenv("DEBUG", "false").lower() == "true" else logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('logs/ricoh_api.log') if os.path.exists('logs') or os.makedirs('logs', exist_ok=True) else logging.StreamHandler()
+    ]
 )
 
 logger = logging.getLogger(__name__)
+
+# Mask sensitive data in logs
+class SensitiveDataFilter(logging.Filter):
+    """Filter to mask sensitive data in logs"""
+    
+    def filter(self, record):
+        # Mask passwords and tokens in log messages
+        if hasattr(record, 'msg'):
+            msg = str(record.msg)
+            # Mask password fields
+            if 'password' in msg.lower():
+                record.msg = msg.replace(record.msg, '[REDACTED]')
+            # Mask tokens (show only first and last 4 chars)
+            if 'token' in msg.lower() and len(msg) > 20:
+                if 'eyJ' in msg:  # JWT token
+                    import re
+                    tokens = re.findall(r'eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*', msg)
+                    for token in tokens:
+                        if len(token) > 20:
+                            masked = f"{token[:4]}...{token[-4:]}"
+                            record.msg = msg.replace(token, masked)
+        return True
+
+# Add filter to all handlers
+for handler in logging.getLogger().handlers:
+    handler.addFilter(SensitiveDataFilter())
 
 # Import database
 from db.database import init_db, engine
@@ -28,6 +60,15 @@ from db import Base
 # Import API routers
 from api import users_router, printers_router, provisioning_router, discovery_router, counters_router
 from api.export import router as export_router
+from api.auth import router as auth_router
+from api.empresas import router as empresas_router
+from api.admin_users import router as admin_users_router
+from api.ddos_admin import router as ddos_admin_router
+
+# Import middleware
+from middleware.ddos_protection import DDoSProtectionMiddleware
+from middleware.https_redirect import HTTPSRedirectMiddleware
+from middleware.csrf_protection import CSRFProtectionMiddleware
 
 
 # WebSocket connection manager
@@ -72,12 +113,46 @@ async def lifespan(app: FastAPI):
     
     print("✅ Database initialized")
     print(f"🔧 Demo Mode: {os.getenv('DEMO_MODE', 'true')}")
+    
+    # Start background cleanup job
+    cleanup_task = None
+    if os.getenv("ENABLE_SESSION_CLEANUP", "true").lower() == "true":
+        print("🧹 Starting session cleanup job (runs every hour)...")
+        cleanup_task = asyncio.create_task(run_cleanup_job_periodically())
+    
     print("🌐 Server ready!")
     
     yield
     
     # Shutdown
     print("🛑 Shutting down Ricoh Equipment Management API...")
+    
+    # Cancel cleanup task
+    if cleanup_task:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
+
+
+async def run_cleanup_job_periodically():
+    """Run cleanup job every hour"""
+    from jobs.cleanup_sessions import run_cleanup_job
+    
+    while True:
+        try:
+            # Wait 1 hour
+            await asyncio.sleep(3600)
+            
+            # Run cleanup in background thread to avoid blocking
+            await asyncio.to_thread(run_cleanup_job)
+            
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"Error in cleanup job: {e}")
+            # Continue running even if there's an error
 
 
 # Create FastAPI app
@@ -95,9 +170,50 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permitir todos los métodos
+    allow_headers=["*"],  # Permitir todos los headers
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
+
+# Add DDoS Protection Middleware
+app.add_middleware(DDoSProtectionMiddleware)
+
+# Add HTTPS Redirect Middleware (solo en producción si FORCE_HTTPS=true)
+app.add_middleware(HTTPSRedirectMiddleware)
+
+# Add CSRF Protection Middleware (deshabilitado por defecto, habilitar con ENABLE_CSRF=true)
+if os.getenv("ENABLE_CSRF", "false").lower() == "true":
+    logger.info("🛡️ CSRF Protection enabled")
+    app.add_middleware(CSRFProtectionMiddleware)
+
+
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to all responses"""
+    
+    # Debug: Print all headers
+    if request.url.path not in ["/", "/docs", "/openapi.json"]:
+        print(f"[HEADERS] Request a {request.url.path}")
+        print(f"[HEADERS] Authorization: {request.headers.get('authorization', 'MISSING')}")
+        print(f"[HEADERS] All headers: {dict(request.headers)}")
+    
+    response = await call_next(request)
+    
+    # Only add HSTS in production
+    if os.getenv("ENVIRONMENT", "development") == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    
+    # Prevent MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    
+    # XSS Protection (legacy browsers)
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    return response
 
 
 # Global exception handler for validation errors
@@ -124,6 +240,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # Include API routers
+app.include_router(auth_router)
+app.include_router(empresas_router)
+app.include_router(admin_users_router)
+app.include_router(ddos_admin_router)
 app.include_router(users_router)
 app.include_router(printers_router)
 app.include_router(provisioning_router)

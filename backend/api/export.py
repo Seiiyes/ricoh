@@ -1,7 +1,7 @@
 """
 API endpoints para exportar cierres y comparaciones a CSV y Excel
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -13,6 +13,8 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 from db.database import get_db
 from db.models import CierreMensual, CierreMensualUsuario, Printer
+from middleware.auth_middleware import get_current_user
+from services.company_filter_service import CompanyFilterService
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -22,10 +24,11 @@ def format_number_es(num: int) -> str:
     return f"{num:,}".replace(",", ".")
 
 
-@router.get("/cierre/{cierre_id}")
-def export_cierre(
+@router.get("/cierre/{cierre_id}", status_code=status.HTTP_200_OK)
+async def export_cierre(
     cierre_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Exporta un cierre individual a CSV
@@ -33,9 +36,15 @@ def export_cierre(
     """
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     if not cierre:
-        raise HTTPException(status_code=404, detail="Cierre no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
     
+    # Validar acceso a la impresora del cierre
     printer = db.query(Printer).filter(Printer.id == cierre.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
     
     # Crear CSV en memoria
     output = io.StringIO()
@@ -79,7 +88,7 @@ def export_cierre(
     
     # Preparar respuesta
     output.seek(0)
-    fecha_str = cierre.fecha_inicio.replace('-', '')
+    fecha_str = cierre.fecha_inicio.strftime('%Y%m%d')
     filename = f"cierre_{printer.hostname if printer else cierre.printer_id}_{fecha_str}.csv"
     
     return StreamingResponse(
@@ -89,11 +98,12 @@ def export_cierre(
     )
 
 
-@router.get("/comparacion/{cierre1_id}/{cierre2_id}")
-def export_comparacion(
+@router.get("/comparacion/{cierre1_id}/{cierre2_id}", status_code=status.HTTP_200_OK)
+async def export_comparacion(
     cierre1_id: int,
     cierre2_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Exporta una comparación entre dos cierres a CSV
@@ -104,12 +114,18 @@ def export_comparacion(
     cierre2 = db.query(CierreMensual).filter(CierreMensual.id == cierre2_id).first()
     
     if not cierre1 or not cierre2:
-        raise HTTPException(status_code=404, detail="Uno o ambos cierres no encontrados")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Uno o ambos cierres no encontrados")
     
     if cierre1.printer_id != cierre2.printer_id:
-        raise HTTPException(status_code=400, detail="Los cierres deben ser de la misma impresora")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Los cierres deben ser de la misma impresora")
     
+    # Validar acceso a la impresora
     printer = db.query(Printer).filter(Printer.id == cierre1.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
     # Crear mapa de usuarios
     usuarios_c1 = {u.codigo_usuario: u for u in cierre1.usuarios}
@@ -190,8 +206,8 @@ def export_comparacion(
     
     # Preparar respuesta
     output.seek(0)
-    fecha1_str = cierre1.fecha_inicio.replace('-', '')
-    fecha2_str = cierre2.fecha_inicio.replace('-', '')
+    fecha1_str = cierre1.fecha_inicio.strftime('%Y%m%d')
+    fecha2_str = cierre2.fecha_inicio.strftime('%Y%m%d')
     serial = printer.serial_number if printer and printer.serial_number else str(cierre1.printer_id)
     filename = f"comparacion_{serial}_{fecha1_str}_{fecha2_str}.csv"
     
@@ -203,10 +219,11 @@ def export_comparacion(
 
 
 
-@router.get("/cierre/{cierre_id}/excel")
-def export_cierre_excel(
+@router.get("/cierre/{cierre_id}/excel", status_code=status.HTTP_200_OK)
+async def export_cierre_excel(
     cierre_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Exporta un cierre individual a Excel
@@ -214,9 +231,15 @@ def export_cierre_excel(
     """
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     if not cierre:
-        raise HTTPException(status_code=404, detail="Cierre no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
     
+    # Validar acceso a la impresora del cierre
     printer = db.query(Printer).filter(Printer.id == cierre.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
     
     # Crear workbook
     wb = Workbook()
@@ -285,7 +308,7 @@ def export_cierre_excel(
     wb.save(output)
     output.seek(0)
     
-    fecha_str = cierre.fecha_inicio.replace('-', '')
+    fecha_str = cierre.fecha_inicio.strftime('%Y%m%d')
     filename = f"cierre_{printer.hostname if printer else cierre.printer_id}_{fecha_str}.xlsx"
     
     return StreamingResponse(
@@ -295,12 +318,12 @@ def export_cierre_excel(
     )
 
 
-@router.get("/comparacion/{cierre1_id}/{cierre2_id}/excel")
-@router.get("/comparacion/{cierre1_id}/{cierre2_id}/excel")
-def export_comparacion_excel(
+@router.get("/comparacion/{cierre1_id}/{cierre2_id}/excel", status_code=status.HTTP_200_OK)
+async def export_comparacion_excel(
     cierre1_id: int,
     cierre2_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Exporta una comparación entre dos cierres a Excel
@@ -310,12 +333,18 @@ def export_comparacion_excel(
     cierre2 = db.query(CierreMensual).filter(CierreMensual.id == cierre2_id).first()
     
     if not cierre1 or not cierre2:
-        raise HTTPException(status_code=404, detail="Uno o ambos cierres no encontrados")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Uno o ambos cierres no encontrados")
     
     if cierre1.printer_id != cierre2.printer_id:
-        raise HTTPException(status_code=400, detail="Los cierres deben ser de la misma impresora")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Los cierres deben ser de la misma impresora")
     
+    # Validar acceso a la impresora
     printer = db.query(Printer).filter(Printer.id == cierre1.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
+    
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
     # Crear mapa de usuarios
     usuarios_c1 = {u.codigo_usuario: u for u in cierre1.usuarios}
@@ -418,8 +447,8 @@ def export_comparacion_excel(
     wb.save(output)
     output.seek(0)
     
-    fecha1_str = cierre1.fecha_inicio.replace('-', '')
-    fecha2_str = cierre2.fecha_inicio.replace('-', '')
+    fecha1_str = cierre1.fecha_inicio.strftime('%Y%m%d')
+    fecha2_str = cierre2.fecha_inicio.strftime('%Y%m%d')
     serial = printer.serial_number if printer and printer.serial_number else str(cierre1.printer_id)
     filename = f"comparacion_{serial}_{fecha1_str}_{fecha2_str}.xlsx"
     
@@ -430,11 +459,12 @@ def export_comparacion_excel(
     )
 
 
-@router.get("/comparacion/{cierre1_id}/{cierre2_id}/excel-ricoh")
-def export_comparacion_excel_ricoh(
+@router.get("/comparacion/{cierre1_id}/{cierre2_id}/excel-ricoh", status_code=status.HTTP_200_OK)
+async def export_comparacion_excel_ricoh(
     cierre1_id: int,
     cierre2_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Exporta una comparación entre dos cierres a Excel en formato Ricoh completo
@@ -447,15 +477,21 @@ def export_comparacion_excel_ricoh(
     cierre2 = db.query(CierreMensual).filter(CierreMensual.id == cierre2_id).first()
     
     if not cierre1 or not cierre2:
-        raise HTTPException(status_code=404, detail="Uno o ambos cierres no encontrados")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Uno o ambos cierres no encontrados")
     
     if cierre1.printer_id != cierre2.printer_id:
-        raise HTTPException(status_code=400, detail="Los cierres deben ser de la misma impresora")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Los cierres deben ser de la misma impresora")
     
+    # Validar acceso a la impresora
     printer = db.query(Printer).filter(Printer.id == cierre1.printer_id).first()
+    if not printer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impresora no encontrada")
     
-    if not printer or not printer.serial_number:
-        raise HTTPException(status_code=400, detail="La impresora debe tener un número de serie")
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+    
+    if not printer.serial_number:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La impresora debe tener un número de serie")
     
     # Generar archivo Excel en formato Ricoh
     wb = exportar_comparacion_ricoh(

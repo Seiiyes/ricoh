@@ -1,9 +1,11 @@
 import type { PrinterDevice } from '@/types';
+import apiClient from './apiClient';
 
 /**
  * Printer Service
  * 
  * This module provides functions for interacting with the backend API.
+ * Uses apiClient for authenticated requests.
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -20,21 +22,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  */
 export async function scanPrinters(ipRange: string = '192.168.1.0/24'): Promise<any[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/discovery/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ip_range: ipRange }),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Scan failed');
-    }
-    
-    const data = await response.json();
-    return data.devices;
+    const response = await apiClient.post('/discovery/scan', { ip_range: ipRange });
+    return response.data.devices;
   } catch (error) {
     console.error('Failed to scan printers:', error);
     throw error;
@@ -48,17 +37,7 @@ export async function scanPrinters(ipRange: string = '192.168.1.0/24'): Promise<
  */
 export async function registerDiscoveredPrinters(devices: any[]): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/discovery/register-discovered`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(devices),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to register printers');
-    }
+    await apiClient.post('/discovery/register-discovered', devices);
   } catch (error) {
     console.error('Failed to register discovered printers:', error);
     throw error;
@@ -76,13 +55,9 @@ export async function registerDiscoveredPrinters(devices: any[]): Promise<void> 
  */
 export async function fetchPrinters(): Promise<PrinterDevice[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/printers/`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch printers: ${response.statusText}`);
-    }
-    
-    const printers = await response.json();
+    const response = await apiClient.get('/printers/');
+    // Backend retorna PrinterListResponse con estructura { items: [...], total, page, ... }
+    const printers = response.data.items || response.data;
     
     // Transform backend response to frontend format
     return printers.map((printer: any) => ({
@@ -116,20 +91,8 @@ export async function fetchPrinters(): Promise<PrinterDevice[]> {
  */
 export async function createPrinter(printer: any): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/printers/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(printer),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to create printer');
-    }
-    
-    return await response.json();
+    const response = await apiClient.post('/printers/', printer);
+    return response.data;
   } catch (error) {
     console.error('Failed to create printer:', error);
     throw error;
@@ -144,20 +107,8 @@ export async function createPrinter(printer: any): Promise<any> {
  */
 export async function updatePrinter(printerId: number, updates: any): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/printers/${printerId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to update printer');
-    }
-    
-    return await response.json();
+    const response = await apiClient.put(`/printers/${printerId}`, updates);
+    return response.data;
   } catch (error) {
     console.error('Failed to update printer:', error);
     throw error;
@@ -171,13 +122,7 @@ export async function updatePrinter(printerId: number, updates: any): Promise<an
  */
 export async function removePrinter(printerId: number): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/printers/${printerId}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to remove printer: ${response.statusText}`);
-    }
+    await apiClient.delete(`/printers/${printerId}`);
   } catch (error) {
     console.error('Failed to remove printer:', error);
     throw error;
@@ -191,16 +136,8 @@ export async function removePrinter(printerId: number): Promise<void> {
  */
 export async function refreshPrinterSNMP(printerId: number): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/discovery/refresh-snmp/${printerId}`, {
-      method: 'POST',
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to refresh printer data');
-    }
-    
-    return await response.json();
+    const response = await apiClient.post(`/discovery/refresh-snmp/${printerId}`);
+    return response.data;
   } catch (error) {
     console.error('Failed to refresh printer SNMP:', error);
     throw error;
@@ -243,24 +180,9 @@ export async function createUser(user: {
 }): Promise<any> {
   try {
     console.log('📤 Sending user creation request:', user);
-    
-    const response = await fetch(`${API_BASE_URL}/users/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(user),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('❌ User creation failed:', error);
-      throw new Error(error.detail || 'Failed to create user');
-    }
-    
-    const result = await response.json();
-    console.log('✅ User created successfully:', result);
-    return result;
+    const response = await apiClient.post('/users/', user);
+    console.log('✅ User created successfully:', response.data);
+    return response.data;
   } catch (error) {
     console.error('Failed to create user:', error);
     throw error;
@@ -272,13 +194,8 @@ export async function createUser(user: {
  */
 export async function fetchUsers(): Promise<any[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch users');
-    }
-    
-    return await response.json();
+    const response = await apiClient.get('/users/');
+    return response.data;
   } catch (error) {
     console.error('Failed to fetch users:', error);
     return [];
@@ -297,23 +214,11 @@ export async function fetchUsers(): Promise<any[]> {
  */
 export async function provisionUser(userId: number, printerIds: number[]): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/provision`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_id: userId,
-        printer_ids: printerIds,
-      }),
+    const response = await apiClient.post('/provisioning/provision', {
+      user_id: userId,
+      printer_ids: printerIds,
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Provisioning failed');
-    }
-    
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error('Failed to provision user:', error);
     throw error;
@@ -327,13 +232,8 @@ export async function provisionUser(userId: number, printerIds: number[]): Promi
  */
 export async function getUserProvisioningStatus(userId: number): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/user/${userId}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to get provisioning status');
-    }
-    
-    return await response.json();
+    const response = await apiClient.get(`/provisioning/user/${userId}`);
+    return response.data;
   } catch (error) {
     console.error('Failed to get provisioning status:', error);
     throw error;

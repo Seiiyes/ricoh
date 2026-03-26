@@ -11,7 +11,7 @@ import time
 from db.repository import UserRepository, PrinterRepository, AssignmentRepository
 from db.models import User, Printer, UserPrinterAssignment
 from sqlalchemy import and_
-from services.encryption import get_encryption_service
+from services.encryption_service import EncryptionService
 from services.ricoh_web_client import get_ricoh_web_client
 from services.retry_strategy import RetryStrategy, load_retry_config_from_env, ErrorType
 
@@ -59,8 +59,7 @@ class ProvisioningService:
         retry_strategy = RetryStrategy(retry_config)
         
         # Decrypt password for provisioning
-        encryption_service = get_encryption_service()
-        network_password = encryption_service.decrypt(user.network_password_encrypted)
+        network_password = EncryptionService.decrypt(user.network_password_encrypted)
         
         # Build Ricoh payload
         ricoh_payload = {
@@ -105,13 +104,16 @@ class ProvisioningService:
         successful = [r for r in results if r['status'] == 'success']
         failed = [r for r in results if r['status'] == 'failed']
         
+        from datetime import datetime
+        
         return {
-            "overall_success": len(successful) > 0,
-            "total_printers": len(printers),
-            "successful_count": len(successful),
-            "failed_count": len(failed),
-            "results": results,
-            "summary_message": f"Usuario '{user.name}' provisionado exitosamente a {len(successful)}/{len(printers)} impresora(s)"
+            "success": len(successful) > 0,
+            "user_id": user.id,
+            "user_name": user.name,
+            "printers_provisioned": len(successful),
+            "printer_ids": [r['printer_id'] for r in successful],
+            "provisioned_at": datetime.now().isoformat(),
+            "message": f"Usuario '{user.name}' provisionado exitosamente a {len(successful)}/{len(printers)} impresora(s)"
         }
     
     @staticmethod

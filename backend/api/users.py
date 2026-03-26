@@ -1,18 +1,21 @@
 """
 User management API routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import or_
+from typing import List, Optional
 import logging
 
 from db.database import get_db
 from db.repository import UserRepository, PrinterRepository
-from services.encryption import get_encryption_service
+from db.models import User
+from services.encryption_service import EncryptionService
 from services.provisioning import ProvisioningService
-from .schemas import UserCreate, UserUpdate, UserResponse, MessageResponse, UserCreateResponse
+from services.sanitization_service import SanitizationService
+from .schemas import UserCreate, UserUpdate, UserResponse, UserListResponse, MessageResponse, UserCreateResponse
 
 router = APIRouter(prefix="/users", tags=["users"])
 logger = logging.getLogger(__name__)
@@ -49,8 +52,13 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     logger = logging.getLogger(__name__)
     
     logger.info(f"📥 Received user creation request")
-    logger.info(f"   Name: {user.name}")
-    logger.info(f"   Código: {user.codigo_de_usuario}")
+    
+    # Sanitizar inputs de texto
+    sanitized_name = SanitizationService.sanitize_string(user.name)
+    sanitized_codigo = SanitizationService.sanitize_string(user.codigo_de_usuario)
+    
+    logger.info(f"   Name: {sanitized_name}")
+    logger.info(f"   Código: {sanitized_codigo}")
     logger.info(f"   Empresa: {user.empresa}")
     logger.info(f"   Centro costos: {user.centro_costos}")
     
@@ -66,36 +74,36 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
                 )
     
     # Check if codigo_de_usuario already exists
-    existing_codigo = UserRepository.get_by_codigo(db, user.codigo_de_usuario)
+    existing_codigo = UserRepository.get_by_codigo(db, sanitized_codigo)
     if existing_codigo:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"User with código de usuario {user.codigo_de_usuario} already exists"
+            detail=f"User with código de usuario {sanitized_codigo} already exists"
         )
     
-    # Extract network credentials (nested or flat)
+    # Extract network credentials (nested or flat) y sanitizar
     if user.network_credentials:
         logger.info("   Using nested network_credentials")
-        network_username = user.network_credentials.username
+        network_username = SanitizationService.sanitize_string(user.network_credentials.username)
         raw_password = user.network_credentials.password or ""
     else:
         logger.info("   Using flat network fields")
-        network_username = user.network_username or "reliteltda\\scaner"
+        network_username = SanitizationService.sanitize_string(user.network_username or "reliteltda\\scaner")
         raw_password = user.network_password or ""
     
     logger.info(f"   Network username: {network_username}")
     
-    # Extract SMB configuration (nested or flat)
+    # Extract SMB configuration (nested or flat) y sanitizar
     if user.smb_config:
         logger.info("   Using nested smb_config")
-        smb_server = user.smb_config.server
+        smb_server = SanitizationService.sanitize_string(user.smb_config.server)
         smb_port = user.smb_config.port
-        smb_path = user.smb_config.path or ""  # Allow empty
+        smb_path = SanitizationService.sanitize_string(user.smb_config.path or "")
     else:
         logger.info("   Using flat SMB fields")
-        smb_server = user.smb_server or ""
+        smb_server = SanitizationService.sanitize_string(user.smb_server or "")
         smb_port = user.smb_port or 21
-        smb_path = user.smb_path or ""  # Allow empty
+        smb_path = SanitizationService.sanitize_string(user.smb_path or "")
     
     logger.info(f"   SMB: {smb_server}:{smb_port} -> {smb_path}")
     
@@ -124,15 +132,14 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     logger.info(f"   Functions: copier={func_copier}, scanner={func_scanner}, printer={func_printer}")
     
     # Encrypt network password
-    encryption_service = get_encryption_service()
-    encrypted_password = encryption_service.encrypt(raw_password)
+    encrypted_password = EncryptionService.encrypt(raw_password)
     
     try:
-        # Create user in database
+        # Create user in database con datos sanitizados
         new_user = UserRepository.create(
             db,
-            name=user.name,
-            codigo_de_usuario=user.codigo_de_usuario,
+            name=sanitized_name,
+            codigo_de_usuario=sanitized_codigo,
             network_username=network_username,
             network_password_encrypted=encrypted_password,
             smb_server=smb_server,
@@ -190,18 +197,57 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
         )
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/", response_model=UserListResponse)
 async def get_users(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     active_only: bool = True,
+    search: Optional[str] = Query(None, description="Search by name or code"),
     db: Session = Depends(get_db)
 ):
     """
-    Get all users with pagination
+    Get all users with pagination and search
+    
+    - **page**: Page number (default: 1)
+    - **page_size**: Items per page (default: 20, max: 100)
+    - **active_only**: Filter only active users (default: True)
+    - **search**: Search term for nombre or codigo_de_usuario
     """
-    users = UserRepository.get_all(db, skip=skip, limit=limit, active_only=active_only)
-    return users
+    # Build query
+    query = db.query(User)
+    
+    # Apply active filter
+    if active_only:
+        query = query.filter(User.is_active == True)
+    
+    # Apply search filter
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            or_(
+                User.nombre.ilike(search_pattern),
+                User.codigo_de_usuario.ilike(search_pattern)
+            )
+        )
+    
+    # Get total count
+    total = query.count()
+    
+    # Calculate pagination
+    import math
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
+    offset = (page - 1) * page_size
+    
+    # Get paginated results
+    users = query.order_by(User.name).offset(offset).limit(page_size).all()
+    
+    return UserListResponse(
+        items=[UserResponse.model_validate(u) for u in users],
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
 
 
 @router.get("/{user_id}", response_model=UserResponse)

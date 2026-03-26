@@ -15,3 +15,9 @@ dnspython==2.4.2
 selenium==4.16.0
 webdriver-manager==4.0.1
 openpyxl==3.1.2
+
+# Authentication dependencies
+bcrypt==4.1.2
+PyJWT==2.8.0
+python-dotenv==1.0.0
+

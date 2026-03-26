@@ -31,3 +31,6 @@ export { Tabs } from './Tabs';
 export type { TabsProps, Tab } from './Tabs';
 
 export { Card } from './card';
+
+export { EmpresaAutocomplete } from './EmpresaAutocomplete';
+export type { default as EmpresaAutocompleteProps } from './EmpresaAutocomplete';

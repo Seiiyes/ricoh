@@ -258,10 +258,35 @@ DATABASE_URL=postgresql://ricoh_admin:ricoh_secure_2024@localhost:5432/ricoh_fle
 API_HOST=0.0.0.0
 API_PORT=8000
 DEMO_MODE=false
-CORS_ORIGINS=http://tu-servidor.com
-ENCRYPTION_KEY=<generar-nueva-clave>
+ENVIRONMENT=production
+
+# CORS (ajustar según tu dominio/IP)
+CORS_ORIGINS=http://tu-servidor.com,http://192.168.1.100:5173
+
+# JWT Secret Key (generar uno nuevo)
+SECRET_KEY=<generar-clave-segura-minimo-32-caracteres>
+
+# Encryption Key (NUEVO - REQUERIDO)
+ENCRYPTION_KEY=<generar-con-comando>
+
+# HTTPS Redirect (NUEVO)
+FORCE_HTTPS=false  # Cambiar a true si tienes SSL
+
+# CSRF Protection (NUEVO - OPCIONAL)
+ENABLE_CSRF=false  # Cambiar a true para habilitar
+
+# Ricoh Admin Credentials
 RICOH_ADMIN_USER=admin
 RICOH_ADMIN_PASSWORD=
+```
+
+Generar claves de seguridad:
+```bash
+# Generar SECRET_KEY
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Generar ENCRYPTION_KEY
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
 ```bash

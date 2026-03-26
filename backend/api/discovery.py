@@ -12,14 +12,19 @@ from db.repository import PrinterRepository
 from db.models import PrinterStatus, User
 from services.network_scanner import NetworkScanner
 from services.snmp_client import get_snmp_client
+from middleware.auth_middleware import get_current_user
 from .schemas import ScanRequest, ScanResponse, DiscoveredDevice, MessageResponse
 
 router = APIRouter(prefix="/discovery", tags=["discovery"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/scan", response_model=ScanResponse)
-async def scan_network_endpoint(scan_request: ScanRequest, db: Session = Depends(get_db)):
+@router.post("/scan", response_model=ScanResponse, status_code=status.HTTP_200_OK)
+async def scan_network_endpoint(
+    scan_request: ScanRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     """
     Scan network for Ricoh printers
     
@@ -63,10 +68,11 @@ async def scan_network_endpoint(scan_request: ScanRequest, db: Session = Depends
         )
 
 
-@router.post("/register-discovered", response_model=MessageResponse)
+@router.post("/register-discovered", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 async def register_discovered_printers(
     devices: list[DiscoveredDevice],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Register discovered printers to database
@@ -115,10 +121,11 @@ async def register_discovered_printers(
     )
 
 
-@router.post("/check-printer")
+@router.post("/check-printer", status_code=status.HTTP_200_OK)
 async def check_single_printer(
     request: dict,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Verifica una sola impresora por IP y puerto SNMP
@@ -155,10 +162,11 @@ async def check_single_printer(
         )
 
 
-@router.post("/refresh-snmp/{printer_id}", response_model=MessageResponse)
+@router.post("/refresh-snmp/{printer_id}", response_model=MessageResponse, status_code=status.HTTP_200_OK)
 async def refresh_printer_snmp(
     printer_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Refresh printer information via SNMP
@@ -226,11 +234,12 @@ async def refresh_printer_snmp(
         )
 
 
-@router.get("/user-details")
+@router.get("/user-details", status_code=status.HTTP_200_OK)
 async def get_user_details_endpoint(
     printer_ip: str,
     entry_index: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Obtiene los detalles (permisos) de un usuario específico en una impresora
@@ -258,10 +267,11 @@ async def get_user_details_endpoint(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/sync-users-from-printers")
+@router.post("/sync-users-from-printers", status_code=status.HTTP_200_OK)
 async def sync_users_from_printers(
     user_code: str = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Lee usuarios desde todas las impresoras físicas y los agrupa por código de usuario

@@ -3,8 +3,10 @@ import { CierreMensual, ComparacionCierres } from './types';
 import { TablaComparacionSimplificada } from './TablaComparacionSimplificada';
 import { Button, Input, Spinner, Alert } from '@/components/ui';
 import { ArrowLeft, RefreshCw, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import closeService from '@/services/closeService';
+import exportService from '@/services/exportService';
+import { parseApiError } from '@/utils/errorHandler';
 
-const API_BASE = 'http://localhost:8000';
 const ROWS_PER_PAGE = 25;
 
 type SortKey = 'nombre' | 'codigo' | 'total1' | 'total2' | 'diferencia' | 'copia' | 'impre' | 'escan' | 'fax';
@@ -52,12 +54,14 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
     if (!cierre1Id || !cierre2Id) return;
     setLoading(true); setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/counters/monthly/compare/${cierre1Id}/${cierre2Id}`);
-      if (!res.ok) throw new Error('Error al comparar cierres');
-      const data = await res.json();
+      const data = await closeService.compareCloses(cierre1Id, cierre2Id);
       setComparacion(data);
-    } catch (err: any) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch (err: any) {
+      console.error('Error al comparar cierres:', err);
+      setError(parseApiError(err, 'Error al comparar cierres'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Detectar capacidades de la impresora y funciones con datos
@@ -456,9 +460,13 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel-ricoh`;
-                            window.open(url, '_blank');
+                          onClick={async () => {
+                            try {
+                              await exportService.exportComparacionExcelRicoh(cierre1Id!, cierre2Id!);
+                            } catch (error: any) {
+                              console.error('Error al exportar:', error);
+                              alert(error.message || 'Error al exportar archivo');
+                            }
                           }}
                           icon={<FileSpreadsheet size={14} />}
                           className="bg-blue-600 hover:bg-blue-700"
@@ -469,9 +477,13 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel`;
-                            window.open(url, '_blank');
+                          onClick={async () => {
+                            try {
+                              await exportService.exportComparacionExcel(cierre1Id!, cierre2Id!);
+                            } catch (error: any) {
+                              console.error('Error al exportar:', error);
+                              alert(error.message || 'Error al exportar archivo');
+                            }
                           }}
                           icon={<Download size={14} />}
                           className="bg-green-600 hover:bg-green-700"
@@ -481,9 +493,13 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}`;
-                            window.open(url, '_blank');
+                          onClick={async () => {
+                            try {
+                              await exportService.exportComparacionCSV(cierre1Id!, cierre2Id!);
+                            } catch (error: any) {
+                              console.error('Error al exportar:', error);
+                              alert(error.message || 'Error al exportar archivo');
+                            }
                           }}
                           icon={<FileText size={14} />}
                           className="bg-indigo-600 hover:bg-indigo-700"

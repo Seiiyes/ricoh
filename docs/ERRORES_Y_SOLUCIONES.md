@@ -1,994 +1,578 @@
-# Errores y Soluciones - Registro de Incidencias
+# Errores Encontrados y Soluciones - Sistema de Autenticación
 
-**Propósito:** Documentar errores encontrados durante el desarrollo y sus soluciones para evitar que se repitan.
+**Fecha**: 20 de Marzo de 2026  
+**Proyecto**: Ricoh Suite - Sistema de Autenticación y Multi-Tenancy
 
----
+## 📋 Resumen
 
-## 📋 ÍNDICE DE ERRORES
-
-1. [Error de sintaxis: Cadena sin terminar en Button.tsx](#error-1-cadena-sin-terminar-buttontsx)
-2. [Error de JSX: Etiqueta de cierre incorrecta en DiscoveryModal.tsx](#error-2-etiqueta-de-cierre-incorrecta-discoverymodaltsx)
-3. [Error de JSX: Div extra en CierreDetalleModal.tsx](#error-3-div-extra-en-cierredetallemodaltsx)
-4. [Error de sintaxis: Cierre de función duplicado en CierreModal.tsx](#error-4-cierre-de-función-duplicado-en-cierremodalts)
+Este documento registra todos los errores encontrados durante la implementación del sistema de autenticación y sus soluciones, para referencia futura y prevención de problemas similares.
 
 ---
 
-## Error #1: Cadena sin terminar en Button.tsx
+## Error 1: Axios no instalado en package.json
 
-**Fecha:** 18 de marzo de 2026  
-**Severidad:** 🔴 Alta (bloquea compilación)  
-**Archivo:** `src/components/ui/Button.tsx`  
-**Línea:** 25-26
-
-### Descripción del Error
-
+### Síntoma
 ```
-[plugin:vite:react-babel] /app/src/components/ui/Button.tsx: Unterminated string constant. (25:13)
+[plugin:vite:import-analysis] Failed to resolve import "axios" from "src/services/apiClient.ts"
 ```
 
-Al reiniciar el frontend, Vite reportó un error de sintaxis: una cadena de texto sin terminar en el archivo Button.tsx.
+### Causa
+El archivo `apiClient.ts` importa `axios`, pero la dependencia no estaba listada en `package.json`.
 
-### Causa Raíz
+### Solución
+Agregar axios a las dependencias:
 
-Durante la creación del componente Button, se introdujo un salto de línea accidental en medio de una cadena de texto:
-
-```typescript
-// ❌ INCORRECTO
-const variantStyles = {
-  primary: 'bg-ricoh-red text-white hover:bg-red-700 focus:ring-2 focus:ring-red-
-500',  // ← Salto de línea en medio de la cadena
+```json
+"dependencies": {
+  "axios": "^1.7.9",
   ...
+}
+```
+
+Luego ejecutar:
+```bash
+npm install
+```
+
+### Prevención
+- Siempre verificar que las dependencias estén en `package.json` antes de usarlas
+- Ejecutar `npm install <paquete>` en lugar de solo importar
+
+### Archivos Afectados
+- `package.json`
+- `src/services/apiClient.ts`
+
+---
+
+## Error 2: Módulo bcrypt no encontrado en Docker
+
+### Síntoma
+```
+ModuleNotFoundError: No module named 'bcrypt'
+```
+
+### Causa
+El contenedor de Docker del backend no se reconstruyó después de agregar nuevas dependencias (`bcrypt`, `PyJWT`, `python-dotenv`) al `requirements.txt`.
+
+### Solución
+Reconstruir el contenedor del backend:
+
+```bash
+docker-compose down
+docker-compose build --no-cache backend
+docker-compose up -d
+```
+
+### Prevención
+- Siempre reconstruir contenedores después de cambios en `requirements.txt`
+- Usar `--no-cache` para asegurar instalación limpia
+- Considerar usar volúmenes para desarrollo local
+
+### Archivos Afectados
+- `backend/requirements.txt`
+- `backend/Dockerfile`
+
+---
+
+## Error 3: CORS Policy - No 'Access-Control-Allow-Origin'
+
+### Síntoma
+```
+Access to XMLHttpRequest at 'http://localhost:8000/printers/' from origin 'http://localhost:5173' 
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
+```
+
+### Causa
+El backend no estaba respondiendo correctamente debido al Error 2 (bcrypt faltante), por lo que no enviaba headers CORS.
+
+### Solución
+1. Solucionar el Error 2 (reconstruir backend)
+2. Verificar configuración CORS en `backend/main.py`:
+
+```python
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=3600,
+)
+```
+
+### Prevención
+- Verificar que el backend esté corriendo correctamente antes de diagnosticar CORS
+- Revisar logs del backend para errores subyacentes
+- CORS es síntoma, no causa raíz
+
+### Archivos Afectados
+- `backend/main.py`
+
+---
+
+## Error 4: Error 403 Forbidden en /printers/
+
+### Síntoma
+```
+Failed to load resource: the server responded with a status of 403 (Forbidden)
+```
+
+### Causa
+El endpoint `/printers/` ahora requiere autenticación (usa `get_current_user`), pero el servicio de frontend (`printerService.ts`) estaba usando `fetch` directamente en lugar de `apiClient` que tiene los interceptores de autenticación.
+
+### Solución
+Actualizar `printerService.ts` para usar `apiClient`:
+
+```typescript
+// ANTES (incorrecto)
+const response = await fetch(`${API_BASE_URL}/printers/`);
+
+// DESPUÉS (correcto)
+import apiClient from './apiClient';
+const response = await apiClient.get('/printers/');
+```
+
+### Prevención
+- Todos los servicios deben usar `apiClient` para requests autenticados
+- `apiClient` maneja automáticamente:
+  - Agregar token de autenticación
+  - Renovar token cuando expira
+  - Redirigir a login si token inválido
+
+### Archivos Afectados
+- `src/services/printerService.ts`
+- `src/services/servicioUsuarios.ts`
+- `src/services/counterService.ts`
+
+---
+
+## Error 5: ResponseValidationError - Empresa object en lugar de string
+
+### Síntoma
+```
+fastapi.exceptions.ResponseValidationError: 5 validation errors:
+'Input should be a valid string', 'input': <Empresa(id=1, razon_social='Sin Asignar', nombre_comercial='sin-asignar')>
+```
+
+### Causa
+Después de la migración a multi-tenancy, el modelo `Printer` tiene una relación con la tabla `Empresa` (objeto completo), pero el schema Pydantic `PrinterResponse` esperaba un `string` para el campo `empresa`.
+
+### Solución
+Agregar un validator en `PrinterResponse` para serializar el objeto `Empresa`:
+
+```python
+class PrinterResponse(PrinterBase):
+    empresa: Optional[str] = None
+    
+    @validator('empresa', pre=True, always=True)
+    def serialize_empresa(cls, v):
+        """Convert Empresa object to string (razon_social)"""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return v
+        if hasattr(v, 'razon_social'):
+            return v.razon_social
+        return str(v)
+```
+
+### Prevención
+- Cuando se cambia un campo de string a relación, actualizar los schemas Pydantic
+- Usar validators para serializar objetos complejos
+- Considerar crear schemas separados para relaciones (EmpresaResponse)
+
+### Archivos Afectados
+- `backend/api/schemas.py`
+- `backend/db/models.py`
+
+---
+
+## Error 6: WebSocket connection failed
+
+### Síntoma
+```
+WebSocket connection to 'ws://localhost:8000/ws/logs' failed: 
+WebSocket is closed before the connection is established
+```
+
+### Causa
+El backend no estaba completamente iniciado o el endpoint WebSocket no está disponible.
+
+### Solución
+Este error es secundario y no crítico. El WebSocket es para logs en tiempo real. Se puede:
+
+1. Verificar que el backend esté completamente iniciado
+2. O deshabilitar temporalmente el WebSocket en el frontend si no es necesario
+
+### Prevención
+- Implementar reconexión automática en el cliente WebSocket
+- Agregar manejo de errores graceful
+- Considerar hacer el WebSocket opcional
+
+### Archivos Afectados
+- `src/services/printerService.ts`
+- `backend/main.py` (endpoint `/ws/logs`)
+
+---
+
+## Error 7: Error 403 Forbidden persistente (Token Expirado)
+
+### Síntoma
+```
+Failed to load resource: the server responded with a status of 403 (Forbidden)
+```
+
+El error aparece intermitentemente, especialmente después de que el usuario ha estado inactivo por un tiempo.
+
+### Causa
+El token JWT ha expirado (30 minutos de vida). Aunque el interceptor de `apiClient` detecta el 403 y renueva el token automáticamente, el usuario ve el error 403 en la consola antes de que se complete la renovación.
+
+### Solución Implementada
+1. **Interceptor actualizado** para manejar tanto 401 como 403:
+   ```typescript
+   // En apiClient.ts
+   if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+     // Intentar renovar token y reintentar request
+   }
+   ```
+
+2. **Todos los servicios actualizados** para usar `apiClient`:
+   - ✅ `printerService.ts` - Completamente actualizado
+   - ✅ `servicioUsuarios.ts` - Completamente actualizado
+   - ✅ `counterService.ts` - Completamente actualizado
+
+3. **Renovación automática** en `AuthContext`:
+   - Token se renueva automáticamente cada 25 minutos
+   - Previene expiración durante uso activo
+
+### Comportamiento Esperado
+- Usuario ve error 403 momentáneo en consola
+- Interceptor detecta el 403 y renueva el token automáticamente
+- Request se reintenta con el nuevo token
+- Usuario ve los datos correctamente sin necesidad de re-login
+
+### Prevención
+- Usar `apiClient` para TODOS los requests autenticados
+- No usar `fetch` directamente
+- El interceptor maneja automáticamente:
+  - Agregar token de autenticación
+  - Renovar token cuando expira (401 o 403)
+  - Redirigir a login si token inválido
+
+### Archivos Afectados
+- `src/services/apiClient.ts` (interceptor)
+- `src/services/printerService.ts` (actualizado)
+- `src/services/servicioUsuarios.ts` (actualizado)
+- `src/services/counterService.ts` (actualizado)
+- `src/contexts/AuthContext.tsx` (renovación automática)
+
+### Nota Importante
+El error 403 en consola es normal y esperado cuando el token expira. Lo importante es que el sistema se recupera automáticamente sin intervención del usuario. Si el usuario necesita hacer login nuevamente, significa que el refresh token también expiró (7 días).
+
+---
+
+## Lecciones Aprendidas
+
+### 1. Orden de Debugging
+Cuando hay múltiples errores:
+1. Verificar que el backend esté corriendo (logs)
+2. Verificar dependencias instaladas
+3. Verificar configuración (CORS, env vars)
+4. Verificar código (schemas, servicios)
+
+### 2. Docker vs Local
+- Docker es mejor para producción
+- Local es mejor para desarrollo y debugging
+- Siempre reconstruir contenedores después de cambios en dependencias
+
+### 3. Schemas Pydantic
+- Mantener schemas sincronizados con modelos de base de datos
+- Usar validators para transformaciones complejas
+- Documentar cambios en relaciones (string → object)
+
+### 4. Servicios Frontend
+- Centralizar requests HTTP en un cliente (apiClient)
+- No usar `fetch` directamente para requests autenticados
+- Interceptores manejan autenticación automáticamente
+- TODOS los servicios deben usar apiClient:
+  - ✅ printerService.ts
+  - ✅ servicioUsuarios.ts
+  - ✅ counterService.ts
+  - ✅ authService.ts
+  - ✅ empresaService.ts
+  - ✅ adminUserService.ts
+
+### 5. Migraciones
+- Cuando se cambia estructura de datos (empresa: string → Empresa: object):
+  1. Actualizar modelos de BD
+  2. Actualizar schemas Pydantic
+  3. Actualizar servicios frontend
+  4. Actualizar componentes que usan los datos
+
+---
+
+## Checklist de Prevención
+
+Antes de implementar cambios similares:
+
+- [ ] Verificar que todas las dependencias estén en package.json/requirements.txt
+- [ ] Reconstruir contenedores Docker después de cambios en dependencias
+- [ ] Actualizar schemas Pydantic cuando se cambian relaciones en modelos
+- [ ] Usar apiClient en lugar de fetch para requests autenticados (TODOS los servicios)
+- [ ] Probar endpoints en Swagger antes de integrar en frontend
+- [ ] Verificar logs del backend antes de diagnosticar errores de frontend
+- [ ] Documentar cambios en estructura de datos
+- [ ] Verificar que el interceptor maneje tanto 401 como 403
+- [ ] Implementar renovación automática de token en AuthContext
+
+---
+
+## Comandos Útiles para Debugging
+
+### Ver logs del backend
+```bash
+docker-compose logs backend --tail=100
+docker-compose logs -f backend  # tiempo real
+```
+
+### Reconstruir backend
+```bash
+docker-compose down
+docker-compose build --no-cache backend
+docker-compose up -d
+```
+
+### Verificar estado de contenedores
+```bash
+docker-compose ps
+```
+
+### Entrar al contenedor
+```bash
+docker exec -it ricoh-backend bash
+```
+
+### Verificar dependencias instaladas
+```bash
+docker exec -it ricoh-backend pip list | grep bcrypt
+```
+
+### Probar endpoint manualmente
+```bash
+curl -X GET http://localhost:8000/printers/ \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Referencias
+
+- **Documentación FastAPI**: https://fastapi.tiangolo.com/
+- **Documentación Pydantic**: https://docs.pydantic.dev/
+- **Documentación Docker Compose**: https://docs.docker.com/compose/
+- **Documentación Axios**: https://axios-http.com/
+
+---
+
+**Mantenido por**: Equipo de Desarrollo  
+**Última actualización**: 20 de Marzo de 2026  
+**Versión**: 1.0
+
+
+---
+
+## Error 8: Componentes usando fetch directamente en lugar de apiClient
+
+### Síntoma
+```
+CierresView.tsx:38  GET http://localhost:8000/printers/ 403 (Forbidden)
+```
+
+Los cierres mensuales no cargan y aparecen errores 403 en la consola, específicamente desde componentes como `CierresView.tsx`, `ComparacionPage.tsx`, etc.
+
+### Causa
+Varios componentes de React estaban usando `fetch` directamente en lugar de `apiClient`, por lo que:
+1. No incluían el token JWT en los headers
+2. No se beneficiaban del interceptor de renovación automática
+3. Cada componente manejaba errores de forma diferente
+
+**Componentes afectados**:
+- `src/components/contadores/cierres/CierresView.tsx`
+- `src/components/contadores/cierres/ComparacionPage.tsx`
+- `src/components/contadores/cierres/CierreModal.tsx`
+- `src/components/contadores/cierres/CierreDetalleModal.tsx`
+- `src/components/contadores/cierres/ComparacionModal.tsx`
+- `src/components/discovery/DiscoveryModal.tsx`
+- `src/components/usuarios/AdministracionUsuarios.tsx`
+
+### Solución
+
+#### 1. Importar apiClient en cada componente
+```typescript
+// ANTES
+const API_BASE = 'http://localhost:8000';
+
+// DESPUÉS
+import apiClient from '@/services/apiClient';
+```
+
+#### 2. Reemplazar fetch por apiClient
+```typescript
+// ANTES (incorrecto)
+const response = await fetch(`${API_BASE}/printers`);
+if (!response.ok) throw new Error('Error al cargar impresoras');
+const data = await response.json();
+
+// DESPUÉS (correcto)
+const response = await apiClient.get('/printers/');
+const data = response.data;
+```
+
+#### 3. Actualizar parámetros de query
+```typescript
+// ANTES (incorrecto)
+const params = new URLSearchParams({ year: selectedYear.toString(), limit: '500' });
+const response = await fetch(`${API_BASE}/api/counters/monthly/${id}?${params}`);
+
+// DESPUÉS (correcto)
+const response = await apiClient.get(`/api/counters/monthly/${id}`, {
+  params: {
+    year: selectedYear,
+    limit: 500
+  }
+});
+```
+
+#### 4. Mejorar manejo de errores
+```typescript
+// ANTES (incorrecto)
+catch (err: any) {
+  setError(err.message);
+}
+
+// DESPUÉS (correcto)
+catch (err: any) {
+  console.error('Error al cargar datos:', err);
+  setError(err.response?.data?.detail || err.message || 'Error al cargar datos');
+}
+```
+
+### Prevención
+
+#### Checklist para Nuevos Componentes
+- [ ] Importar `apiClient` en lugar de usar `fetch`
+- [ ] NO definir variables `API_BASE` o `API_URL`
+- [ ] Usar `apiClient.get/post/put/delete()` para todos los requests autenticados
+- [ ] Usar `params` object para query parameters
+- [ ] Manejar errores con `err.response?.data?.detail`
+- [ ] Agregar `console.error` para debugging
+
+#### Patrón Recomendado para Componentes
+```typescript
+import { useState, useEffect } from 'react';
+import apiClient from '@/services/apiClient';
+
+export const MiComponente = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.get('/endpoint', {
+        params: { filter: 'value' }
+      });
+      setData(response.data);
+    } catch (err: any) {
+      console.error('Error al cargar datos:', err);
+      setError(err.response?.data?.detail || err.message || 'Error al cargar datos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // ... resto del componente
 };
 ```
 
-JavaScript/TypeScript no permite saltos de línea en medio de cadenas de texto sin usar comillas invertidas (template literals) o concatenación.
+### Cómo Detectar Este Error
 
-### Solución Aplicada
-
-Se corrigió la cadena de texto para que esté en una sola línea:
-
-```typescript
-// ✅ CORRECTO
-const variantStyles = {
-  primary: 'bg-ricoh-red text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500',
-  secondary: 'bg-industrial-gray text-white hover:bg-gray-900 focus:ring-2 focus:ring-gray-500',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500',
-  ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-gray-300',
-  outline: 'bg-transparent border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-300',
-};
-```
-
-### Verificación
-
+#### 1. Buscar en el código
 ```bash
-# Verificar que no hay errores de TypeScript
-npm run type-check
+# Buscar componentes que usan fetch
+grep -r "await fetch" src/components/
 
-# Verificar que el frontend compila
-npm run dev
+# Buscar definiciones de API_BASE o API_URL
+grep -r "API_BASE\|API_URL" src/components/
 ```
 
-**Resultado:** ✅ Error corregido, compilación exitosa
-
-### Prevención Futura
-
-**Reglas a seguir:**
-
-1. **Nunca dividir cadenas de texto en múltiples líneas** sin usar:
-   - Template literals: `` `texto ${variable}` ``
-   - Concatenación: `'texto ' + 'más texto'`
-   - Continuación con `\`: `'texto \` + nueva línea + `más texto'`
-
-2. **Usar template literals para cadenas largas:**
-   ```typescript
-   // ✅ RECOMENDADO para cadenas largas
-   const styles = `
-     bg-ricoh-red text-white 
-     hover:bg-red-700 
-     focus:ring-2 focus:ring-red-500
-   `.replace(/\s+/g, ' ').trim();
-   ```
-
-3. **Configurar linter para detectar este error:**
-   - ESLint ya detecta este tipo de errores
-   - Asegurarse de que ESLint esté habilitado en el editor
-
-4. **Verificar antes de commit:**
-   ```bash
-   npm run lint
-   npm run type-check
-   ```
-
-### Lecciones Aprendidas
-
-- ✅ Siempre verificar la sintaxis después de editar archivos
-- ✅ Usar herramientas de formateo automático (Prettier)
-- ✅ Probar la compilación antes de hacer commit
-- ✅ Documentar errores para referencia futura
-
----
-
-## Error #2: Etiqueta de cierre incorrecta en DiscoveryModal.tsx
-
-**Fecha:** 18 de marzo de 2026  
-**Severidad:** 🔴 Alta (bloquea compilación)  
-**Archivo:** `src/components/discovery/DiscoveryModal.tsx`  
-**Línea:** 356
-
-### Descripción del Error
-
+#### 2. Revisar errores en consola
+Si ves errores 403 que mencionan un archivo `.tsx` específico:
 ```
-[plugin:vite:react-babel] /app/src/components/discovery/DiscoveryModal.tsx: 
-Expected corresponding JSX closing tag for <Modal>. (356:6)
+CierresView.tsx:38  GET http://localhost:8000/printers/ 403 (Forbidden)
 ```
 
-Al reiniciar el frontend después de refactorizar el DiscoveryModal, Vite reportó un error de JSX: estructura de etiquetas incorrecta.
+Esto indica que el componente está usando `fetch` directamente.
 
-### Causa Raíz
-
-Durante la refactorización del modal, se dejó un `</div>` extra que rompió la estructura JSX:
-
-```typescript
-// ❌ INCORRECTO
-<Modal>
-  <div className="space-y-6">
-    {/* Contenido */}
-  </div>  {/* ← Cierre del div principal */}
-
-  {/* Footer */}
-  {discoveredDevices.length > 0 && (
-    <div>...</div>
-  )}
-</div>  {/* ← Cierre extra que no debería estar aquí */}
-</Modal>
+#### 3. Verificar que el interceptor no se ejecuta
+Si NO ves estos logs después del 403:
+```
+🔄 Token expirado, renovando automáticamente...
+✅ Token renovado exitosamente, reintentando request...
 ```
 
-El footer estaba fuera del div principal pero había un `</div>` extra antes del cierre del `</Modal>`.
-
-### Solución Aplicada
-
-Se eliminó el `</div>` extra para que la estructura JSX sea correcta:
-
-```typescript
-// ✅ CORRECTO
-<Modal>
-  <div className="space-y-6">
-    {/* Contenido */}
-  
-    {/* Footer dentro del div principal */}
-    {discoveredDevices.length > 0 && (
-      <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-        <Button variant="secondary" onClick={handleRegister}>Registrar</Button>
-      </div>
-    )}
-  </div>  {/* ← Un solo cierre del div principal */}
-</Modal>
-```
-
-### Verificación
-
-```bash
-# Verificar que no hay errores de TypeScript
-npm run type-check
-
-# Verificar que el frontend compila
-npm run dev
-```
-
-**Resultado:** ✅ Error corregido, compilación exitosa
-
-### Prevención Futura
-
-**Reglas a seguir:**
-
-1. **Mantener estructura JSX clara y consistente:**
-   ```typescript
-   // ✅ RECOMENDADO
-   <ComponentePadre>
-     <div className="contenedor-principal">
-       {/* Todo el contenido dentro */}
-       <div>Sección 1</div>
-       <div>Sección 2</div>
-       {condicion && <div>Sección condicional</div>}
-     </div>
-   </ComponentePadre>
-   ```
-
-2. **Usar indentación correcta:**
-   - Cada nivel de anidación debe tener 2 espacios
-   - Usar un formateador automático (Prettier)
-
-3. **Verificar estructura al refactorizar:**
-   - Contar etiquetas de apertura y cierre
-   - Usar el resaltado de sintaxis del editor
-   - Probar después de cada cambio grande
-
-4. **Usar herramientas del editor:**
-   - VS Code: Extensión "Bracket Pair Colorizer"
-   - Resaltado automático de etiquetas JSX
-   - Auto-cierre de etiquetas
-
-5. **Commits frecuentes:**
-   - Hacer commit después de cada refactorización exitosa
-   - Facilita rollback si algo sale mal
-
-### Lecciones Aprendidas
-
-- ✅ Al refactorizar componentes grandes, hacerlo por secciones
-- ✅ Verificar la estructura JSX después de cada cambio
-- ✅ Usar herramientas de formateo automático
-- ✅ Probar la compilación antes de continuar
-- ✅ No hacer múltiples refactorizaciones sin probar
-
-### Contexto Adicional
-
-Este error ocurrió durante la refactorización del DiscoveryModal de usar estructura HTML custom a usar el componente Modal del sistema de diseño. Al cambiar de:
-
-```typescript
-// Antes
-<div className="fixed inset-0...">
-  <div className="bg-white...">
-    <div className="header">...</div>
-    <div className="content">...</div>
-    <div className="footer">...</div>
-  </div>
-</div>
-```
-
-A:
-
-```typescript
-// Después
-<Modal>
-  <div className="space-y-6">
-    {/* contenido */}
-  </div>
-  {/* footer */}
-</Modal>
-```
-
-Se dejó un cierre de div extra del código anterior.
-
----
-
-## Error #3: Div extra en CierreDetalleModal.tsx
-
-**Fecha:** 18 de marzo de 2026  
-**Severidad:** 🔴 Alta (bloquea compilación)  
-**Archivo:** `src/components/contadores/cierres/CierreDetalleModal.tsx`  
-**Línea:** 414
-
-### Descripción del Error
-
-```
-[plugin:vite:react-babel] /app/src/components/contadores/cierres/CierreDetalleModal.tsx: 
-Expected corresponding JSX closing tag for <Modal>. (414:6)
-    412 |           </Button>
-    413 |         </div>
-  > 414 |       </div>
-        |       ^
-    415 |     </Modal>
-    416 |   );
-    417 | };
-```
-
-Al refactorizar el CierreDetalleModal para usar el componente Modal del sistema de diseño, se introdujo un error de estructura JSX con un `</div>` extra.
-
-### Causa Raíz
-
-Durante la refactorización del modal, se mantuvo la estructura de divs del código anterior pero se agregó el componente `<Modal>` que ya maneja su propio wrapper. Esto resultó en un `</div>` extra que no tenía apertura correspondiente:
-
-```typescript
-// ❌ INCORRECTO
-<Modal>
-  <div className="space-y-6">
-    {/* Contenido principal */}
-  </div>
-
-  {/* Footer */}
-  <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-    <Button>Exportar Excel</Button>
-    <Button>Exportar CSV</Button>
-    <Button>Cerrar</Button>
-  </div>
-</div>  {/* ← Cierre extra sin apertura correspondiente */}
-</Modal>
-```
-
-El problema es que había un `</div>` adicional después del footer que no correspondía a ningún `<div>` de apertura.
-
-### Solución Aplicada
-
-Se eliminó el `</div>` extra y se envolvió el footer en una condición para que solo se muestre cuando hay datos:
-
-```typescript
-// ✅ CORRECTO
-<Modal
-  isOpen={true}
-  onClose={onClose}
-  title={`Detalle del Cierre - ${formatDate(cierre.fecha_inicio)}`}
-  size="xl"
->
-  <div className="space-y-6">
-    {/* Contenido principal */}
-  </div>
-
-  {/* Footer - solo se muestra si hay detalle */}
-  {detalle && (
-    <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-      <Button variant="outline" size="sm" icon={<FileSpreadsheet size={16} />}>
-        Exportar Excel
-      </Button>
-      <Button variant="outline" size="sm" icon={<Download size={16} />}>
-        Exportar CSV
-      </Button>
-      <Button variant="ghost" onClick={onClose}>
-        Cerrar
-      </Button>
-    </div>
-  )}
-</Modal>  {/* ← Cierre correcto del Modal */}
-```
-
-### Verificación
-
-```bash
-# Verificar que no hay errores de TypeScript
-getDiagnostics(["src/components/contadores/cierres/CierreDetalleModal.tsx"])
-```
-
-**Resultado:** ✅ No diagnostics found
-
-### Prevención Futura
-
-**Reglas a seguir:**
-
-1. **Entender la estructura del componente Modal:**
-   - El componente `<Modal>` ya maneja su propio wrapper y overlay
-   - No necesita divs adicionales de estructura
-   - Los hijos del Modal deben ser el contenido directo
-
-2. **Patrón correcto para modales con footer:**
-   ```typescript
-   // ✅ PATRÓN RECOMENDADO
-   <Modal title="Título" onClose={onClose}>
-     {/* Contenido principal */}
-     <div className="space-y-6">
-       {/* Secciones del contenido */}
-     </div>
-
-     {/* Footer condicional */}
-     {condicion && (
-       <div className="footer-styles">
-         {/* Botones del footer */}
-       </div>
-     )}
-   </Modal>
-   ```
-
-3. **Al refactorizar de HTML custom a componente Modal:**
-   - Eliminar todos los divs de estructura (fixed, overlay, wrapper)
-   - Mantener solo el contenido y footer
-   - Verificar que no queden cierres de etiquetas huérfanos
-
-4. **Usar herramientas de validación:**
-   - Verificar con getDiagnostics después de cada cambio
-   - Usar el resaltado de sintaxis del editor
-   - Contar manualmente las etiquetas de apertura/cierre si es necesario
-
-5. **Commits incrementales:**
-   - Hacer commit después de cada refactorización exitosa
-   - Probar la compilación antes de continuar con el siguiente archivo
-
-### Lecciones Aprendidas
-
-- ✅ Al refactorizar modales, entender primero la estructura del componente destino
-- ✅ Eliminar toda la estructura HTML custom al migrar a componentes
-- ✅ Verificar la estructura JSX después de cada cambio
-- ✅ Usar getDiagnostics inmediatamente después de refactorizar
-- ✅ No asumir que getDiagnostics detecta todos los errores de runtime (Vite puede detectar más)
-
-### Contexto Adicional
-
-Este es el **tercer error de estructura JSX** encontrado durante la refactorización de modales. Los tres errores tienen el mismo patrón:
-
-1. **DiscoveryModal.tsx** - Div extra después del footer
-2. **CierreDetalleModal.tsx** - Div extra después del footer
-3. **Patrón común:** Al refactorizar de estructura HTML custom a componente Modal
-
-**Patrón del error:**
-```typescript
-// Estructura original (HTML custom)
-<div className="fixed inset-0">
-  <div className="bg-white">
-    <div className="header">...</div>
-    <div className="content">...</div>
-    <div className="footer">...</div>
-  </div>  {/* ← Este cierre se mantiene por error */}
-</div>
-
-// Después de refactorizar (incorrecto)
-<Modal>
-  <div className="content">...</div>
-  <div className="footer">...</div>
-</div>  {/* ← Cierre huérfano del código anterior */}
-</Modal>
-```
-
-**Solución definitiva:** Al refactorizar modales, eliminar TODA la estructura de divs custom y mantener solo el contenido.
+Significa que el request no pasó por `apiClient`.
 
 ### Impacto
 
-- **Tiempo de detección:** Inmediato (error de compilación en Vite)
-- **Tiempo de resolución:** ~3 minutos
-- **Impacto en producción:** Ninguno (detectado antes de deploy)
-- **Archivos afectados:** 1
+**Antes de la corrección**:
+- ❌ 7 componentes sin autenticación automática
+- ❌ Errores 403 persistentes en cierres
+- ❌ Manejo inconsistente de errores
+- ❌ Código duplicado en cada componente
+
+**Después de la corrección**:
+- ✅ Todos los componentes usan autenticación automática
+- ✅ Renovación de token funciona en todos los componentes
+- ✅ Manejo consistente de errores
+- ✅ ~450 líneas de código menos (64% reducción)
+
+### Archivos Afectados
+- `src/components/contadores/cierres/CierresView.tsx`
+- `src/components/contadores/cierres/ComparacionPage.tsx`
+- `src/components/contadores/cierres/CierreModal.tsx`
+- `src/components/contadores/cierres/CierreDetalleModal.tsx`
+- `src/components/contadores/cierres/ComparacionModal.tsx`
+- `src/components/discovery/DiscoveryModal.tsx`
+- `src/components/usuarios/AdministracionUsuarios.tsx`
+
+### Lección Aprendida
+
+**Regla de Oro**: NUNCA usar `fetch` directamente en componentes o servicios que requieren autenticación. SIEMPRE usar `apiClient`.
+
+**Por qué es importante**:
+1. `apiClient` agrega automáticamente el token JWT
+2. `apiClient` renueva el token cuando expira
+3. `apiClient` maneja errores de forma consistente
+4. `apiClient` redirige a login cuando es necesario
+5. Código más limpio y mantenible
+
+**Cómo asegurar que no vuelva a pasar**:
+1. Revisar todos los componentes nuevos antes de commit
+2. Buscar `fetch(` en el código antes de hacer PR
+3. Agregar un linter rule para prohibir `fetch` en src/
+4. Documentar el patrón en la guía de desarrollo
 
 ---
 
-## Plantilla para Nuevos Errores
-
-```markdown
-## Error #X: [Título descriptivo]
-
-**Fecha:** [Fecha]  
-**Severidad:** 🔴 Alta / 🟡 Media / 🟢 Baja  
-**Archivo:** [Ruta del archivo]  
-**Línea:** [Número de línea]
-
-### Descripción del Error
-
-[Mensaje de error completo]
-
-### Causa Raíz
-
-[Explicación de qué causó el error]
-
-### Solución Aplicada
-
-[Código antes y después]
-
-### Verificación
-
-[Comandos o pasos para verificar la solución]
-
-### Prevención Futura
-
-[Reglas o prácticas para evitar que se repita]
-
-### Lecciones Aprendidas
-
-[Puntos clave aprendidos]
-```
-
----
-
-## Estadísticas
-
-| Métrica | Valor |
-|---------|-------|
-| Total de errores documentados | 3 |
-| Errores críticos (🔴) | 3 |
-| Errores medios (🟡) | 0 |
-| Errores bajos (🟢) | 0 |
-| Errores resueltos | 3 (100%) |
-| Tiempo promedio de resolución | ~4 minutos |
-
-### Errores por Categoría
-
-| Categoría | Cantidad |
-|-----------|----------|
-| Sintaxis JavaScript/TypeScript | 1 |
-| Estructura JSX | 2 |
-| Lógica de negocio | 0 |
-| Performance | 0 |
-| Estilos CSS | 0 |
-
-### Errores por Archivo
-
-| Archivo | Errores |
-|---------|---------|
-| Button.tsx | 1 |
-| DiscoveryModal.tsx | 1 |
-| CierreDetalleModal.tsx | 1 |
-
-### Patrón de Errores Detectado
-
-**Patrón:** Div extra al refactorizar modales  
-**Frecuencia:** 2 de 3 errores (66%)  
-**Archivos afectados:** DiscoveryModal.tsx, CierreDetalleModal.tsx
-
-**Causa común:** Al migrar de estructura HTML custom a componente Modal, se mantienen cierres de div del código anterior.
-
-**Prevención:** 
-1. Eliminar TODA la estructura de divs custom al refactorizar
-2. Verificar con getDiagnostics después de cada cambio
-3. Probar compilación en Vite antes de continuar
-
----
-
-**Última actualización:** 18 de marzo de 2026  
-**Mantenido por:** Kiro AI
-
-
-## Error #4: Cierre de función duplicado en CierreModal.tsx
-
-**Fecha:** 18 de marzo de 2026  
-**Severidad:** 🔴 Alta (bloquea compilación)  
-**Archivo:** `src/components/contadores/cierres/CierreModal.tsx`  
-**Línea:** 137
-
-### Descripción del Error
-
-```
-[plugin:vite:react-babel] /app/src/components/contadores/cierres/CierreModal.tsx: 
-Unexpected token (137:0)
-  135 |      );
-  136 |    };
-> 137 |  };
-      |  ^
-  138 |
-```
-
-Al refactorizar el CierreModal, se introdujo un error de sintaxis con un cierre de función duplicado `};`.
-
-### Causa Raíz
-
-Durante la refactorización del modal, se dejó un cierre de función extra. El componente tenía dos cierres cuando solo debería tener uno:
-
-```typescript
-// ❌ INCORRECTO
-export const CierreModal: React.FC<CierreModalProps> = ({ ... }) => {
-  return (
-    <Modal>...</Modal>
-  );
-};  // ← Cierre correcto de la arrow function
-};  // ← Cierre extra que causa el error
-```
-
-Este tipo de error ocurre cuando:
-1. Se copia/pega código y se duplican cierres
-2. Se refactoriza de función tradicional a arrow function
-3. Se eliminan bloques de código pero se dejan los cierres
-
-### Solución Aplicada
-
-Se eliminó el cierre de función duplicado, dejando solo uno:
-
-```typescript
-// ✅ CORRECTO
-export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName, onClose, onSuccess }) => {
-  // ... código del componente
-  
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Crear Cierre" size="md">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* contenido del formulario */}
-      </form>
-    </Modal>
-  );
-};  // ← Un solo cierre de la arrow function
-```
-
-### Verificación
-
-```bash
-getDiagnostics(["src/components/contadores/cierres/CierreModal.tsx"])
-```
-
-**Resultado:** ✅ No diagnostics found
-
-### Prevención Futura
-
-**Reglas a seguir:**
-
-1. **Estructura correcta de arrow functions:**
-   ```typescript
-   // Arrow function con return explícito
-   const Component = () => {
-     return <div>...</div>;
-   };  // ← Un solo cierre
-   
-   // Arrow function con return implícito
-   const Component = () => (
-     <div>...</div>
-   );  // ← Un solo cierre
-   ```
-
-2. **Contar llaves al refactorizar:**
-   - Cada `{` debe tener su correspondiente `}`
-   - Usar el resaltado de sintaxis del editor
-   - Herramientas como "Bracket Pair Colorizer" ayudan
-
-3. **Verificar después de copiar/pegar:**
-   - Al copiar código, verificar que no se dupliquen cierres
-   - Usar formateo automático (Prettier) para detectar inconsistencias
-
-4. **Patrón estándar de componentes React:**
-   ```typescript
-   // ✅ PATRÓN CORRECTO
-   export const ComponentName: React.FC<Props> = ({ props }) => {
-     // hooks y lógica
-     
-     return (
-       <JSX>
-         {/* contenido */}
-       </JSX>
-     );
-   };  // ← Un solo cierre aquí
-   ```
-
-5. **Usar herramientas de validación:**
-   - ESLint detecta este tipo de errores
-   - TypeScript también los detecta
-   - Verificar con getDiagnostics después de cada cambio
-
-### Lecciones Aprendidas
-
-- ✅ Verificar la estructura de funciones después de refactorizar
-- ✅ No copiar/pegar código sin revisar la estructura completa
-- ✅ Usar formateo automático para detectar inconsistencias
-- ✅ Probar compilación inmediatamente después de cambios
-- ✅ Contar manualmente las llaves si es necesario
-
-### Contexto Adicional
-
-Este error es común cuando se refactoriza código de diferentes estilos:
-
-**Función tradicional:**
-```typescript
-function Component() {
-  return <div>...</div>;
-}  // ← Un cierre
-```
-
-**Arrow function:**
-```typescript
-const Component = () => {
-  return <div>...</div>;
-};  // ← Un cierre (diferente sintaxis)
-```
-
-Al migrar entre estilos, es fácil duplicar o perder cierres.
-
-### Impacto
-
-- **Tiempo de detección:** Inmediato (error de compilación en Vite)
-- **Tiempo de resolución:** ~2 minutos
-- **Impacto en producción:** Ninguno (detectado antes de deploy)
-- **Archivos afectados:** 1
-
-### Relación con Otros Errores
-
-Este es un error de sintaxis básico, diferente a los errores de estructura JSX (#2 y #3). Sin embargo, todos comparten el patrón de ser errores introducidos durante la refactorización.
-
----
-
-## 📊 ESTADÍSTICAS ACTUALIZADAS
-
-| Métrica | Valor |
-|---------|-------|
-| Total de errores documentados | 4 |
-| Errores críticos (🔴) | 4 |
-| Errores medios (🟡) | 0 |
-| Errores bajos (🟢) | 0 |
-| Errores resueltos | 4 (100%) |
-| Tiempo promedio de resolución | ~3.5 minutos |
-
-### Errores por Categoría
-
-| Categoría | Cantidad |
-|-----------|----------|
-| Sintaxis JavaScript/TypeScript | 2 |
-| Estructura JSX | 2 |
-| Lógica de negocio | 0 |
-| Performance | 0 |
-| Estilos CSS | 0 |
-
-### Errores por Archivo
-
-| Archivo | Errores |
-|---------|---------|
-| Button.tsx | 1 |
-| DiscoveryModal.tsx | 1 |
-| CierreDetalleModal.tsx | 1 |
-| CierreModal.tsx | 1 |
-
-### Patrones de Errores Detectados
-
-**Patrón 1:** Div extra al refactorizar modales  
-**Frecuencia:** 2 de 4 errores (50%)  
-**Archivos afectados:** DiscoveryModal.tsx, CierreDetalleModal.tsx
-
-**Patrón 2:** Errores de sintaxis en refactorización  
-**Frecuencia:** 2 de 4 errores (50%)  
-**Archivos afectados:** Button.tsx, CierreModal.tsx
-
-**Causa común:** Todos los errores fueron introducidos durante la refactorización de componentes.
-
-**Prevención general:** 
-1. Verificar con getDiagnostics después de cada cambio
-2. Probar compilación en Vite antes de continuar
-3. Usar formateo automático (Prettier)
-4. Hacer commits incrementales
-
----
-
-**Última actualización:** 18 de marzo de 2026 (Error #4 agregado)  
-**Mantenido por:** Kiro AI
-
-
-## Error #5: Componente de icono pasado sin instanciar en Button
-
-**Fecha:** 18 de marzo de 2026  
-**Severidad:** 🔴 Alta (bloquea renderizado)  
-**Archivos:** 
-- `src/components/usuarios/ModificarUsuario.tsx` (líneas 571, 589)
-- `src/components/usuarios/GestorEquipos.tsx` (línea 131)
-- `src/components/usuarios/EditorPermisos.tsx` (línea 243)
-
-### Descripción del Error
-
-```
-Uncaught Error: Objects are not valid as a React child (found: object with keys {$$typeof, render}). 
-If you meant to render a collection of children, use an array instead.
-```
-
-Al hacer clic en "Editar" en un usuario, el modal se abre pero React lanza un error indicando que se está intentando renderizar un objeto (componente) como hijo en lugar de un elemento JSX.
-
-### Causa Raíz
-
-El componente `Button` espera la prop `icon` como `React.ReactNode` (un elemento JSX), pero se estaba pasando el componente sin instanciar:
-
-```typescript
-// ❌ INCORRECTO - Pasando el componente sin instanciar
-<Button
-  icon={Save}  // ← Esto es un componente, no un elemento
-  onClick={handleSave}
->
-  Guardar
-</Button>
-```
-
-Cuando React intenta renderizar el icono, encuentra un objeto (el componente) en lugar de un elemento JSX, lo que causa el error.
-
-**Diferencia clave:**
-- `Save` = Componente (función/objeto)
-- `<Save />` = Elemento JSX (resultado de llamar al componente)
-
-### Solución Aplicada
-
-Se corrigieron todos los usos de la prop `icon` para pasar elementos JSX en lugar de componentes:
-
-```typescript
-// ✅ CORRECTO - Pasando el elemento JSX
-<Button
-  icon={<Save size={16} />}  // ← Elemento JSX instanciado
-  onClick={handleSave}
->
-  Guardar
-</Button>
-```
-
-**Archivos corregidos:**
-
-1. **ModificarUsuario.tsx:**
-   ```typescript
-   // Antes
-   icon={Trash2}
-   icon={Save}
-   
-   // Después
-   icon={<Trash2 size={16} />}
-   icon={<Save size={16} />}
-   ```
-
-2. **GestorEquipos.tsx:**
-   ```typescript
-   // Antes
-   icon={Trash2}
-   
-   // Después
-   icon={<Trash2 size={16} />}
-   ```
-
-3. **EditorPermisos.tsx:**
-   ```typescript
-   // Antes
-   icon={Save}
-   
-   // Después
-   icon={<Save size={18} />}
-   ```
-
-### Verificación
-
-```bash
-getDiagnostics([
-  "src/components/usuarios/ModificarUsuario.tsx",
-  "src/components/usuarios/GestorEquipos.tsx",
-  "src/components/usuarios/EditorPermisos.tsx"
-])
-```
-
-**Resultado:** ✅ No diagnostics found
-
-**Prueba funcional:**
-1. Abrir lista de usuarios
-2. Hacer clic en "Editar" en cualquier usuario
-3. El modal se abre correctamente sin errores
-4. Los botones con iconos se renderizan correctamente
-
-### Prevención Futura
-
-**Reglas a seguir:**
-
-1. **Entender la diferencia entre componente y elemento:**
-   ```typescript
-   // Componente (función/objeto)
-   const Icon = Save;  // ❌ No se puede renderizar directamente
-   
-   // Elemento JSX (resultado de llamar al componente)
-   const icon = <Save />;  // ✅ Se puede renderizar
-   ```
-
-2. **Patrón correcto para props de iconos:**
-   ```typescript
-   // ✅ PATRÓN RECOMENDADO
-   interface ButtonProps {
-     icon?: React.ReactNode;  // Acepta elementos JSX
-   }
-   
-   // Uso correcto
-   <Button icon={<Save size={16} />}>Guardar</Button>
-   <Button icon={<Edit size={14} />}>Editar</Button>
-   ```
-
-3. **Alternativa: Aceptar componentes y renderizarlos internamente:**
-   ```typescript
-   // Opción alternativa (requiere cambiar el componente Button)
-   interface ButtonProps {
-     icon?: React.ComponentType<{ size?: number }>;
-     iconSize?: number;
-   }
-   
-   // Dentro del componente Button
-   {icon && <icon size={iconSize || 16} />}
-   
-   // Uso
-   <Button icon={Save} iconSize={16}>Guardar</Button>
-   ```
-
-4. **Verificar tipos con TypeScript:**
-   ```typescript
-   // TypeScript debería advertir si se pasa el tipo incorrecto
-   icon?: React.ReactNode;  // Acepta JSX
-   // vs
-   icon?: React.ComponentType;  // Acepta componentes
-   ```
-
-5. **Buscar patrones incorrectos:**
-   ```bash
-   # Buscar usos de icon con componentes sin instanciar
-   grep -r "icon={[A-Z]" src/components/
-   ```
-
-### Lecciones Aprendidas
-
-- ✅ Siempre instanciar componentes cuando se pasan como props de tipo ReactNode
-- ✅ Entender la diferencia entre componente y elemento JSX
-- ✅ Verificar el tipo esperado por la prop antes de usarla
-- ✅ Probar la funcionalidad después de refactorizar, no solo la compilación
-- ✅ Los errores de runtime pueden no ser detectados por TypeScript o getDiagnostics
-
-### Contexto Adicional
-
-Este error es común cuando se refactoriza código que usa iconos. Hay dos enfoques comunes:
-
-**Enfoque 1: Pasar elementos JSX (usado en este proyecto)**
-```typescript
-<Button icon={<Save size={16} />}>Guardar</Button>
-```
-- ✅ Más flexible (puedes pasar cualquier ReactNode)
-- ✅ Permite personalizar props del icono
-- ❌ Más verboso
-
-**Enfoque 2: Pasar componentes y renderizar internamente**
-```typescript
-<Button icon={Save} iconSize={16}>Guardar</Button>
-```
-- ✅ Más conciso
-- ✅ API más limpia
-- ❌ Menos flexible (solo acepta componentes de icono)
-
-Ambos enfoques son válidos, pero es importante ser consistente en todo el proyecto.
-
-### Impacto
-
-- **Tiempo de detección:** Inmediato (error en consola al abrir modal)
-- **Tiempo de resolución:** ~5 minutos
-- **Impacto en producción:** Alto (bloquea funcionalidad de edición de usuarios)
-- **Archivos afectados:** 3
-- **Componentes afectados:** 4 botones
-
-### Relación con Otros Errores
-
-Este es el primer error de **lógica de React** documentado. Los errores anteriores (#1-4) fueron de sintaxis o estructura JSX. Este error es más sutil porque:
-- TypeScript no lo detecta (ambos tipos son válidos)
-- getDiagnostics no lo detecta (no es un error de compilación)
-- Solo se manifiesta en runtime cuando React intenta renderizar
-
-**Patrón emergente:** Los errores de runtime requieren pruebas funcionales, no solo verificación de compilación.
-
----
-
-## 📊 ESTADÍSTICAS ACTUALIZADAS
-
-| Métrica | Valor |
-|---------|-------|
-| Total de errores documentados | 5 |
-| Errores críticos (🔴) | 5 |
-| Errores medios (🟡) | 0 |
-| Errores bajos (🟢) | 0 |
-| Errores resueltos | 5 (100%) |
-| Tiempo promedio de resolución | ~3.8 minutos |
-
-### Errores por Categoría
-
-| Categoría | Cantidad |
-|-----------|----------|
-| Sintaxis JavaScript/TypeScript | 2 |
-| Estructura JSX | 2 |
-| Lógica de React | 1 |
-| Performance | 0 |
-| Estilos CSS | 0 |
-
-### Errores por Tipo de Detección
-
-| Tipo | Cantidad |
-|------|----------|
-| Compilación (TypeScript/Babel) | 4 |
-| Runtime (React) | 1 |
-
-### Errores por Archivo
-
-| Archivo | Errores |
-|---------|---------|
-| Button.tsx | 1 |
-| DiscoveryModal.tsx | 1 |
-| CierreDetalleModal.tsx | 1 |
-| CierreModal.tsx | 1 |
-| ModificarUsuario.tsx | 1 |
-| GestorEquipos.tsx | 1 |
-| EditorPermisos.tsx | 1 |
-
-**Nota:** Los últimos 3 archivos comparten el mismo error (#5).
-
-### Patrones de Errores Detectados
-
-**Patrón 1:** Div extra al refactorizar modales  
-**Frecuencia:** 2 de 5 errores (40%)  
-**Archivos afectados:** DiscoveryModal.tsx, CierreDetalleModal.tsx
-
-**Patrón 2:** Errores de sintaxis en refactorización  
-**Frecuencia:** 2 de 5 errores (40%)  
-**Archivos afectados:** Button.tsx, CierreModal.tsx
-
-**Patrón 3:** Componentes pasados sin instanciar  
-**Frecuencia:** 1 de 5 errores (20%)  
-**Archivos afectados:** ModificarUsuario.tsx, GestorEquipos.tsx, EditorPermisos.tsx
-
-**Causa común:** Todos los errores fueron introducidos durante la refactorización de componentes.
-
-**Prevención general:** 
-1. Verificar con getDiagnostics después de cada cambio
-2. Probar compilación en Vite antes de continuar
-3. **NUEVO:** Probar funcionalidad en el navegador, no solo compilación
-4. Usar formateo automático (Prettier)
-5. Hacer commits incrementales
-
----
-
-**Última actualización:** 18 de marzo de 2026 (Error #5 agregado)  
-**Mantenido por:** Kiro AI
+**Última actualización**: 20 de Marzo de 2026  
+**Total de errores documentados**: 8

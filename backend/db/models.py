@@ -12,6 +12,9 @@ from typing import Optional
 
 from .database import Base
 
+# Import authentication models
+from .models_auth import Empresa, AdminUser, AdminSession, AdminAuditLog
+
 
 class PrinterStatus(str, enum.Enum):
     """Printer status enumeration"""
@@ -55,7 +58,7 @@ class User(Base):
     func_browser = Column(Boolean, default=False, nullable=False)  # Navegador
     
     # Optional Fields
-    empresa = Column(String(255), nullable=True, index=True)  # Empresa (antes email)
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="RESTRICT"), nullable=True, index=True)
     centro_costos = Column(String(100), nullable=True, index=True)  # Centro de costos (antes department)
     
     # Metadata
@@ -64,14 +67,53 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    empresa = relationship("Empresa", back_populates="users")
     printer_assignments = relationship(
         "UserPrinterAssignment",
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    
+    def set_network_password(self, password: str):
+        """
+        Encriptar y guardar password de red
+        
+        Args:
+            password: Password en texto plano
+        """
+        # Import aquí para evitar circular dependency
+        from services.encryption_service import EncryptionService
+        self.network_password_encrypted = EncryptionService.encrypt(password)
+    
+    def get_network_password(self) -> Optional[str]:
+        """
+        Obtener password de red desencriptado
+        
+        Returns:
+            Password en texto plano o None si no existe
+        """
+        if self.network_password_encrypted:
+            try:
+                # Import aquí para evitar circular dependency
+                from services.encryption_service import EncryptionService
+                return EncryptionService.decrypt(self.network_password_encrypted)
+            except Exception:
+                # Si falla la desencriptación, retornar None
+                return None
+        return None
+    
+    @property
+    def network_password(self) -> Optional[str]:
+        """Property para acceso transparente al password"""
+        return self.get_network_password()
+    
+    @network_password.setter
+    def network_password(self, value: str):
+        """Property setter para encriptar automáticamente"""
+        self.set_network_password(value)
 
     def __repr__(self):
-        return f"<User(id={self.id}, name='{self.name}', empresa='{self.empresa}')>"
+        return f"<User(id={self.id}, name='{self.name}', empresa_id={self.empresa_id})>"
 
 
 class Printer(Base):
@@ -85,7 +127,7 @@ class Printer(Base):
     hostname = Column(String(255), nullable=False, index=True)
     ip_address = Column(String(45), nullable=False, unique=True, index=True)  # IPv4/IPv6
     location = Column(String(255), nullable=True)
-    empresa = Column(String(255), nullable=True, index=True)  # Company/Organization
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="RESTRICT"), nullable=False, index=True)
     status = Column(Enum(PrinterStatus), default=PrinterStatus.OFFLINE)
     detected_model = Column(String(100), nullable=True)
     serial_number = Column(String(100), nullable=True, index=True)  # Unique constraint removed to allow NULL duplicates
@@ -117,6 +159,7 @@ class Printer(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    empresa = relationship("Empresa", back_populates="printers")
     user_assignments = relationship(
         "UserPrinterAssignment",
         back_populates="printer",

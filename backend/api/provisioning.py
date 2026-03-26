@@ -1,7 +1,7 @@
 """
 Provisioning API routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -14,7 +14,8 @@ from .schemas import (
     PrinterUsersResponse,
     MessageResponse,
     UpdateUserFunctionsRequest,
-    UpdateUserFunctionsResponse
+    UpdateUserFunctionsResponse,
+    UpdateAssignmentRequest
 )
 
 router = APIRouter(prefix="/provisioning", tags=["provisioning"])
@@ -107,18 +108,35 @@ async def get_printer_users(printer_id: int, db: Session = Depends(get_db)):
         )
 
 
-@router.patch("/update-assignment", response_model=MessageResponse)
+@router.patch("/update-assignment")
 async def update_assignment_permissions(
-    user_id: int,
-    printer_id: int,
-    permissions: dict,
-    entry_index: Optional[str] = None,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
     Update permissions for a specific user-printer assignment
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        # Leer el body manualmente
+        body = await request.json()
+        
+        user_id = body.get('user_id')
+        printer_id = body.get('printer_id')
+        permissions = body.get('permissions')
+        entry_index = body.get('entry_index')
+        
+        if not user_id or not printer_id or not permissions:
+            raise HTTPException(status_code=400, detail="Faltan parámetros requeridos: user_id, printer_id, permissions")
+        
+        logger.info(f"📝 Actualizando permisos de asignación:")
+        logger.info(f"   User ID: {user_id}")
+        logger.info(f"   Printer ID: {printer_id}")
+        logger.info(f"   Entry Index: {entry_index}")
+        logger.info(f"   Permissions: {permissions}")
+        
         from db.repository import AssignmentRepository
         
         # Actualizar en DB

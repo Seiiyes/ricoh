@@ -3,8 +3,9 @@ import { CierreMensual, ComparacionCierres } from './types';
 import { UsuarioComparacionRow } from './UsuarioComparacionRow';
 import { Modal, Button, Input, Spinner } from '@/components/ui';
 import { Download } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import closeService from '@/services/closeService';
+import exportService from '@/services/exportService';
+import { parseApiError } from '@/utils/errorHandler';
 
 interface ComparacionModalProps {
   printerId: number;
@@ -46,17 +47,11 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
 
     try {
       // Cargar todos los usuarios sin límite
-      const response = await fetch(
-        `${API_BASE}/api/counters/monthly/compare/${cierre1Id}/${cierre2Id}`
-      );
-
-      if (!response.ok) throw new Error('Error al comparar cierres');
-
-      const data = await response.json();
+      const data = await closeService.compareCloses(cierre1Id, cierre2Id);
       setComparacion(data);
     } catch (err: any) {
       console.error('Error loading comparacion:', err);
-      setError(err.message);
+      setError(parseApiError(err, 'Error al comparar cierres'));
     } finally {
       setLoading(false);
     }
@@ -434,9 +429,13 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
           <Button
             variant="primary"
             icon={<Download size={16} />}
-            onClick={() => {
-              const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel-ricoh`;
-              window.open(url, '_blank');
+            onClick={async () => {
+              try {
+                await exportService.exportComparacionExcelRicoh(cierre1Id!, cierre2Id!);
+              } catch (error: any) {
+                console.error('Error al exportar:', error);
+                alert(error.message || 'Error al exportar archivo');
+              }
             }}
             title="Exportar en formato Ricoh (52 columnas, 3 hojas)"
           >
@@ -445,9 +444,13 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
           <Button
             variant="primary"
             icon={<Download size={16} />}
-            onClick={() => {
-              const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}/excel`;
-              window.open(url, '_blank');
+            onClick={async () => {
+              try {
+                await exportService.exportComparacionExcel(cierre1Id!, cierre2Id!);
+              } catch (error: any) {
+                console.error('Error al exportar:', error);
+                alert(error.message || 'Error al exportar archivo');
+              }
             }}
             className="bg-green-600 hover:bg-green-700"
           >
@@ -456,9 +459,13 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
           <Button
             variant="primary"
             icon={<Download size={16} />}
-            onClick={() => {
-              const url = `${API_BASE}/api/export/comparacion/${cierre1Id}/${cierre2Id}`;
-              window.open(url, '_blank');
+            onClick={async () => {
+              try {
+                await exportService.exportComparacionCSV(cierre1Id!, cierre2Id!);
+              } catch (error: any) {
+                console.error('Error al exportar:', error);
+                alert(error.message || 'Error al exportar archivo');
+              }
             }}
           >
             CSV

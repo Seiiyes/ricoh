@@ -1,6 +1,7 @@
 ---
 inclusion: auto
 priority: high
+description: "Contexto general del proyecto: arquitectura, estructura, módulos principales, comandos útiles y convenciones de código"
 ---
 
 # 📋 Contexto del Proyecto - Sistema de Gestión de Impresoras Ricoh

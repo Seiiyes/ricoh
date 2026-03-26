@@ -3,6 +3,7 @@
  * 
  * Service layer for counter API integration.
  * Encapsulates all HTTP calls to the backend counter endpoints.
+ * Uses apiClient for authenticated requests.
  */
 
 import type {
@@ -13,8 +14,7 @@ import type {
   ReadResult,
   ReadAllResult,
 } from '@/types/counter';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import apiClient from './apiClient';
 
 /**
  * Fetches the latest total counter for a printer
@@ -25,27 +25,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  */
 export async function fetchLatestCounter(printerId: number): Promise<TotalCounter> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/counters/printer/${printerId}`);
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch counter: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error fetching counter');
+    const response = await apiClient.get(`/api/counters/printer/${printerId}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch counter';
+    throw new Error(errorMessage);
   }
 }
 
@@ -66,33 +50,16 @@ export async function fetchCounterHistory(
   }
 ): Promise<TotalCounter[]> {
   try {
-    const params = new URLSearchParams();
-    if (options?.startDate) params.append('start_date', options.startDate);
-    if (options?.endDate) params.append('end_date', options.endDate);
-    if (options?.limit) params.append('limit', options.limit.toString());
+    const params: any = {};
+    if (options?.startDate) params.start_date = options.startDate;
+    if (options?.endDate) params.end_date = options.endDate;
+    if (options?.limit) params.limit = options.limit;
     
-    const url = `${API_BASE_URL}/api/counters/printer/${printerId}/history${params.toString() ? '?' + params.toString() : ''}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch history: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error fetching history');
+    const response = await apiClient.get(`/api/counters/printer/${printerId}/history`, { params });
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch history';
+    throw new Error(errorMessage);
   }
 }
 
@@ -105,27 +72,11 @@ export async function fetchCounterHistory(
  */
 export async function fetchUserCounters(printerId: number): Promise<UserCounter[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/counters/users/${printerId}`);
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch user counters: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error fetching user counters');
+    const response = await apiClient.get(`/api/counters/users/${printerId}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch user counters';
+    throw new Error(errorMessage);
   }
 }
 
@@ -147,34 +98,17 @@ export async function fetchUserCounterHistory(
   }
 ): Promise<UserCounter[]> {
   try {
-    const params = new URLSearchParams();
-    if (options?.codigoUsuario) params.append('codigo_usuario', options.codigoUsuario);
-    if (options?.startDate) params.append('start_date', options.startDate);
-    if (options?.endDate) params.append('end_date', options.endDate);
-    if (options?.limit) params.append('limit', options.limit.toString());
+    const params: any = {};
+    if (options?.codigoUsuario) params.codigo_usuario = options.codigoUsuario;
+    if (options?.startDate) params.start_date = options.startDate;
+    if (options?.endDate) params.end_date = options.endDate;
+    if (options?.limit) params.limit = options.limit;
     
-    const url = `${API_BASE_URL}/api/counters/users/${printerId}/history${params.toString() ? '?' + params.toString() : ''}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch user history: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error fetching user history');
+    const response = await apiClient.get(`/api/counters/users/${printerId}/history`, { params });
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch user history';
+    throw new Error(errorMessage);
   }
 }
 
@@ -187,29 +121,11 @@ export async function fetchUserCounterHistory(
  */
 export async function triggerManualRead(printerId: number): Promise<ReadResult> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/counters/read/${printerId}`, {
-      method: 'POST',
-    });
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to read counters: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error reading counters');
+    const response = await apiClient.post(`/api/counters/read/${printerId}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to read counters';
+    throw new Error(errorMessage);
   }
 }
 
@@ -221,29 +137,11 @@ export async function triggerManualRead(printerId: number): Promise<ReadResult> 
  */
 export async function triggerReadAll(): Promise<ReadAllResult> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/counters/read-all`, {
-      method: 'POST',
-    });
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to read all counters: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error reading all counters');
+    const response = await apiClient.post('/api/counters/read-all');
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to read all counters';
+    throw new Error(errorMessage);
   }
 }
 
@@ -256,31 +154,11 @@ export async function triggerReadAll(): Promise<ReadAllResult> {
  */
 export async function performMonthlyClose(data: MonthlyCloseRequest): Promise<MonthlyClose> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/counters/close-month`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      let errorMessage = 'Failed to perform monthly close';
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error performing monthly close');
+    const response = await apiClient.post('/api/counters/close-month', data);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to perform monthly close';
+    throw new Error(errorMessage);
   }
 }
 
@@ -297,31 +175,12 @@ export async function fetchMonthlyCloses(
   year?: number
 ): Promise<MonthlyClose[]> {
   try {
-    const url = year
-      ? `${API_BASE_URL}/api/counters/monthly/${printerId}?year=${year}`
-      : `${API_BASE_URL}/api/counters/monthly/${printerId}`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch monthly closes: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error fetching monthly closes');
+    const params = year ? { year } : {};
+    const response = await apiClient.get(`/api/counters/monthly/${printerId}`, { params });
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch monthly closes';
+    throw new Error(errorMessage);
   }
 }
 
@@ -340,28 +199,10 @@ export async function fetchMonthlyClose(
   month: number
 ): Promise<MonthlyClose> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/counters/monthly/${printerId}/${year}/${month}`
-    );
-    
-    if (!response.ok) {
-      let errorMessage = `Failed to fetch monthly close: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Unknown error fetching monthly close');
+    const response = await apiClient.get(`/api/counters/monthly/${printerId}/${year}/${month}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch monthly close';
+    throw new Error(errorMessage);
   }
 }

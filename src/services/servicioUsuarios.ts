@@ -1,12 +1,12 @@
 import type { Usuario, ActualizarUsuario, UsuarioConEquipos } from '@/types/usuario';
+import apiClient from './apiClient';
 
 /**
  * Servicio de Usuarios
  * 
  * Funciones para interactuar con la API de usuarios
+ * Usa apiClient para requests autenticados
  */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // ============================================================================
 // Obtener Usuarios
@@ -21,19 +21,15 @@ export async function obtenerUsuarios(
   soloActivos: boolean = true
 ): Promise<Usuario[]> {
   try {
-    const params = new URLSearchParams({
-      skip: skip.toString(),
-      limit: limit.toString(),
-      active_only: soloActivos.toString(),
+    const response = await apiClient.get('/users/', {
+      params: {
+        skip,
+        limit,
+        active_only: soloActivos,
+      },
     });
-
-    const response = await fetch(`${API_BASE_URL}/users/?${params}`);
-
-    if (!response.ok) {
-      throw new Error('Error al obtener usuarios');
-    }
-
-    return await response.json();
+    // Backend retorna UserListResponse con estructura { items: [...], total, page, ... }
+    return response.data.items || response.data;
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
     throw error;
@@ -45,13 +41,8 @@ export async function obtenerUsuarios(
  */
 export async function obtenerUsuarioPorId(id: number): Promise<Usuario> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`);
-
-    if (!response.ok) {
-      throw new Error(`Usuario con ID ${id} no encontrado`);
-    }
-
-    return await response.json();
+    const response = await apiClient.get(`/users/${id}`);
+    return response.data;
   } catch (error) {
     console.error('Error al obtener usuario:', error);
     throw error;
@@ -63,13 +54,8 @@ export async function obtenerUsuarioPorId(id: number): Promise<Usuario> {
  */
 export async function obtenerUsuarioConEquipos(id: number): Promise<UsuarioConEquipos> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/user/${id}`);
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener equipos del usuario ${id}`);
-    }
-
-    const data = await response.json();
+    const response = await apiClient.get(`/provisioning/user/${id}`);
+    const data = response.data;
 
     // Transformar respuesta del backend al formato del frontend
     return {
@@ -122,18 +108,13 @@ export async function obtenerDetallesUsuarioImpresora(
   entryIndex: string
 ): Promise<any> {
   try {
-    const params = new URLSearchParams({
-      printer_ip: printerIp,
-      entry_index: entryIndex,
+    const response = await apiClient.get('/discovery/user-details', {
+      params: {
+        printer_ip: printerIp,
+        entry_index: entryIndex,
+      },
     });
-
-    const response = await fetch(`${API_BASE_URL}/discovery/user-details?${params}`);
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener detalles del usuario en ${printerIp}`);
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error('Error al obtener detalles del usuario:', error);
     throw error;
@@ -145,13 +126,8 @@ export async function obtenerDetallesUsuarioImpresora(
  */
 export async function buscarUsuarios(query: string): Promise<Usuario[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/search/${encodeURIComponent(query)}`);
-
-    if (!response.ok) {
-      throw new Error('Error al buscar usuarios');
-    }
-
-    return await response.json();
+    const response = await apiClient.get(`/users/search/${encodeURIComponent(query)}`);
+    return response.data;
   } catch (error) {
     console.error('Error al buscar usuarios:', error);
     return [];
@@ -167,29 +143,12 @@ export async function buscarUsuarios(query: string): Promise<Usuario[]> {
  */
 export async function crearUsuario(datos: any): Promise<Usuario> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(datos),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error detallado del servidor:', errorData);
-
-      const detail = typeof errorData.detail === 'string'
-        ? errorData.detail
-        : JSON.stringify(errorData.detail || errorData);
-
-      throw new Error(detail || 'Error al crear usuario');
-    }
-
-    return await response.json();
-  } catch (error) {
+    const response = await apiClient.post('/users/', datos);
+    return response.data;
+  } catch (error: any) {
     console.error('Error al crear usuario:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al crear usuario';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -205,23 +164,12 @@ export async function actualizarUsuario(
   datos: ActualizarUsuario
 ): Promise<Usuario> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(datos),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al actualizar usuario');
-    }
-
-    return await response.json();
-  } catch (error) {
+    const response = await apiClient.put(`/users/${id}`, datos);
+    return response.data;
+  } catch (error: any) {
     console.error('Error al actualizar usuario:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al actualizar usuario';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -256,28 +204,20 @@ export async function actualizarPermisosAsignacion(
   entryIndex?: string
 ): Promise<any> {
   try {
-    const url = new URL(`${API_BASE_URL}/provisioning/update-assignment`);
-    url.searchParams.append('user_id', usuarioId.toString());
-    url.searchParams.append('printer_id', printerId.toString());
-    if (entryIndex) url.searchParams.append('entry_index', entryIndex);
+    // Enviar todo en el body (no en query params)
+    const body = {
+      user_id: usuarioId,
+      printer_id: printerId,
+      permissions: permisos,
+      entry_index: entryIndex || null
+    };
 
-    const response = await fetch(url.toString(), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(permisos),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al actualizar permisos en el equipo');
-    }
-
-    return await response.json();
-  } catch (error) {
+    const response = await apiClient.patch('/provisioning/update-assignment', body);
+    return response.data;
+  } catch (error: any) {
     console.error('Error al actualizar permisos de asignación:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al actualizar permisos en el equipo';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -289,26 +229,15 @@ export async function asignarEquipos(
   equipoIds: number[]
 ): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/provision`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_id: usuarioId,
-        printer_ids: equipoIds,
-      }),
+    const response = await apiClient.post('/provisioning/provision', {
+      user_id: usuarioId,
+      printer_ids: equipoIds,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al asignar equipos');
-    }
-
-    return await response.json();
-  } catch (error) {
+    return response.data;
+  } catch (error: any) {
     console.error('Error al asignar equipos:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al asignar equipos';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -320,26 +249,17 @@ export async function desasignarEquipos(
   equipoIds: number[]
 ): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/remove`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const response = await apiClient.delete('/provisioning/remove', {
+      data: {
         user_id: usuarioId,
         printer_ids: equipoIds,
-      }),
+      },
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al desasignar equipos');
-    }
-
-    return await response.json();
-  } catch (error) {
+    return response.data;
+  } catch (error: any) {
     console.error('Error al desasignar equipos:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al desasignar equipos';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -352,13 +272,7 @@ export async function desasignarEquipos(
  */
 export async function eliminarUsuario(id: number): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al eliminar usuario');
-    }
+    await apiClient.delete(`/users/${id}`);
   } catch (error) {
     console.error('Error al eliminar usuario:', error);
     throw error;
@@ -426,23 +340,12 @@ export async function actualizarFuncionesEnImpresora(
   }
 ): Promise<{ success: boolean; message: string; user_code: string; printer_ip: string; functions_updated: any }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/printers/${printerIp}/users/${userCode}/functions`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(funciones),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al actualizar funciones en la impresora');
-    }
-
-    return await response.json();
-  } catch (error) {
+    const response = await apiClient.put(`/provisioning/printers/${printerIp}/users/${userCode}/functions`, funciones);
+    return response.data;
+  } catch (error: any) {
     console.error('Error al actualizar funciones en impresora:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al actualizar funciones en la impresora';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -454,22 +357,12 @@ export async function sincronizarUsuariosImpresora(
   printerIp: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/printers/${printerIp}/sync`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al sincronizar usuarios de la impresora');
-    }
-
-    return await response.json();
-  } catch (error) {
+    const response = await apiClient.post(`/provisioning/printers/${printerIp}/sync`);
+    return response.data;
+  } catch (error: any) {
     console.error('Error al sincronizar usuarios:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al sincronizar usuarios de la impresora';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }
 
@@ -481,22 +374,13 @@ export async function sincronizarUsuarioTodasImpresoras(
   printerIps: string[]
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/provisioning/users/${usuarioId}/sync-to-all-printers`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ printer_ips: printerIps }),
+    const response = await apiClient.put(`/provisioning/users/${usuarioId}/sync-to-all-printers`, {
+      printer_ips: printerIps,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Error al sincronizar usuario a todas las impresoras');
-    }
-
-    return await response.json();
-  } catch (error) {
+    return response.data;
+  } catch (error: any) {
     console.error('Error al sincronizar usuario a todas las impresoras:', error);
-    throw error;
+    const detail = error.response?.data?.detail || error.message || 'Error al sincronizar usuario a todas las impresoras';
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
 }

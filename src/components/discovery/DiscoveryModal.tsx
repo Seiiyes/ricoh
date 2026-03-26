@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Wifi, AlertCircle, Loader2 } from 'lucide-react';
 import { scanPrinters, registerDiscoveredPrinters } from '@/services/printerService';
 import { Modal, Button, Input, Spinner } from '@/components/ui';
+import discoveryService from '@/services/discoveryService';
 
 interface DiscoveredDevice {
   hostname: string;
@@ -124,30 +125,29 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
       setIsCheckingManual(true);
       
       // Llamar al endpoint de escaneo con una sola IP
-      const response = await fetch(`http://localhost:8000/discovery/check-printer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ip_address: manualIP,
-          snmp_port: parseInt(manualPort) || 161
-        })
-      });
+      const response = await discoveryService.checkPrinter(manualIP);
 
-      if (!response.ok) {
-        throw new Error('No se pudo conectar con la impresora');
+      if (!response.success || !response.printer) {
+        alert(response.message || 'No se pudo verificar la impresora');
+        return;
       }
 
-      const device = await response.json();
+      const device = response.printer;
       
       // Agregar a la lista de dispositivos descubiertos
       const editableDevice: EditableDevice = {
         ...device,
+        status: 'online',
+        toner_cyan: 0,
+        toner_magenta: 0,
+        toner_yellow: 0,
+        toner_black: 0,
         editedHostname: device.hostname,
-        editedLocation: device.location || ''
+        editedLocation: ''
       };
       
       setDiscoveredDevices(prev => [...prev, editableDevice]);
-      setSelectedDevices(prev => new Set([...prev, device.ip_address]));
+      setSelectedDevices(prev => new Set([...prev, device.ip]));
       setScanComplete(true);
       setShowManualAdd(false);
       setManualIP('');

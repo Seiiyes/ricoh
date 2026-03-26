@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            margin: 0 0 20px 0;
+        }
+        p {
+            color: #666;
+            font-size: 18px;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Test Exitoso</h1>
+        <p class="success">El servidor Vite está funcionando correctamente</p>
+        <p>Si ves este mensaje, el problema NO es con Vite ni con el navegador.</p>
+        <p>El problema está en el código React.</p>
+        <hr style="margin: 20px 0;">
+        <p><strong>Siguiente paso:</strong></p>
+        <p>Intenta acceder a <a href="/">http://localhost:5173/</a></p>
+    </div>
+    <script>
+        console.log('✅ JavaScript funcionando correctamente');
+        console.log('Hora actual:', new Date().toLocaleString());
+    </script>
+</body>
+</html>

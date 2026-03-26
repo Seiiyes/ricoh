@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Input, Alert } from '@/components/ui';
 import { Lock, AlertTriangle } from 'lucide-react';
+import closeService from '@/services/closeService';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CierreModalProps {
   printerId: number;
@@ -9,9 +11,9 @@ interface CierreModalProps {
   onSuccess: () => void;
 }
 
-const API_BASE = 'http://localhost:8000';
-
 export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName, onClose, onSuccess }) => {
+  const { user } = useAuth();
+  
   // Generar fecha actual en formato local YYYY-MM-DD
   const getLocalDate = () => {
     const now = new Date();
@@ -22,10 +24,17 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
   };
 
   const hoyStr = getLocalDate();
-  const [cerradoPor, setCerradoPor] = useState('admin');
+  const [cerradoPor, setCerradoPor] = useState('');
   const [notas, setNotas] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Establecer el usuario actual automáticamente
+  useEffect(() => {
+    if (user) {
+      setCerradoPor(user.nombre_completo || user.username);
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,27 +42,54 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/api/counters/close`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          printer_id: printerId,
-          fecha_inicio: hoyStr,
-          fecha_fin: hoyStr,
-          cerrado_por: cerradoPor,
-          notas: notas,
-          tipo_periodo: 'personalizado'
-        })
-      });
+      // Usar la fecha de HOY como período de un solo día
+      const hoy = getLocalDate();
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Error al crear el cierre');
-      }
+      await closeService.createClose({
+        printer_id: printerId,
+        tipo_periodo: 'diario',
+        fecha_inicio: hoy,
+        fecha_fin: hoy,
+        cerrado_por: cerradoPor || undefined,
+        notas: notas || undefined
+      });
 
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
+      console.error('Error al crear cierre:', err);
+      
+      // Manejar diferentes tipos de errores
+      let errorMessage = 'Error al crear el cierre';
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        
+        // Si detail es un array de errores de validación (422)
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map((e: any) => {
+            if (typeof e === 'object' && e.msg) {
+              return `${e.loc ? e.loc.join('.') + ': ' : ''}${e.msg}`;
+            }
+            return String(e);
+          }).join(', ');
+        } 
+        // Si detail es un string
+        else if (typeof detail === 'string') {
+          errorMessage = detail;
+        }
+        // Si detail es un objeto con message
+        else if (typeof detail === 'object' && detail.message) {
+          errorMessage = detail.message;
+        }
+        // Cualquier otro caso
+        else {
+          errorMessage = JSON.stringify(detail);
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
