@@ -4,6 +4,7 @@ import { fetchPrinters } from '@/services/printerService';
 import { asignarEquipos } from '@/services/servicioUsuarios';
 import { Button, Spinner } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
+import { useNotification } from '@/hooks/useNotification';
 
 interface GestorEquiposProps {
   usuarioId: number;
@@ -16,6 +17,7 @@ export const GestorEquipos = ({
   equiposAsignados,
   onCambio,
 }: GestorEquiposProps) => {
+  const notify = useNotification();
   const [equiposDisponibles, setEquiposDisponibles] = useState<PrinterDevice[]>([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -69,11 +71,12 @@ export const GestorEquipos = ({
     try {
       setGuardando(true);
       await asignarEquipos(usuarioId, equiposSeleccionados);
+      notify.success('Equipos actualizados', 'Los equipos del usuario se actualizaron correctamente');
       onCambio(equiposSeleccionados);
       setCambiosPendientes(false);
     } catch (error) {
       console.error('Error al guardar equipos:', error);
-      alert('Error al guardar los cambios en los equipos');
+      notify.error('Error al guardar', 'No se pudieron guardar los cambios en los equipos');
     } finally {
       setGuardando(false);
     }

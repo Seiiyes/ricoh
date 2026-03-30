@@ -7,8 +7,10 @@ import adminUserService from '../services/adminUserService';
 import empresaService, { Empresa } from '../services/empresaService';
 import { AdminUser } from '../services/authService';
 import AdminUserModal from '../components/AdminUserModal';
+import { useNotification } from '../hooks/useNotification';
 
 const AdminUsersPage = () => {
+  const notify = useNotification();
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,13 +88,11 @@ const AdminUsersPage = () => {
     
     try {
       await adminUserService.delete(adminUser.id);
+      notify.success('Usuario desactivado', `${adminUser.username} ha sido desactivado correctamente`);
       await loadAdminUsers();
     } catch (error: any) {
-      if (error.response?.data?.detail) {
-        alert(error.response.data.detail.message || 'Error al desactivar usuario');
-      } else {
-        alert('Error al desactivar usuario');
-      }
+      const message = error.response?.data?.detail?.message || error.response?.data?.detail || 'No se pudo desactivar el usuario';
+      notify.error('Error al desactivar', message);
     }
   };
   

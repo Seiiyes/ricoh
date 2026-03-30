@@ -14,6 +14,7 @@ import { ErrorHandler } from '../shared/ErrorHandler';
 import { Button, Breadcrumbs } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 import type { TotalCounter, UserCounter } from '@/types/counter';
+import { useNotification } from '@/hooks/useNotification';
 
 interface PrinterDetailViewProps {
   printerId: number;
@@ -24,6 +25,7 @@ export const PrinterDetailView: React.FC<PrinterDetailViewProps> = ({
   printerId,
   onNavigateBack,
 }) => {
+  const notify = useNotification();
   const [printer, setPrinter] = useState<PrinterDevice | null>(null);
   const [counter, setCounter] = useState<TotalCounter | null>(null);
   const [userCounters, setUserCounters] = useState<UserCounter[]>([]);
@@ -65,7 +67,7 @@ export const PrinterDetailView: React.FC<PrinterDetailViewProps> = ({
       setError(null);
       await triggerManualRead(printerId);
       await loadPrinterData(); // Refresh data
-      alert(`✅ Lectura completada exitosamente para ${printer.hostname}`);
+      notify.success('Lectura completada', `Los contadores de ${printer.hostname} se leyeron correctamente`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al leer contadores';
       setError(message);

@@ -36,16 +36,11 @@ class RicohWebClient:
         
         # Try to get password from parameter or environment variable
         if admin_password is None:
-            admin_password = os.getenv("RICOH_ADMIN_PASSWORD")
+            admin_password = os.getenv("RICOH_ADMIN_PASSWORD", "")
         
-        # Validate that password is provided and not empty
-        if not admin_password:
-            raise ValueError(
-                "RICOH_ADMIN_PASSWORD must be set. "
-                "Configure it in environment variables or pass it explicitly."
-            )
-        
-        self.admin_password = admin_password
+        # Allow empty password (some Ricoh printers don't have password set)
+        # Store as empty string if None
+        self.admin_password = admin_password if admin_password is not None else ""
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',

@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import closeService from '@/services/closeService';
 import exportService from '@/services/exportService';
 import { parseApiError } from '@/utils/errorHandler';
+import { useNotification } from '@/hooks/useNotification';
 
 interface ComparacionModalProps {
   printerId: number;
@@ -17,6 +18,7 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
   cierres,
   onClose
 }) => {
+  const notify = useNotification();
   const [cierre1Id, setCierre1Id] = useState<number | null>(null);
   const [cierre2Id, setCierre2Id] = useState<number | null>(null);
   const [comparacion, setComparacion] = useState<ComparacionCierres | null>(null);
@@ -432,9 +434,10 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
             onClick={async () => {
               try {
                 await exportService.exportComparacionExcelRicoh(cierre1Id!, cierre2Id!);
+                notify.success('Archivo descargado', 'El archivo Excel Ricoh se descargó correctamente');
               } catch (error: any) {
                 console.error('Error al exportar:', error);
-                alert(error.message || 'Error al exportar archivo');
+                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
               }
             }}
             title="Exportar en formato Ricoh (52 columnas, 3 hojas)"
@@ -447,9 +450,10 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
             onClick={async () => {
               try {
                 await exportService.exportComparacionExcel(cierre1Id!, cierre2Id!);
+                notify.success('Archivo descargado', 'El archivo Excel Simple se descargó correctamente');
               } catch (error: any) {
                 console.error('Error al exportar:', error);
-                alert(error.message || 'Error al exportar archivo');
+                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
               }
             }}
             className="bg-green-600 hover:bg-green-700"
@@ -462,9 +466,10 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
             onClick={async () => {
               try {
                 await exportService.exportComparacionCSV(cierre1Id!, cierre2Id!);
+                notify.success('Archivo descargado', 'El archivo CSV se descargó correctamente');
               } catch (error: any) {
                 console.error('Error al exportar:', error);
-                alert(error.message || 'Error al exportar archivo');
+                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
               }
             }}
           >

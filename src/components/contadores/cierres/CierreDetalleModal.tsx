@@ -6,6 +6,7 @@ import { Download, FileSpreadsheet } from 'lucide-react';
 import closeService from '@/services/closeService';
 import exportService from '@/services/exportService';
 import { parseApiError } from '@/utils/errorHandler';
+import { useNotification } from '@/hooks/useNotification';
 
 interface CierreDetalleModalProps {
   cierre: CierreMensual;
@@ -16,6 +17,7 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
   cierre,
   onClose
 }) => {
+  const notify = useNotification();
   const [detalle, setDetalle] = useState<CierreMensualDetalle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -398,9 +400,10 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
             onClick={async () => {
               try {
                 await exportService.exportCierreExcel(cierre.id);
+                notify.success('Archivo descargado', 'El archivo Excel se descargó correctamente');
               } catch (error: any) {
                 console.error('Error al exportar:', error);
-                alert(error.message || 'Error al exportar archivo');
+                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo Excel');
               }
             }}
           >
@@ -413,9 +416,10 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
             onClick={async () => {
               try {
                 await exportService.exportCierreCSV(cierre.id);
+                notify.success('Archivo descargado', 'El archivo CSV se descargó correctamente');
               } catch (error: any) {
                 console.error('Error al exportar:', error);
-                alert(error.message || 'Error al exportar archivo');
+                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo CSV');
               }
             }}
           >

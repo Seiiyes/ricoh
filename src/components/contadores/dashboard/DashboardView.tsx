@@ -8,12 +8,14 @@ import { ErrorHandler } from '../shared/ErrorHandler';
 import { Button } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 import type { TotalCounter } from '@/types/counter';
+import { useNotification } from '@/hooks/useNotification';
 
 interface DashboardViewProps {
   onNavigateToPrinter: (printerId: number) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToPrinter }) => {
+  const notify = useNotification();
   const [printers, setPrinters] = useState<PrinterDevice[]>([]);
   const [counters, setCounters] = useState<Map<number, TotalCounter>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateToPrinte
       setReadingAll(true);
       setError(null);
       const result = await triggerReadAll();
-      alert(`✅ Lectura completada\nExitosas: ${result.successful}\nFallidas: ${result.failed}`);
+      notify.success('Lectura completada', `Exitosas: ${result.successful} | Con errores: ${result.failed}`);
       await loadDashboardData(); // Refresh data
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al leer todas las impresoras';

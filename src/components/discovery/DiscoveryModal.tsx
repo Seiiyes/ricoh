@@ -3,6 +3,7 @@ import { X, Wifi, AlertCircle, Loader2 } from 'lucide-react';
 import { scanPrinters, registerDiscoveredPrinters } from '@/services/printerService';
 import { Modal, Button, Input, Spinner } from '@/components/ui';
 import discoveryService from '@/services/discoveryService';
+import { useNotification } from '@/hooks/useNotification';
 
 interface DiscoveredDevice {
   hostname: string;
@@ -31,6 +32,7 @@ interface DiscoveryModalProps {
 }
 
 export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalProps) => {
+  const notify = useNotification();
   const [ipRange, setIpRange] = useState('192.168.91.0/24');
   const [isScanning, setIsScanning] = useState(false);
   const [discoveredDevices, setDiscoveredDevices] = useState<EditableDevice[]>([]);
@@ -63,7 +65,7 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
       setScanComplete(true);
     } catch (error) {
       console.error('Escaneo fallido:', error);
-      alert('Escaneo fallido. Por favor verifica el rango de IP e intenta de nuevo.');
+      notify.error('Error en el escaneo', 'No se pudo completar el escaneo de red. Verifica el rango de IP e intenta nuevamente');
     } finally {
       setIsScanning(false);
     }
@@ -89,7 +91,7 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
 
   const handleRegister = async () => {
     if (selectedDevices.size === 0) {
-      alert('Por favor selecciona al menos un dispositivo para registrar');
+      notify.warning('Selecciona dispositivos', 'Debes seleccionar al menos una impresora para registrar');
       return;
     }
 
@@ -104,12 +106,15 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
         }));
       
       await registerDiscoveredPrinters(devicesToRegister);
-      alert(`Se registraron exitosamente ${devicesToRegister.length} impresora(s)`);
+      notify.success(
+        'Impresoras registradas', 
+        `${devicesToRegister.length} ${devicesToRegister.length === 1 ? 'impresora registrada' : 'impresoras registradas'} exitosamente`
+      );
       onComplete();
       onClose();
     } catch (error) {
       console.error('Registro fallido:', error);
-      alert('Error al registrar impresoras. Algunas pueden ya existir.');
+      notify.error('Error al registrar', 'No se pudieron registrar las impresoras. Algunas pueden estar duplicadas');
     } finally {
       setIsRegistering(false);
     }
@@ -117,7 +122,7 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
 
   const handleManualAdd = async () => {
     if (!manualIP) {
-      alert('Por favor ingresa una dirección IP');
+      notify.warning('Ingresa una IP', 'Debes ingresar una dirección IP válida');
       return;
     }
 
@@ -128,7 +133,7 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
       const response = await discoveryService.checkPrinter(manualIP);
 
       if (!response.success || !response.printer) {
-        alert(response.message || 'No se pudo verificar la impresora');
+        notify.error('No se pudo verificar', response.message || 'La impresora no responde o no es accesible');
         return;
       }
 
@@ -152,10 +157,11 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
       setShowManualAdd(false);
       setManualIP('');
       setManualPort('161');
+      notify.success('Impresora agregada', `${device.hostname} se agregó correctamente al sistema`);
       
     } catch (error) {
       console.error('Error agregando impresora manual:', error);
-      alert('No se pudo conectar con la impresora. Verifica la IP y el puerto SNMP.');
+      notify.error('Error de conexión', 'No se pudo conectar con la impresora. Verifica la dirección IP y el puerto SNMP');
     } finally {
       setIsCheckingManual(false);
     }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import { actualizarFuncionesEnImpresora } from '@/services/servicioUsuarios';
 import { Button, Alert } from '@/components/ui';
+import { useNotification } from '@/hooks/useNotification';
 
 interface Permisos {
   func_copier: boolean;
@@ -29,6 +30,7 @@ interface EditorPermisosProps {
 }
 
 export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPermisosProps) => {
+  const notify = useNotification();
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [permisosLocales, setPermisosLocales] = useState(permisos);
@@ -82,7 +84,7 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
         onChange(permisosLocales);
         
         // Mostrar mensaje de éxito
-        alert(`✅ Funciones actualizadas correctamente en ${modoImpresora.printerName}`);
+        notify.success('Permisos actualizados', `Los permisos se actualizaron correctamente en ${modoImpresora.printerName}`);
         
         if (modoImpresora.onSuccess) {
           modoImpresora.onSuccess();

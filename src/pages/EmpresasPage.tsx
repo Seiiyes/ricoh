@@ -5,8 +5,10 @@ import { useState, useEffect } from 'react';
 import { Building2, Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import empresaService, { Empresa } from '../services/empresaService';
 import EmpresaModal from '../components/EmpresaModal';
+import { useNotification } from '../hooks/useNotification';
 
 const EmpresasPage = () => {
+  const notify = useNotification();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -64,13 +66,11 @@ const EmpresasPage = () => {
     
     try {
       await empresaService.delete(empresa.id);
+      notify.success('Empresa desactivada', `${empresa.razon_social} ha sido desactivada correctamente`);
       await loadEmpresas();
     } catch (error: any) {
-      if (error.response?.data?.detail) {
-        alert(error.response.data.detail.message || 'Error al desactivar empresa');
-      } else {
-        alert('Error al desactivar empresa');
-      }
+      const message = error.response?.data?.detail?.message || error.response?.data?.detail || 'No se pudo desactivar la empresa';
+      notify.error('Error al desactivar', message);
     }
   };
   

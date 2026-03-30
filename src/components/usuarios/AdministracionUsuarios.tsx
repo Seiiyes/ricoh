@@ -8,8 +8,10 @@ import { Button, Input, Spinner } from '@/components/ui';
 import type { Usuario } from '@/types/usuario';
 import discoveryService from '@/services/discoveryService';
 import { parseApiError } from '@/utils/errorHandler';
+import { useNotification } from '@/hooks/useNotification';
 
 export const AdministracionUsuarios = () => {
+  const notify = useNotification();
   const {
     usuarios,
     cargando,
@@ -72,7 +74,7 @@ export const AdministracionUsuarios = () => {
       console.log('📊 Usuarios sincronizados:', response.users?.length || 0);
       
       if (response.success) {
-        alert(response.message);
+        notify.success('Sincronización completada', response.message);
         
         // Recargar usuarios de la base de datos
         await cargarUsuarios();
@@ -85,11 +87,11 @@ export const AdministracionUsuarios = () => {
           console.warn('⚠️ No se recibieron usuarios en la respuesta');
         }
       } else {
-        alert('Error al sincronizar usuarios');
+        notify.error('Error en la sincronización', 'No se pudieron sincronizar los usuarios');
       }
     } catch (error: any) {
       console.error('Error al sincronizar:', error);
-      alert(parseApiError(error, 'Error al sincronizar usuarios desde impresoras'));
+      notify.error('Error al sincronizar', parseApiError(error, 'No se pudieron obtener los usuarios de las impresoras'));
     } finally {
       setSincronizando(false);
     }

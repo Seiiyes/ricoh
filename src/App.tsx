@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sileo';
+import 'sileo/styles.css';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
@@ -9,6 +11,15 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Toaster 
+          position="top-center"
+          offset={20}
+          options={{
+            duration: 4000,
+            autopilot: true
+          }}
+          theme="system"
+        />
         <Routes>
           {/* Rutas públicas */}
           <Route path="/login" element={<LoginPage />} />

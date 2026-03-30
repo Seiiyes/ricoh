@@ -6,6 +6,7 @@ import { ArrowLeft, RefreshCw, Download, FileSpreadsheet, FileText } from 'lucid
 import closeService from '@/services/closeService';
 import exportService from '@/services/exportService';
 import { parseApiError } from '@/utils/errorHandler';
+import { useNotification } from '@/hooks/useNotification';
 
 const ROWS_PER_PAGE = 25;
 
@@ -25,6 +26,7 @@ const SortIcon = ({ active, dir }: { active: boolean; dir: SortDir }) => (
 );
 
 export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVolver }) => {
+  const notify = useNotification();
   const [cierre1Id, setCierre1Id] = useState<number | null>(null);
   const [cierre2Id, setCierre2Id] = useState<number | null>(null);
   const [comparacion, setComparacion] = useState<ComparacionCierres | null>(null);
@@ -463,9 +465,10 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                           onClick={async () => {
                             try {
                               await exportService.exportComparacionExcelRicoh(cierre1Id!, cierre2Id!);
+                              notify.success('Archivo descargado', 'El archivo Excel Ricoh se descargó correctamente');
                             } catch (error: any) {
                               console.error('Error al exportar:', error);
-                              alert(error.message || 'Error al exportar archivo');
+                              notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
                             }
                           }}
                           icon={<FileSpreadsheet size={14} />}
@@ -480,9 +483,10 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                           onClick={async () => {
                             try {
                               await exportService.exportComparacionExcel(cierre1Id!, cierre2Id!);
+                              notify.success('Archivo descargado', 'El archivo Excel Simple se descargó correctamente');
                             } catch (error: any) {
                               console.error('Error al exportar:', error);
-                              alert(error.message || 'Error al exportar archivo');
+                              notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
                             }
                           }}
                           icon={<Download size={14} />}
@@ -496,9 +500,10 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                           onClick={async () => {
                             try {
                               await exportService.exportComparacionCSV(cierre1Id!, cierre2Id!);
+                              notify.success('Archivo descargado', 'El archivo CSV se descargó correctamente');
                             } catch (error: any) {
                               console.error('Error al exportar:', error);
-                              alert(error.message || 'Error al exportar archivo');
+                              notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
                             }
                           }}
                           icon={<FileText size={14} />}

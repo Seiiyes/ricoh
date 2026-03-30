@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import { Modal, Button, Input, EmpresaAutocomplete } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
+import { useNotification } from '@/hooks/useNotification';
 
 interface EditPrinterModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface EditPrinterModalProps {
 }
 
 export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrinterModalProps) => {
+  const notify = useNotification();
   const [hostname, setHostname] = useState('');
   const [location, setLocation] = useState('');
   const [empresa, setEmpresa] = useState('');
@@ -39,10 +41,11 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
         empresa_id: empresaId || null,
         serial_number: serialNumber || null,
       });
+      notify.success('Impresora actualizada', `Los datos de ${hostname} se guardaron correctamente`);
       onClose();
     } catch (error) {
       console.error('Error al guardar:', error);
-      alert('Error al actualizar la impresora');
+      notify.error('Error al actualizar', 'No se pudieron guardar los cambios de la impresora');
     } finally {
       setIsSaving(false);
     }
