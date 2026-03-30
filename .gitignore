@@ -30,7 +30,9 @@ backend/env/
 
 # Environment
 .env
+.env.local
 backend/.env
+backend/.env.local
 
 # Database
 *.db

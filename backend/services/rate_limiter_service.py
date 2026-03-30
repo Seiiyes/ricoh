@@ -2,10 +2,14 @@
 Rate Limiter Service
 Servicio para limitar requests y prevenir ataques
 """
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, Optional
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import threading
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RateLimitResult(NamedTuple):
@@ -16,11 +20,80 @@ class RateLimitResult(NamedTuple):
 
 
 class RateLimiterService:
-    """Service for rate limiting using in-memory storage"""
+    """Service for rate limiting using Redis or in-memory storage"""
+    
+    # Configuración de backend
+    _redis_client: Optional[object] = None
+    _storage_backend: Optional[str] = None
+    _initialized: bool = False
     
     # Storage: {key: {window_start: datetime, count: int}}
     _storage: Dict[str, Dict] = defaultdict(dict)
     _lock = threading.Lock()
+    
+    @classmethod
+    def initialize(cls):
+        """Initialize rate limiter with Redis or memory backend"""
+        if cls._initialized:
+            return
+        
+        redis_url = os.getenv("REDIS_URL")
+        
+        if redis_url:
+            try:
+                import redis
+                cls._redis_client = redis.from_url(redis_url, decode_responses=True)
+                # Test connection
+                cls._redis_client.ping()
+                cls._storage_backend = "redis"
+                logger.info("🔴 Rate Limiter usando Redis para almacenamiento distribuido")
+            except Exception as e:
+                logger.warning(f"⚠️ No se pudo conectar a Redis: {e}. Usando memoria como fallback.")
+                cls._redis_client = None
+                cls._storage_backend = "memory"
+                logger.warning("⚠️ Rate Limiter usando memoria (no recomendado para producción multi-instancia)")
+        else:
+            cls._storage_backend = "memory"
+            logger.warning("⚠️ Rate Limiter usando memoria (no recomendado para producción multi-instancia)")
+        
+        cls._initialized = True
+    
+    @classmethod
+    def check_rate_limit_redis(cls, key: str, max_requests: int, window_seconds: int) -> RateLimitResult:
+        """
+        Check rate limit using Redis with atomic operations
+        
+        Args:
+            key: Unique key (e.g., IP address, user ID)
+            max_requests: Maximum requests allowed
+            window_seconds: Time window in seconds
+            
+        Returns:
+            RateLimitResult with allowed status, remaining count, and reset time
+        """
+        redis_key = f"ratelimit:{key}"
+        
+        # Usar pipeline para operaciones atómicas
+        pipe = cls._redis_client.pipeline()
+        pipe.incr(redis_key)
+        pipe.expire(redis_key, window_seconds)
+        pipe.ttl(redis_key)
+        results = pipe.execute()
+        
+        current_count = results[0]
+        ttl = results[2]
+        
+        # Calcular reset_at basado en TTL
+        if ttl > 0:
+            reset_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
+        else:
+            reset_at = datetime.now(timezone.utc) + timedelta(seconds=window_seconds)
+        
+        if current_count > max_requests:
+            return RateLimitResult(allowed=False, remaining=0, reset_at=reset_at)
+        
+        remaining = max_requests - current_count
+        return RateLimitResult(allowed=True, remaining=remaining, reset_at=reset_at)
     
     @classmethod
     def check_rate_limit(
@@ -47,6 +120,15 @@ class RateLimiterService:
             >>> result.remaining
             4
         """
+        # Initialize if not already done
+        if not cls._initialized:
+            cls.initialize()
+        
+        # Delegar a Redis o memoria según configuración
+        if cls._storage_backend == "redis" and cls._redis_client:
+            return cls.check_rate_limit_redis(key, max_requests, window_seconds)
+        
+        # Fallback a memoria
         with cls._lock:
             now = datetime.now(timezone.utc)
             
@@ -108,6 +190,20 @@ class RateLimiterService:
             >>> count
             1
         """
+        # Initialize if not already done
+        if not cls._initialized:
+            cls.initialize()
+        
+        # Use Redis if available
+        if cls._storage_backend == "redis" and cls._redis_client:
+            redis_key = f"ratelimit:{key}"
+            pipe = cls._redis_client.pipeline()
+            pipe.incr(redis_key)
+            pipe.expire(redis_key, window_seconds)
+            results = pipe.execute()
+            return results[0]
+        
+        # Fallback to memory
         with cls._lock:
             now = datetime.now(timezone.utc)
             
@@ -145,6 +241,17 @@ class RateLimiterService:
         Example:
             >>> RateLimiterService.reset_counter("192.168.1.100")
         """
+        # Initialize if not already done
+        if not cls._initialized:
+            cls.initialize()
+        
+        # Use Redis if available
+        if cls._storage_backend == "redis" and cls._redis_client:
+            redis_key = f"ratelimit:{key}"
+            cls._redis_client.delete(redis_key)
+            return
+        
+        # Fallback to memory
         with cls._lock:
             if key in cls._storage:
                 del cls._storage[key]
@@ -199,6 +306,21 @@ class RateLimiterService:
             >>> remaining >= 0
             True
         """
+        # Initialize if not already done
+        if not cls._initialized:
+            cls.initialize()
+        
+        # Use Redis if available
+        if cls._storage_backend == "redis" and cls._redis_client:
+            redis_key = f"ratelimit:{key}"
+            current_count = cls._redis_client.get(redis_key)
+            if current_count is None:
+                return max_requests
+            current_count = int(current_count)
+            remaining = max_requests - current_count
+            return max(0, remaining)
+        
+        # Fallback to memory
         with cls._lock:
             if key not in cls._storage:
                 return max_requests

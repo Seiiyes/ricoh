@@ -236,35 +236,95 @@ def check_security_config():
     """Verificar configuración de seguridad"""
     print_header("Verificando Configuración de Seguridad")
     
-    env_vars = {}
-    env_path = Path(".env")
-    if env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    env_vars[key] = value
+    all_ok = True
     
-    # Verificar ENVIRONMENT
-    environment = env_vars.get('ENVIRONMENT', 'development')
+    # Verificar variables de entorno directamente
+    encryption_key = os.getenv('ENCRYPTION_KEY')
+    secret_key = os.getenv('SECRET_KEY')
+    environment = os.getenv('ENVIRONMENT', 'development')
+    redis_url = os.getenv('REDIS_URL')
+    ricoh_password = os.getenv('RICOH_ADMIN_PASSWORD')
+    
+    # 1. ENCRYPTION_KEY
+    if encryption_key:
+        print_success("ENCRYPTION_KEY configurada")
+        if len(encryption_key) < 20:
+            print_warning("ENCRYPTION_KEY parece muy corta")
+            all_ok = False
+    else:
+        print_error("ENCRYPTION_KEY no configurada")
+        all_ok = False
+    
+    # 2. SECRET_KEY
+    if secret_key:
+        if len(secret_key) >= 32:
+            print_success(f"SECRET_KEY configurada (longitud: {len(secret_key)})")
+            
+            # Verificar entropía
+            import string
+            has_upper = any(c in string.ascii_uppercase for c in secret_key)
+            has_lower = any(c in string.ascii_lowercase for c in secret_key)
+            has_digit = any(c in string.digits for c in secret_key)
+            has_special = any(c in string.punctuation for c in secret_key)
+            categories = sum([has_upper, has_lower, has_digit, has_special])
+            
+            if categories >= 3:
+                print_success(f"SECRET_KEY tiene entropía suficiente ({categories}/4 categorías)")
+            else:
+                print_error(f"SECRET_KEY tiene baja entropía ({categories}/4 categorías)")
+                all_ok = False
+        else:
+            print_error(f"SECRET_KEY muy corta (longitud: {len(secret_key)}, mínimo: 32)")
+            all_ok = False
+    else:
+        print_error("SECRET_KEY no configurada")
+        all_ok = False
+    
+    # 3. ENVIRONMENT
     if environment == 'production':
         print_success("ENVIRONMENT=production")
         
-        # En producción, verificar configuraciones adicionales
-        if env_vars.get('FORCE_HTTPS', 'false').lower() == 'true':
+        # En producción, CSRF debe estar habilitada
+        print_info("CSRF se habilita automáticamente en producción")
+        
+        # Verificar HTTPS
+        force_https = os.getenv('FORCE_HTTPS', 'false').lower() == 'true'
+        if force_https:
             print_success("FORCE_HTTPS habilitado")
         else:
-            print_warning("FORCE_HTTPS deshabilitado (recomendado habilitarlo con SSL)")
-        
-        if env_vars.get('ENABLE_CSRF', 'false').lower() == 'true':
-            print_success("CSRF Protection habilitado")
-        else:
-            print_info("CSRF Protection deshabilitado (opcional)")
+            print_warning("FORCE_HTTPS deshabilitado (recomendado habilitarlo)")
     else:
-        print_info(f"ENVIRONMENT={environment} (desarrollo)")
+        print_info(f"ENVIRONMENT={environment} (no producción)")
     
-    return True
+    # 4. REDIS_URL (requerido para producción)
+    if redis_url:
+        print_success("REDIS_URL configurada (almacenamiento distribuido)")
+    else:
+        if environment == 'production':
+            print_warning("REDIS_URL no configurada (recomendado para producción)")
+        else:
+            print_info("REDIS_URL no configurada (usando memoria en desarrollo)")
+    
+    # 5. RICOH_ADMIN_PASSWORD
+    if ricoh_password:
+        print_success("RICOH_ADMIN_PASSWORD configurada")
+    else:
+        print_warning("RICOH_ADMIN_PASSWORD no configurada (requerida para integración con impresoras)")
+    
+    # 6. DATABASE_URL
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        print_success("DATABASE_URL configurada")
+        
+        # Verificar que no tiene credenciales hardcodeadas
+        if 'ricoh_secure_2024' in database_url:
+            print_error("DATABASE_URL contiene credenciales hardcodeadas de desarrollo")
+            all_ok = False
+    else:
+        print_error("DATABASE_URL no configurada")
+        all_ok = False
+    
+    return all_ok
 
 def main():
     """Ejecutar todas las verificaciones"""

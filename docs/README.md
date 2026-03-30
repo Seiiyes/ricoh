@@ -1,44 +1,85 @@
 # 📚 Documentación - Ricoh Fleet Manager
 
-## 🚀 Inicio Rápido
+## 📂 Estructura de Documentación
 
-- **[QUICKSTART.md](QUICKSTART.md)** - Guía de inicio rápido
-- **[GUIA_DE_USO.md](GUIA_DE_USO.md)** - Guía completa de uso
-- **[PROTECCION_DATOS.md](PROTECCION_DATOS.md)** - Sistema de respaldos
+La documentación está organizada en las siguientes carpetas:
 
-## 🎯 Nuevas Funcionalidades
+### 🏗️ [arquitectura/](arquitectura/)
+Arquitectura del sistema, diagramas de flujo y diseños UI
+- Arquitectura completa 2026
+- Diagramas de flujo
+- Diseños de interfaces
 
-- **[IMPLEMENTACION_COMPLETADA.md](IMPLEMENTACION_COMPLETADA.md)** - Nueva interfaz de administración de usuarios
-- **[ANALISIS_Y_DISENO_GESTION_USUARIOS.md](ANALISIS_Y_DISENO_GESTION_USUARIOS.md)** - Diseño técnico
+### 🔌 [api/](api/)
+Documentación de APIs y referencias técnicas
+- API de contadores
+- API de cierres mensuales
+- Referencias de endpoints
 
-## 🔧 Instalación y Configuración
+### 🔐 [seguridad/](seguridad/)
+Seguridad, autenticación y protección de datos
+- Sistema de autenticación JWT
+- Protección DDoS
+- Implementaciones de seguridad crítica
 
-- **[INSTALACION_NUEVO_EQUIPO.md](INSTALACION_NUEVO_EQUIPO.md)** - Instalar en otro equipo
-- **[INSTALAR_DEPENDENCIAS_PASO_A_PASO.md](INSTALAR_DEPENDENCIAS_PASO_A_PASO.md)** - Instalar dependencias locales
-- **[SOLUCION_DEFINITIVA_LINEAS_ROJAS.md](SOLUCION_DEFINITIVA_LINEAS_ROJAS.md)** - Solución de errores del editor
+### 🚀 [deployment/](deployment/)
+Guías de instalación y despliegue
+- Instrucciones de despliegue en producción
+- Instalación en nuevos equipos
+- Troubleshooting Docker
 
-## 🔒 Respaldos
+### 📖 [guias/](guias/)
+Guías de usuario y manuales
+- Guía de usuario completa
+- Guía rápida
+- Testing y migration guides
 
-- **[GUIA_RESPALDO_BASE_DATOS.md](GUIA_RESPALDO_BASE_DATOS.md)** - Guía completa de respaldos
-- **[PROTECCION_DATOS.md](PROTECCION_DATOS.md)** - Guía rápida
+### 🔧 [fixes/](fixes/)
+Documentación de correcciones y bugs resueltos
+- Fixes de CORS
+- Correcciones de sincronización
+- Soluciones de errores específicos
 
-## 🏗️ Arquitectura y Desarrollo
+### 📊 [resumen/](resumen/)
+Resúmenes de sesiones y progreso del proyecto
+- Resúmenes de sesiones
+- Progreso de implementaciones
+- Snapshots del proyecto
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Arquitectura del sistema
-- **[DIAGRAMA_FLUJO.md](DIAGRAMA_FLUJO.md)** - Diagramas de flujo
-- **[ESTADO_ACTUAL.md](ESTADO_ACTUAL.md)** - Estado del proyecto
+### 💻 [desarrollo/](desarrollo/)
+Documentación técnica de desarrollo
+- Análisis y planificación
+- Refactorizaciones
+- Verificaciones y auditorías
+- Migraciones de base de datos
 
-## 📖 Ejemplos y Guías
+## 🎯 Documentos Principales
 
-- **[EJEMPLOS_USO.md](EJEMPLOS_USO.md)** - Ejemplos prácticos
-- **[CHECKLIST_VERIFICACION.md](CHECKLIST_VERIFICACION.md)** - Checklist de verificación
+### Para Nuevos Desarrolladores
+- [arquitectura/ARQUITECTURA_COMPLETA_2026.md](arquitectura/ARQUITECTURA_COMPLETA_2026.md)
+- [desarrollo/ESTADO_ACTUAL_PROYECTO.md](desarrollo/ESTADO_ACTUAL_PROYECTO.md)
+- [guias/GUIA_RAPIDA.md](guias/GUIA_RAPIDA.md)
 
-## 📊 Resúmenes
+### Para Usuarios Finales
+- [guias/GUIA_USUARIO.md](guias/GUIA_USUARIO.md)
+- [guias/INICIO_RAPIDO.md](guias/INICIO_RAPIDO.md)
+- [guias/EJEMPLOS_USO.md](guias/EJEMPLOS_USO.md)
 
-- **[RESUMEN_FINAL.md](RESUMEN_FINAL.md)** - Resumen completo del proyecto
-- **[RESUMEN_EJECUTIVO.md](RESUMEN_EJECUTIVO.md)** - Resumen ejecutivo
-- **[RESUMEN_FUNCIONALIDAD.md](RESUMEN_FUNCIONALIDAD.md)** - Funcionalidades implementadas
+### Para DevOps
+- [deployment/INSTRUCCIONES_DESPLIEGUE_PRODUCCION.md](deployment/INSTRUCCIONES_DESPLIEGUE_PRODUCCION.md)
+- [deployment/TROUBLESHOOTING_DOCKER.md](deployment/TROUBLESHOOTING_DOCKER.md)
+- [guias/GUIA_RESPALDO_BASE_DATOS.md](guias/GUIA_RESPALDO_BASE_DATOS.md)
+
+### Para Seguridad
+- [seguridad/SISTEMA_AUTENTICACION_COMPLETADO.md](seguridad/SISTEMA_AUTENTICACION_COMPLETADO.md)
+- [seguridad/CRITICAL_SECURITY_IMPLEMENTATION.md](seguridad/CRITICAL_SECURITY_IMPLEMENTATION.md)
+- [seguridad/README_SEGURIDAD.md](seguridad/README_SEGURIDAD.md)
+
+## 📋 Índice Completo
+
+Para ver el índice completo de todos los documentos, consulta:
+- [INDICE_DOCUMENTACION_ACTUALIZADO.md](INDICE_DOCUMENTACION_ACTUALIZADO.md)
 
 ---
 
-**Última actualización:** 18 de Febrero de 2026
+**Última actualización:** 30 de Marzo de 2026

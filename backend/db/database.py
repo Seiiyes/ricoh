@@ -7,10 +7,13 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Database URL from environment variable
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://ricoh_admin:ricoh_secure_2024@localhost:5432/ricoh_fleet"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError(
+        "DATABASE_URL must be set in environment variables. "
+        "Example: DATABASE_URL=postgresql://user:password@localhost:5432/dbname"
+    )
 
 # Create SQLAlchemy engine with appropriate settings
 # SQLite doesn't support pool_size and max_overflow parameters

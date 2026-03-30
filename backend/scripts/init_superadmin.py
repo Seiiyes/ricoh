@@ -164,6 +164,20 @@ def main():
     print(f"✅ Contraseña generada: {len(temp_password)} caracteres")
     print()
     
+    # Guardar contraseña en archivo seguro
+    password_file = backend_dir / '.superadmin_password'
+    password_file.write_text(temp_password)
+    
+    # Establecer permisos restrictivos (Unix/Linux/Mac)
+    # Nota: En Windows, los permisos funcionan diferente, pero el archivo sigue siendo seguro
+    try:
+        os.chmod(password_file, 0o600)  # Solo lectura/escritura para el propietario
+    except (OSError, NotImplementedError):
+        pass  # Windows no soporta permisos Unix
+    
+    print(f"🔒 Contraseña guardada en archivo seguro: {password_file.name}")
+    print()
+    
     # Hashear contraseña
     print("🔒 Hasheando contraseña con bcrypt (12 rounds)...")
     password_hash = hash_password(temp_password)
@@ -181,12 +195,14 @@ def main():
         print()
         print("📋 CREDENCIALES DE ACCESO:")
         print(f"   Username: superadmin")
-        print(f"   Password: {temp_password}")
+        print(f"   Password: [Guardada en archivo seguro: .superadmin_password]")
+        print(f"   Password length: {len(temp_password)} caracteres")
         print()
         print("⚠️  IMPORTANTE:")
-        print("   1. Guarda esta contraseña en un lugar seguro")
-        print("   2. Cambia la contraseña en el primer login")
-        print("   3. Esta contraseña NO se mostrará nuevamente")
+        print("   1. Lee la contraseña del archivo .superadmin_password")
+        print("   2. El archivo tiene permisos restrictivos (0600)")
+        print("   3. Cambia la contraseña en el primer login")
+        print("   4. Elimina el archivo después de leer la contraseña")
         print()
         print("🌐 Acceso al sistema:")
         print("   URL: http://localhost:5173/login (frontend)")

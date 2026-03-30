@@ -166,12 +166,22 @@ app = FastAPI(
 # CORS Configuration
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174").split(",")
 
+# Define explicit allowed methods and headers for CORS
+ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+ALLOWED_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "X-CSRF-Token",
+    "X-Request-ID"
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos los métodos
-    allow_headers=["*"],  # Permitir todos los headers
+    allow_methods=ALLOWED_METHODS,
+    allow_headers=ALLOWED_HEADERS,
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
@@ -181,10 +191,25 @@ app.add_middleware(DDoSProtectionMiddleware)
 # Add HTTPS Redirect Middleware (solo en producción si FORCE_HTTPS=true)
 app.add_middleware(HTTPSRedirectMiddleware)
 
-# Add CSRF Protection Middleware (deshabilitado por defecto, habilitar con ENABLE_CSRF=true)
-if os.getenv("ENABLE_CSRF", "false").lower() == "true":
-    logger.info("🛡️ CSRF Protection enabled")
+# Add CSRF Protection Middleware
+# Habilitar CSRF por defecto en producción y staging, o si ENABLE_CSRF=true
+# Permitir deshabilitar explícitamente solo si ENABLE_CSRF=false está configurado
+environment = os.getenv("ENVIRONMENT", "development")
+enable_csrf_env = os.getenv("ENABLE_CSRF", "").lower()
+
+# Lógica de habilitación:
+# - En producción/staging: habilitada por defecto, deshabilitar solo si ENABLE_CSRF=false
+# - En desarrollo: deshabilitada por defecto, habilitar solo si ENABLE_CSRF=true
+if environment in ["production", "staging"]:
+    enable_csrf = enable_csrf_env != "false"
+else:
+    enable_csrf = enable_csrf_env == "true"
+
+if enable_csrf:
+    logger.info(f"🛡️ CSRF Protection enabled (ENVIRONMENT={environment})")
     app.add_middleware(CSRFProtectionMiddleware)
+else:
+    logger.warning(f"⚠️ CSRF Protection disabled (ENVIRONMENT={environment}, not recommended for production)")
 
 
 # Security Headers Middleware

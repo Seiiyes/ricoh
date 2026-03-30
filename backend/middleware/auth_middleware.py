@@ -59,9 +59,12 @@ async def get_current_user(
     # Extract token
     token = credentials.credentials
     
+    # Mask token for security - show only first 4 and last 4 characters
+    token_preview = f"{token[:4]}...{token[-4:]}" if token and len(token) > 8 else "NONE"
+    
     # Use print for debugging (logger might not be visible)
-    print(f"[AUTH] Autenticación iniciada - Token: {token[:20] if token else 'NONE'}...")
-    logger.info(f"🔐 Autenticación iniciada - Token: {token[:20] if token else 'NONE'}...")
+    print(f"[AUTH] Autenticación iniciada - Token: {token_preview}")
+    logger.info(f"🔐 Autenticación iniciada - Token: {token_preview}")
     
     if not token:
         print("[AUTH] ERROR: Token faltante")

@@ -29,6 +29,40 @@ class JWTService:
     ALGORITHM = "HS256"
     
     @classmethod
+    def _validate_secret_key_entropy(cls, secret_key: str) -> bool:
+        """
+        Validate SECRET_KEY has minimum entropy
+        
+        Verifies that the key contains at least 3 of 4 character categories:
+        - Uppercase letters (A-Z)
+        - Lowercase letters (a-z)
+        - Digits (0-9)
+        - Special characters (punctuation)
+        
+        Args:
+            secret_key: The SECRET_KEY to validate
+            
+        Returns:
+            True if entropy is sufficient, False otherwise
+            
+        Example:
+            >>> JWTService._validate_secret_key_entropy("Abc123!@#xyz")
+            True
+            >>> JWTService._validate_secret_key_entropy("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            False
+        """
+        import string
+        
+        charset_used = set(secret_key)
+        has_upper = any(c in string.ascii_uppercase for c in charset_used)
+        has_lower = any(c in string.ascii_lowercase for c in charset_used)
+        has_digit = any(c in string.digits for c in charset_used)
+        has_special = any(c in string.punctuation for c in charset_used)
+        
+        categories = sum([has_upper, has_lower, has_digit, has_special])
+        return categories >= 3
+    
+    @classmethod
     def _get_secret_key(cls) -> str:
         """
         Get SECRET_KEY from environment variable
@@ -37,7 +71,7 @@ class JWTService:
             SECRET_KEY string
             
         Raises:
-            ValueError: If SECRET_KEY is not set or is too short
+            ValueError: If SECRET_KEY is not set, is too short, or has insufficient entropy
         """
         secret_key = os.getenv("SECRET_KEY")
         
@@ -48,6 +82,14 @@ class JWTService:
         
         if len(secret_key) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long")
+        
+        # Validate entropy
+        if not cls._validate_secret_key_entropy(secret_key):
+            raise ValueError(
+                "SECRET_KEY has insufficient entropy. "
+                "Must contain at least 3 of: uppercase, lowercase, digits, special characters. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+            )
         
         return secret_key
     
@@ -158,7 +200,9 @@ class JWTService:
             True
         """
         try:
-            print(f"[JWT] Decodificando token: {token[:20]}...")
+            # Mask token for security - show only first 4 and last 4 characters
+            token_preview = f"{token[:4]}...{token[-4:]}" if token and len(token) > 8 else "NONE"
+            print(f"[JWT] Decodificando token: {token_preview}")
             secret_key = cls._get_secret_key()
             payload = jwt.decode(token, secret_key, algorithms=[cls.ALGORITHM])
             print(f"[JWT] Token decodificado exitosamente, user_id: {payload.get('user_id')}")

@@ -22,17 +22,29 @@ class RicohWebClient:
     Client for provisioning users to Ricoh printers via web interface
     """
     
-    def __init__(self, timeout: int = 30, admin_user: str = "admin", admin_password: str = ""):
+    def __init__(self, timeout: int = 30, admin_user: str = "admin", admin_password: str = None):
         """
         Initialize Ricoh web client
         
         Args:
             timeout: Request timeout in seconds
             admin_user: Administrator username (default: "admin")
-            admin_password: Administrator password (default: empty)
+            admin_password: Administrator password (required, can be set via RICOH_ADMIN_PASSWORD env var)
         """
         self.timeout = timeout
         self.admin_user = admin_user
+        
+        # Try to get password from parameter or environment variable
+        if admin_password is None:
+            admin_password = os.getenv("RICOH_ADMIN_PASSWORD")
+        
+        # Validate that password is provided and not empty
+        if not admin_password:
+            raise ValueError(
+                "RICOH_ADMIN_PASSWORD must be set. "
+                "Configure it in environment variables or pass it explicitly."
+            )
+        
         self.admin_password = admin_password
         self.session = requests.Session()
         self.session.headers.update({
@@ -91,7 +103,9 @@ class RicohWebClient:
                 if match:
                     token = match.group(1)
                     self._wim_tokens[printer_ip] = token
-                    logger.debug(f"✅ Nuevo wimToken obtenido: {token}")
+                    # Mask token to show only first 4 and last 4 characters
+                    token_preview = f"{token[:4]}...{token[-4:]}" if len(token) > 8 else token
+                    logger.debug(f"✅ Nuevo wimToken obtenido: {token_preview}")
                     return token
             
             logger.warning(f"⚠️  No se pudo refrescar wimToken para {printer_ip} (Status {response.status_code})")
@@ -168,7 +182,9 @@ class RicohWebClient:
                 logger.error("❌ No se pudo obtener wimToken para el login")
                 return False
             
-            logger.debug(f"Login wimToken obtenido: {login_token}")
+            # Mask token to show only first 4 and last 4 characters
+            token_preview = f"{login_token[:4]}...{login_token[-4:]}" if len(login_token) > 8 else login_token
+            logger.debug(f"Login wimToken obtenido: {token_preview}")
             
             # Step 3: Encode credentials in Base64
             userid_b64 = base64.b64encode(self.admin_user.encode()).decode()
@@ -259,7 +275,9 @@ class RicohWebClient:
                 return False
             
             list_wim_token = match.group(1)
-            logger.info(f"✅ wimToken de lista obtenido: {list_wim_token}")
+            # Mask token to show only first 4 and last 4 characters
+            token_preview = f"{list_wim_token[:4]}...{list_wim_token[-4:]}" if len(list_wim_token) > 8 else list_wim_token
+            logger.info(f"✅ wimToken de lista obtenido: {token_preview}")
             
             # Step 3: POST to adrsGetUser.cgi to get the add user form (with fresh wimToken)
             get_user_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"
@@ -291,7 +309,9 @@ class RicohWebClient:
                 return False
             
             wim_token = match.group(1)
-            logger.info(f"✅ wimToken FRESCO del formulario obtenido: {wim_token}")
+            # Mask token to show only first 4 and last 4 characters
+            token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+            logger.info(f"✅ wimToken FRESCO del formulario obtenido: {token_preview}")
             
             # Extract the entryIndexIn that the printer assigned automatically
             index_match = re.search(r'name="entryIndexIn"\s+value="(\d{5})"', form_response.text)
@@ -1256,6 +1276,9 @@ class RicohWebClient:
                 return False
             
             wim_token = match.group(1)
+            # Mask token to show only first 4 and last 4 characters
+            token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+            logger.debug(f"✅ wimToken obtenido: {token_preview}")
             
             # 4. Obtener el formulario de edición (modo READ para leer campos actuales)
             edit_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"

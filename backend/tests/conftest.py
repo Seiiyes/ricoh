@@ -2,7 +2,7 @@
 Pytest configuration and fixtures
 """
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, JSON
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 import os
@@ -11,6 +11,10 @@ import os
 os.environ["ENVIRONMENT"] = "test"
 os.environ["SECRET_KEY"] = "test-secret-key-minimum-32-characters-long"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+
+# Monkey-patch JSONB to use JSON for SQLite BEFORE importing models
+from sqlalchemy.dialects import postgresql
+postgresql.JSONB = JSON
 
 
 @pytest.fixture(scope="function")

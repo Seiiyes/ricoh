@@ -1,0 +1,41 @@
+[Unit]
+Description=Ricoh Equipment Management Suite
+Documentation=https://github.com/your-org/ricoh-equipment-management
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/ricoh
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Start command
+ExecStart=/usr/bin/docker-compose -f deployment/docker-compose.prod.yml --env-file .env.production up -d
+
+# Stop command
+ExecStop=/usr/bin/docker-compose -f deployment/docker-compose.prod.yml down
+
+# Reload command (for updates without downtime)
+ExecReload=/usr/bin/docker-compose -f deployment/docker-compose.prod.yml --env-file .env.production up -d --force-recreate --no-deps backend
+
+# Run as ricoh user
+User=ricoh
+Group=ricoh
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ricoh-suite
+
+[Install]
+WantedBy=multi-user.target

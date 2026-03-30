@@ -32,17 +32,10 @@ class EncryptionService:
         encryption_key = os.getenv("ENCRYPTION_KEY")
         
         if not encryption_key:
-            # En desarrollo, generar clave temporal
-            if os.getenv("ENVIRONMENT", "development") == "development":
-                logger.warning("⚠️ ENCRYPTION_KEY no configurada, generando clave temporal")
-                logger.warning("⚠️ Esta clave NO debe usarse en producción")
-                encryption_key = Fernet.generate_key().decode()
-                logger.info(f"🔑 Clave temporal generada: {encryption_key}")
-            else:
-                raise ValueError(
-                    "ENCRYPTION_KEY must be set in production environment. "
-                    "Generate one with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
-                )
+            raise ValueError(
+                "ENCRYPTION_KEY must be set in all environments. "
+                "Generate one with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+            )
         
         # Convertir a bytes si es string
         if isinstance(encryption_key, str):

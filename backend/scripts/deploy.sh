@@ -49,10 +49,18 @@ if [ ! -f ".env" ]; then
 fi
 log_info ".env file found"
 
+# Check if ENCRYPTION_KEY is set
+if ! grep -q "ENCRYPTION_KEY=" .env || grep -q "ENCRYPTION_KEY=your-encryption-key-here" .env; then
+    log_error "ENCRYPTION_KEY not properly configured in .env!"
+    echo "Generate one with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+    exit 1
+fi
+log_info "ENCRYPTION_KEY configured"
+
 # Check if SECRET_KEY is set
-if ! grep -q "SECRET_KEY=" .env; then
-    log_error "SECRET_KEY not found in .env!"
-    echo "Please set SECRET_KEY in .env file"
+if ! grep -q "SECRET_KEY=" .env || grep -q "SECRET_KEY=your-secret-key" .env; then
+    log_error "SECRET_KEY not properly configured in .env!"
+    echo "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
     exit 1
 fi
 log_info "SECRET_KEY configured"
@@ -65,6 +73,14 @@ if ! grep -q "DATABASE_URL=" .env; then
 fi
 log_info "DATABASE_URL configured"
 
+# Check if DATABASE_URL has hardcoded credentials
+if grep -q "ricoh_secure_2024" .env; then
+    log_error "DATABASE_URL contains hardcoded development credentials!"
+    echo "Please use a strong, unique password for production"
+    exit 1
+fi
+log_info "DATABASE_URL uses custom credentials"
+
 # Check if ENVIRONMENT is set to production
 if ! grep -q "ENVIRONMENT=production" .env; then
     log_warn "ENVIRONMENT is not set to 'production' in .env"
@@ -73,6 +89,20 @@ if ! grep -q "ENVIRONMENT=production" .env; then
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
     fi
+else
+    log_info "ENVIRONMENT=production"
+fi
+
+# Check if REDIS_URL is configured (recommended for production)
+if ! grep -q "REDIS_URL=" .env || grep -q "^#.*REDIS_URL=" .env; then
+    log_warn "REDIS_URL not configured (recommended for production multi-instance)"
+    read -p "Continue without Redis? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+else
+    log_info "REDIS_URL configured"
 fi
 
 echo ""
