@@ -1,6 +1,8 @@
-# Ricoh Equipment Manager
+# Ricoh Suite
 
-Sistema integral de gestión de impresoras Ricoh con módulos de aprovisionamiento, monitoreo de contadores y cierres mensuales.
+Sistema integral de gestión de impresoras Ricoh con autenticación JWT, multi-tenancy y tres módulos principales: Governance (Aprovisionamiento), Contadores y Cierres Mensuales.
+
+**Versión**: 2.1.0 | **Estado**: ✅ Producción | **Última actualización**: 30 de Marzo de 2025
 
 ## 🚀 Inicio Rápido
 
@@ -34,23 +36,36 @@ start-dev.bat
 
 ## 📋 Módulos del Sistema
 
-### 1. Governance (Aprovisionamiento)
+### 1. Sistema de Autenticación y Multi-Tenancy
+- Login con JWT (access token + refresh token)
+- Gestión de empresas y usuarios administradores
+- Multi-tenancy con filtrado automático
+- Auditoría completa de acciones
+- Rate limiting y bloqueo de cuenta
+
+### 2. Governance (Aprovisionamiento)
 - Descubrimiento automático de impresoras en red
 - Configuración de usuarios y perfiles
 - Sincronización de configuraciones
+- Soporte para contraseñas vacías
 
-### 2. Contadores
+### 3. Contadores
 - Lectura automática de contadores totales
 - Lectura de contadores por usuario
 - Soporte para contador ecológico
 - Historial de lecturas
 
-### 3. Cierres Mensuales
+### 4. Cierres Mensuales
 - Creación de cierres mensuales automáticos
 - Snapshot de contadores por usuario
 - Comparación entre cierres
-- Exportación a Excel (formato Ricoh)
+- Exportación a Excel (formato Ricoh de 3 hojas)
 - Validación de integridad de datos
+
+### 5. Sistema de Notificaciones
+- Notificaciones modernas con Sileo
+- Animaciones basadas en física
+- Mensajes amigables en español
 
 ---
 
@@ -76,25 +91,50 @@ restore-db.bat
 
 ## 📚 Documentación
 
-Toda la documentación está en la carpeta `docs/`:
+Toda la documentación está organizada en la carpeta `docs/`:
+
+### Estado del Proyecto
+- `docs/ESTADO_PROYECTO_2025_03_30.md` - 📊 Estado actual completo (ACTUALIZADO)
+- `docs/README.md` - Índice de documentación
+- `docs/INDICE_DOCUMENTACION_ACTUALIZADO.md` - Índice detallado
 
 ### Inicio y Uso
-- `docs/INICIO_RAPIDO.md` - 🚀 Guía de inicio rápido
-- `docs/GUIA_DE_USO.md` - Guía completa de uso
-- `docs/SOLUCION_ERROR_SINCRONIZACION.md` - 🔧 Solución a errores comunes
+- `docs/guias/INICIO_RAPIDO.md` - 🚀 Guía de inicio rápido
+- `docs/guias/GUIA_DE_USO.md` - Guía completa de uso
+- `docs/guias/GUIA_USUARIO.md` - Manual de usuario
 
-### Técnica
-- `docs/ARCHITECTURE.md` - Arquitectura del sistema
-- `docs/API_CONTADORES.md` - API de contadores
-- `docs/API_CIERRES_MENSUALES.md` - API de cierres mensuales
-- `docs/PROTECCION_DATOS.md` - Sistema de respaldos
-- `docs/API_REVERSE_ENGINEERING_EXITOSO.md` - Ingeniería inversa de API Ricoh
+### Técnica y API
+- `docs/arquitectura/ARCHITECTURE.md` - Arquitectura del sistema
+- `docs/api/API_CONTADORES.md` - API de contadores
+- `docs/api/API_CIERRES_MENSUALES.md` - API de cierres mensuales
+- `docs/seguridad/SISTEMA_AUTENTICACION_COMPLETADO.md` - Sistema de autenticación
 
-### Desarrollo
-- `docs/ESTADO_ACTUAL_PROYECTO.md` - Estado del proyecto
-- `docs/desarrollo/` - Documentación de desarrollo (análisis, verificaciones, importaciones)
+### Desarrollo y Fixes
+- `docs/desarrollo/` - Documentación de desarrollo (100+ archivos)
+- `docs/fixes/` - Correcciones de bugs documentadas (18 archivos)
+- `docs/resumen/` - Resúmenes de sesiones (25 archivos)
 
 ## 🛠️ Desarrollo
+
+### Stack Tecnológico
+
+**Frontend:**
+- React 19.2.0 + TypeScript 5.9.3
+- Vite 7.3.1, Zustand 5.0.11
+- Tailwind CSS 4.1.18
+- Sileo 0.1.5 (notificaciones)
+- Axios 1.13.6, Recharts 3.7.0
+
+**Backend:**
+- Python 3.11+ + FastAPI 0.109.0
+- SQLAlchemy 2.0.25, PostgreSQL 16
+- JWT (PyJWT 2.8.0), bcrypt 4.1.2
+- Cryptography 42.0.0 (AES-256)
+
+**Infraestructura:**
+- Docker + Docker Compose
+- Adminer (DB admin UI)
+- WebSocket (real-time)
 
 ### Estructura del Proyecto
 ```
