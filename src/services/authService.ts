@@ -54,9 +54,9 @@ class AuthService {
     
     const { access_token, refresh_token, user } = response.data;
     
-    // Guardar tokens en sessionStorage (consistente con apiClient)
-    sessionStorage.setItem('access_token', access_token);
-    sessionStorage.setItem('refresh_token', refresh_token);
+    // Guardar tokens en localStorage (persiste al cerrar pestaña)
+    localStorage.setItem('access_token', access_token);
+    localStorage.setItem('refresh_token', refresh_token);
     
     return response.data;
   }
@@ -70,9 +70,9 @@ class AuthService {
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     } finally {
-      // Limpiar sessionStorage siempre
-      sessionStorage.removeItem('access_token');
-      sessionStorage.removeItem('refresh_token');
+      // Limpiar localStorage siempre
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
     }
   }
   
@@ -80,7 +80,7 @@ class AuthService {
    * Renovar token de acceso
    */
   async refreshToken(): Promise<string> {
-    const refreshToken = sessionStorage.getItem('refresh_token');
+    const refreshToken = localStorage.getItem('refresh_token');
     
     if (!refreshToken) {
       throw new Error('No hay refresh token disponible');
@@ -92,8 +92,8 @@ class AuthService {
     
     const { access_token } = response.data;
     
-    // Actualizar token en sessionStorage
-    sessionStorage.setItem('access_token', access_token);
+    // Actualizar token en localStorage
+    localStorage.setItem('access_token', access_token);
     
     return access_token;
   }
@@ -120,7 +120,7 @@ class AuthService {
    * Verificar si hay un token válido
    */
   hasToken(): boolean {
-    return !!sessionStorage.getItem('access_token');
+    return !!localStorage.getItem('access_token');
   }
 }
 

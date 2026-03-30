@@ -14,8 +14,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  */
 async function downloadFile(url: string, filename: string): Promise<void> {
   try {
-    // Obtener el token del sessionStorage
-    const token = sessionStorage.getItem('access_token');
+    // Obtener el token del localStorage
+    const token = localStorage.getItem('access_token');
     if (!token) {
       throw new Error('No hay sesión activa');
     }

@@ -17,14 +17,14 @@ const apiClient = axios.create({
 // Request interceptor: Agregar token y CSRF token a todas las peticiones
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = sessionStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token');
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     
     // Agregar CSRF token para requests mutables
-    const csrfToken = sessionStorage.getItem('csrf_token');
+    const csrfToken = localStorage.getItem('csrf_token');
     if (csrfToken && config.method && ['post', 'put', 'delete', 'patch'].includes(config.method.toLowerCase())) {
       config.headers['X-CSRF-Token'] = csrfToken;
     }
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
     // Guardar nuevo CSRF token si viene en el header
     const newCsrfToken = response.headers['x-csrf-token'];
     if (newCsrfToken) {
-      sessionStorage.setItem('csrf_token', newCsrfToken);
+      localStorage.setItem('csrf_token', newCsrfToken);
     }
     return response;
   },
@@ -54,8 +54,8 @@ apiClient.interceptors.response.use(
     
     if (error.response?.status === 401 && !isAuthRoute && !originalRequest._retry) {
       console.log('❌ 401 Unauthorized - redirigiendo a login');
-      sessionStorage.removeItem('access_token');
-      sessionStorage.removeItem('refresh_token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       window.location.href = '/login';
     }
     
