@@ -127,6 +127,7 @@ docs/
 | [fixes/FIX_BOTON_DUPLICADO_CONTRASEÑA.md](fixes/FIX_BOTON_DUPLICADO_CONTRASEÑA.md) | Botón duplicado contraseña | ✅ Resuelto |
 | [fixes/FIX_ERRORES_AUTENTICACION_Y_VALIDACION.md](fixes/FIX_ERRORES_AUTENTICACION_Y_VALIDACION.md) | Errores autenticación | ✅ Resuelto |
 | [fixes/FIX_LOOP_INFINITO_APICLIENT.md](fixes/FIX_LOOP_INFINITO_APICLIENT.md) | Loop infinito apiClient | ✅ Resuelto |
+| [fixes/FIX_EXPORT_FILENAME_CORS.md](fixes/FIX_EXPORT_FILENAME_CORS.md) | Content-Disposition bloqueado por CORS | ✅ Resuelto |
 
 ---
 
@@ -205,13 +206,13 @@ Ver carpeta: [desarrollo/verificacion/](desarrollo/verificacion/)
 
 | Categoría | Cantidad |
 |-----------|----------|
-| **Total Documentos** | 150+ |
+| **Total Documentos** | 151+ |
 | **Arquitectura** | 8 |
 | **APIs** | 5 |
 | **Seguridad** | 10 |
 | **Deployment** | 4 |
 | **Guías** | 15 |
-| **Fixes** | 18 |
+| **Fixes** | 19 |
 | **Resúmenes** | 24 |
 | **Desarrollo** | 100+ |
 
@@ -242,6 +243,6 @@ Ver carpeta: [desarrollo/verificacion/](desarrollo/verificacion/)
 
 ---
 
-**Última Actualización**: 30 de Marzo de 2026  
-**Versión**: 3.0.0  
-**Total Documentos**: 150+
+**Última Actualización**: 31 de Marzo de 2026  
+**Versión**: 3.0.1  
+**Total Documentos**: 151+

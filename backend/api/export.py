@@ -88,13 +88,15 @@ async def export_cierre(
     
     # Preparar respuesta
     output.seek(0)
-    fecha_str = cierre.fecha_inicio.strftime('%Y%m%d')
-    filename = f"cierre_{printer.hostname if printer else cierre.printer_id}_{fecha_str}.csv"
+    # Formato: SERIAL DD.MM.YYYY
+    fecha_actual = datetime.now().strftime('%d.%m.%Y')
+    serial = printer.serial_number if printer and printer.serial_number else printer.hostname if printer else str(cierre.printer_id)
+    filename = f"{serial} {fecha_actual}.csv"
     
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
 
@@ -206,15 +208,15 @@ async def export_comparacion(
     
     # Preparar respuesta
     output.seek(0)
-    fecha1_str = cierre1.fecha_inicio.strftime('%Y%m%d')
-    fecha2_str = cierre2.fecha_inicio.strftime('%Y%m%d')
-    serial = printer.serial_number if printer and printer.serial_number else str(cierre1.printer_id)
-    filename = f"comparacion_{serial}_{fecha1_str}_{fecha2_str}.csv"
+    # Formato: SERIAL DD.MM.YYYY
+    fecha_actual = datetime.now().strftime('%d.%m.%Y')
+    serial = printer.serial_number if printer and printer.serial_number else printer.hostname if printer else str(cierre1.printer_id)
+    filename = f"{serial} {fecha_actual}.csv"
     
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
 
@@ -308,13 +310,15 @@ async def export_cierre_excel(
     wb.save(output)
     output.seek(0)
     
-    fecha_str = cierre.fecha_inicio.strftime('%Y%m%d')
-    filename = f"cierre_{printer.hostname if printer else cierre.printer_id}_{fecha_str}.xlsx"
+    # Formato: SERIAL DD.MM.YYYY
+    fecha_actual = datetime.now().strftime('%d.%m.%Y')
+    serial = printer.serial_number if printer and printer.serial_number else printer.hostname if printer else str(cierre.printer_id)
+    filename = f"{serial} {fecha_actual}.xlsx"
     
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
 
@@ -447,15 +451,15 @@ async def export_comparacion_excel(
     wb.save(output)
     output.seek(0)
     
-    fecha1_str = cierre1.fecha_inicio.strftime('%Y%m%d')
-    fecha2_str = cierre2.fecha_inicio.strftime('%Y%m%d')
+    # Formato: SERIAL DD.MM.YYYY
+    fecha_actual = datetime.now().strftime('%d.%m.%Y')
     serial = printer.serial_number if printer and printer.serial_number else str(cierre1.printer_id)
-    filename = f"comparacion_{serial}_{fecha1_str}_{fecha2_str}.xlsx"
+    filename = f"{serial} {fecha_actual}.xlsx"
     
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
 
@@ -513,10 +517,12 @@ async def export_comparacion_excel_ricoh(
     mes1_nombre = meses[cierre1.mes]
     mes2_nombre = meses[cierre2.mes]
     
-    filename = f"{printer.serial_number} {mes1_nombre} - {mes2_nombre}.xlsx"
+    # Formato: SERIAL DD.MM.YYYY
+    fecha_actual = datetime.now().strftime('%d.%m.%Y')
+    filename = f"{printer.serial_number} {fecha_actual}.xlsx"
     
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )

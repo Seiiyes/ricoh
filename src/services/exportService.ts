@@ -10,9 +10,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  * Descarga un archivo desde el backend con autenticación
  * Usa fetch() en lugar de axios para evitar problemas de CORS con blobs
  * @param url - URL relativa del endpoint
- * @param filename - Nombre del archivo a descargar
+ * @param fallbackFilename - Nombre del archivo por defecto si el backend no lo proporciona
  */
-async function downloadFile(url: string, filename: string): Promise<void> {
+async function downloadFile(url: string, fallbackFilename: string): Promise<void> {
   try {
     // Obtener el token del localStorage
     const token = localStorage.getItem('access_token');
@@ -42,6 +42,19 @@ async function downloadFile(url: string, filename: string): Promise<void> {
       
       throw new Error(errorMessage);
     }
+
+    // Extraer el nombre del archivo del header Content-Disposition
+    let filename = fallbackFilename;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    console.log('Content-Disposition header:', contentDisposition);
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+        console.log('Filename extraído del backend:', filename);
+      }
+    }
+    console.log('Filename final a usar:', filename);
 
     // Obtener el blob y descargarlo
     const blob = await response.blob();

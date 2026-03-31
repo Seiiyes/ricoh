@@ -1,0 +1,22 @@
+# Sistema de Auditoría y Optimización de Código
+# Dependencias necesarias para ejecutar el sistema
+
+# Property-Based Testing
+hypothesis>=6.92.0
+
+# HTTP Requests (para verificación de vulnerabilidades)
+requests>=2.31.0
+
+# Parsing y análisis de código Python (built-in, no requiere instalación)
+# ast - Abstract Syntax Trees
+
+# Parsing TypeScript/JavaScript
+# esprima>=4.0.1  # Opcional: para parsing avanzado de TypeScript
+# Nota: El sistema usa regex para análisis básico de TypeScript
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Utilidades
+python-dateutil>=2.8.2

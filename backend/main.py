@@ -181,7 +181,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=ALLOWED_METHODS,
     allow_headers=ALLOWED_HEADERS,
-    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "Content-Disposition"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
