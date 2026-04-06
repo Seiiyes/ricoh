@@ -91,144 +91,151 @@ const EmpresaModal = ({ empresa, onClose, onSave }: EmpresaModalProps) => {
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-up flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
             {empresa ? 'Editar Empresa' : 'Nueva Empresa'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-ricoh-red hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:ring-offset-1"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium animate-fade-in">
               {errors.general}
             </div>
           )}
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Razón Social <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Razón Social <span className="text-ricoh-red">*</span>
               </label>
               <input
                 type="text"
                 value={formData.razon_social}
                 onChange={(e) => setFormData({ ...formData, razon_social: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.razon_social ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm ${
+                  errors.razon_social ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                 }`}
               />
               {errors.razon_social && (
-                <p className="text-red-500 text-sm mt-1">{errors.razon_social}</p>
+                <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.razon_social}</p>
               )}
             </div>
             
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre Comercial <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Nombre Comercial <span className="text-ricoh-red">*</span>
               </label>
               <input
                 type="text"
                 value={formData.nombre_comercial}
                 onChange={(e) => setFormData({ ...formData, nombre_comercial: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.nombre_comercial ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm ${
+                  errors.nombre_comercial ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                 }`}
                 placeholder="mi-empresa"
               />
               {errors.nombre_comercial && (
-                <p className="text-red-500 text-sm mt-1">{errors.nombre_comercial}</p>
+                <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.nombre_comercial}</p>
               )}
-              <p className="text-gray-500 text-xs mt-1">Formato kebab-case (solo minúsculas, números y guiones)</p>
+              <p className="text-slate-400 text-xs mt-1.5">Formato kebab-case (solo minúsculas, números y guiones)</p>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">NIT</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">NIT</label>
               <input
                 type="text"
                 value={formData.nit}
                 onChange={(e) => setFormData({ ...formData, nit: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white transition-colors shadow-sm"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Teléfono</label>
               <input
                 type="text"
                 value={formData.telefono}
                 onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white transition-colors shadow-sm"
               />
             </div>
             
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Dirección</label>
               <input
                 type="text"
                 value={formData.direccion}
                 onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white transition-colors shadow-sm"
               />
             </div>
             
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm ${
+                  errors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                 }`}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.email}</p>
               )}
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Contacto</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nombre de Contacto</label>
               <input
                 type="text"
                 value={formData.contacto_nombre}
                 onChange={(e) => setFormData({ ...formData, contacto_nombre: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white transition-colors shadow-sm"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cargo de Contacto</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Cargo de Contacto</label>
               <input
                 type="text"
                 value={formData.contacto_cargo}
                 onChange={(e) => setFormData({ ...formData, contacto_cargo: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white transition-colors shadow-sm"
               />
             </div>
           </div>
           
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-5 py-2.5 text-slate-600 font-medium bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative overflow-hidden px-6 py-2.5 bg-ricoh-red text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-[0_4px_14px_0_rgba(227,6,19,0.2)] hover:shadow-[0_6px_20px_rgba(227,6,19,0.3)] disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
             >
-              {loading ? 'Guardando...' : 'Guardar'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Guardando...
+                </span>
+              ) : (
+                'Guardar Empresa'
+              )}
             </button>
           </div>
         </form>

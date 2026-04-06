@@ -19,14 +19,14 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 font-bold uppercase tracking-wide transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 focus:outline-none';
   
   const variantStyles = {
-    primary: 'bg-ricoh-red text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500',
-    secondary: 'bg-industrial-gray text-white hover:bg-gray-900 focus:ring-2 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500',
-    ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-gray-300',
-    outline: 'bg-transparent border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-300',
+    primary: 'bg-ricoh-red text-white hover:bg-red-700 shadow-[0_4px_14px_0_rgba(227,6,19,0.2)] hover:shadow-[0_6px_20px_rgba(227,6,19,0.3)] focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
+    secondary: 'bg-slate-800 text-white hover:bg-slate-900 shadow-md hover:shadow-lg focus:ring-2 focus:ring-slate-800 focus:ring-offset-2',
+    danger: 'bg-red-500 text-white hover:bg-red-600 shadow-md hover:shadow-lg focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
+    ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-2 focus:ring-slate-300',
+    outline: 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm focus:ring-2 focus:ring-ricoh-red focus:ring-offset-1',
   };
   
   const sizeStyles = {

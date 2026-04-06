@@ -2,7 +2,7 @@
 
 Sistema integral de gestión de impresoras Ricoh con autenticación JWT, multi-tenancy y tres módulos principales: Governance (Aprovisionamiento), Contadores y Cierres Mensuales.
 
-**Versión**: 2.1.1 | **Estado**: ✅ Producción | **Última actualización**: 31 de Marzo de 2026
+**Versión**: 2.2.0 | **Estado**: ✅ Producción | **Última actualización**: 06 de Abril de 2026
 
 ## 🚀 Inicio Rápido
 
@@ -95,10 +95,10 @@ restore-db.bat
 Toda la documentación está organizada en la carpeta `docs/`:
 
 ### Estado del Proyecto
-- `docs/ESTADO_PROYECTO_2026_03_31.md` - 📊 Estado actual completo (ACTUALIZADO)
-- `docs/README.md` - Índice de documentación
+- `docs/desarrollo/mejoras/MODERNIZACION_UI_UX_PREMIUM_2026.md` - 💎 **Modernización UI/UX Premium**
+- `docs/PROGRESO_SESION_HOY.md` - 📊 Historial de progreso actualizado
 - `docs/INDICE_DOCUMENTACION_ACTUALIZADO.md` - Índice detallado
-- `CHANGELOG.md` - 📝 Registro de cambios por versión
+- `CHANGELOG.md` - 📝 Registro de cambios por versión (v2.2.0)
 
 ### Inicio y Uso
 - `docs/guias/INICIO_RAPIDO.md` - 🚀 Guía de inicio rápido

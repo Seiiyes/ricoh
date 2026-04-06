@@ -177,7 +177,7 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
             <label
               className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all shadow-sm ${
                 permisosLocales[config.key]
-                  ? 'border-blue-500 bg-blue-50/30 ring-4 ring-blue-500/5'
+                  ? 'border-ricoh-red bg-red-50/30 ring-4 ring-red-500/5'
                   : 'border-slate-100 hover:border-slate-300 bg-white grayscale opacity-70 hover:grayscale-0 hover:opacity-100'
               }`}
             >
@@ -186,14 +186,14 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
                 checked={permisosLocales[config.key]}
                 onChange={() => handleToggle(config.key)}
                 disabled={guardando}
-                className="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500 rounded-lg border-slate-300"
+                className="mt-1 w-5 h-5 text-ricoh-red focus:ring-ricoh-red rounded border-slate-300"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl">{config.icon}</span>
                   <span
                     className={`text-[11px] font-black uppercase tracking-tight ${
-                      permisosLocales[config.key] ? 'text-blue-900' : 'text-slate-700'
+                      permisosLocales[config.key] ? 'text-slate-900' : 'text-slate-700'
                     }`}
                   >
                     {config.label}
@@ -211,7 +211,7 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
                 <label
                   className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${
                     permisosLocales[config.colorKey]
-                      ? 'border-indigo-400 bg-indigo-50/50'
+                      ? 'border-red-400 bg-red-50/50'
                       : 'border-slate-100 bg-slate-50 hover:bg-white'
                   }`}
                 >
@@ -220,11 +220,11 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
                     checked={permisosLocales[config.colorKey]}
                     onChange={() => handleToggle(config.colorKey!)}
                     disabled={guardando}
-                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 rounded border-slate-300"
+                    className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red rounded border-slate-300"
                   />
                   <span
                     className={`text-[10px] font-black uppercase tracking-wide ${
-                      permisosLocales[config.colorKey] ? 'text-indigo-800' : 'text-slate-500'
+                      permisosLocales[config.colorKey] ? 'text-red-800' : 'text-slate-500'
                     }`}
                   >
                     Permitir Color
@@ -243,7 +243,7 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
             onClick={handleGuardarEnImpresora}
             loading={guardando}
             icon={<Save size={18} />}
-            className="w-full"
+            className="w-full bg-ricoh-red hover:bg-red-700 shadow-xl shadow-red-500/20"
           >
             {guardando ? 'Guardando en impresora...' : `Guardar en ${modoImpresora.printerName}`}
           </Button>

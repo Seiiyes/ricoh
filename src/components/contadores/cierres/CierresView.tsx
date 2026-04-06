@@ -5,10 +5,12 @@ import { CierreModal } from './CierreModal';
 import { CierreDetalleModal } from './CierreDetalleModal';
 import { ComparacionPage } from './ComparacionPage';
 import { Button, Spinner, Alert } from '@/components/ui';
-import { RefreshCw, Plus, BarChart3 } from 'lucide-react';
+import { RefreshCw, Plus, BarChart3, Filter, SlidersHorizontal, Calculator, Printer as PrinterIcon } from 'lucide-react';
 import closeService from '@/services/closeService';
 import apiClient from '@/services/apiClient';
 import { parseApiError } from '@/utils/errorHandler';
+import { cn } from '@/lib/utils';
+import type { Printer } from '@/types';
 
 export const CierresView: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -75,100 +77,125 @@ export const CierresView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-
-      {/* Barra de filtros */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-wrap items-center gap-3">
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 font-medium">Impresora:</label>
-            <select
-              value={selectedPrinter || ''}
-              onChange={(e) => setSelectedPrinter(e.target.value ? Number(e.target.value) : null)}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="">Seleccionar...</option>
-              {printers.map(printer => (
-                <option key={printer.id} value={printer.id}>
-                  {printer.hostname} ({printer.ip_address})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 font-medium">Año:</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              {years.map(year => <option key={year} value={year}>{year}</option>)}
-            </select>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadCierres}
-            loading={loading}
-            disabled={!selectedPrinter}
-            icon={<RefreshCw size={16} />}
-          >
-            Actualizar
-          </Button>
-
-          <div className="flex-1" />
-
-          {cierres.length >= 2 && (
+    <div className="space-y-10 animate-fade-in">
+      {/* Barra de filtros Premium */}
+      <div className="bg-white/70 backdrop-blur-md rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="flex flex-wrap items-end gap-6 flex-1">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dispositivo Escaneado</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-ricoh-red transition-colors">
+                  <PrinterIcon size={16} />
+                </div>
+                <select
+                  value={selectedPrinter || ''}
+                  onChange={(e) => setSelectedPrinter(e.target.value ? Number(e.target.value) : null)}
+                  className="pl-11 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 appearance-none focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-ricoh-red transition-all min-w-[280px]"
+                >
+                  <option value="">Seleccionar Impresora...</option>
+                  {printers.map(printer => (
+                    <option key={printer.id} value={printer.id}>
+                      {printer.hostname} ({printer.ip_address})
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <SlidersHorizontal size={14} />
+                </div>
+              </div>
+            </div>
+ 
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Periodo Anual</label>
+              <div className="relative group">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="px-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 appearance-none focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-ricoh-red transition-all min-w-[120px]"
+                >
+                  {years.map(year => <option key={year} value={year}>{year}</option>)}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                   <Filter size={14} />
+                </div>
+              </div>
+            </div>
+ 
             <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setVistaActual('comparacion')}
-              icon={<BarChart3 size={16} />}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              variant="ghost"
+              size="lg"
+              onClick={loadCierres}
+              loading={loading}
+              disabled={!selectedPrinter}
+              icon={<RefreshCw size={16} className={cn(loading && "animate-spin")} />}
+              className="rounded-2xl h-[46px] px-6 text-slate-400 hover:text-ricoh-red hover:bg-red-50"
             >
-              Comparar cierres ({cierres.length})
+              Recargar
             </Button>
-          )}
-
-          <Button
-            size="sm"
-            onClick={() => setCierreModalOpen(true)}
-            disabled={!selectedPrinter}
-            icon={<Plus size={16} />}
-          >
-            Crear Cierre
-          </Button>
+          </div>
+ 
+          <div className="flex items-center gap-4">
+            {cierres.length >= 2 && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setVistaActual('comparacion')}
+                icon={<BarChart3 size={18} />}
+                className="rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-slate-50 h-[52px] px-8"
+              >
+                Comparativa ({cierres.length})
+              </Button>
+            )}
+ 
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => setCierreModalOpen(true)}
+              disabled={!selectedPrinter}
+              icon={<Calculator size={18} />}
+              className="rounded-2xl bg-slate-900 border-none text-white shadow-xl shadow-slate-200 h-[52px] px-10 font-black uppercase tracking-widest text-[11px]"
+            >
+              Nuevo Cierre
+            </Button>
+          </div>
         </div>
       </div>
-
+ 
       {error && (
-        <Alert variant="error" onClose={() => setError(null)}>
+        <Alert variant="error" onClose={() => setError(null)} className="rounded-2xl border-none shadow-lg">
           {error}
         </Alert>
       )}
-
-      {!selectedPrinter ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-          <p className="text-gray-600">Selecciona una impresora para ver sus cierres</p>
-        </div>
-      ) : loading ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <Spinner size="lg" text="Cargando cierres..." />
-        </div>
-      ) : (
-        <ListaCierres
-          printer={selectedPrinterData!}
-          year={selectedYear}
-          tipoPeriodo="personalizado"
-          cierres={cierres}
-          onCreateCierre={() => setCierreModalOpen(true)}
-          onViewDetalle={(cierre) => { setSelectedCierre(cierre); setDetalleModalOpen(true); }}
-        />
-      )}
-
+ 
+      {/* Contenido Principal */}
+      <div className="min-h-[400px]">
+        {!selectedPrinter ? (
+          <div className="flex flex-col items-center justify-center py-32 bg-white/40 backdrop-blur-md rounded-[3rem] border border-dashed border-slate-200">
+            <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6 text-slate-300">
+              <Calculator size={32} />
+            </div>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Selección Requerida</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase mt-2">Elige una impresora para visualizar el historial de cierres</p>
+          </div>
+        ) : loading ? (
+          <div className="flex flex-col items-center justify-center py-32">
+            <Spinner size="lg" text="Procesando datos históricos..." />
+          </div>
+        ) : (
+          <div className="animate-slide-up">
+            <ListaCierres
+              printer={selectedPrinterData!}
+              year={selectedYear}
+              tipoPeriodo="personalizado"
+              cierres={cierres}
+              onCreateCierre={() => setCierreModalOpen(true)}
+              onViewDetalle={(cierre) => { setSelectedCierre(cierre); setDetalleModalOpen(true); }}
+            />
+          </div>
+        )}
+      </div>
+ 
       {cierreModalOpen && selectedPrinter && (
         <CierreModal
           printerId={selectedPrinter}
@@ -177,7 +204,7 @@ export const CierresView: React.FC = () => {
           onSuccess={handleCierreSuccess}
         />
       )}
-
+ 
       {detalleModalOpen && selectedCierre && (
         <CierreDetalleModal
           cierre={selectedCierre}

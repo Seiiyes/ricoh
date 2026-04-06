@@ -16,13 +16,13 @@ export const Alert: React.FC<AlertProps> = ({
   onClose,
   className = '',
 }) => {
-  const baseStyles = 'rounded-lg p-4 border-l-4';
+  const baseStyles = 'rounded-xl p-4 border-l-4 shadow-sm animate-fade-in relative overflow-hidden';
   
   const variantStyles = {
-    success: 'bg-green-50 border-green-500 text-green-800',
-    warning: 'bg-yellow-50 border-yellow-500 text-yellow-800',
-    error: 'bg-red-50 border-red-500 text-red-800',
-    info: 'bg-blue-50 border-blue-500 text-blue-800',
+    success: 'bg-green-50/80 border-green-500 text-green-900 border border-green-100',
+    warning: 'bg-yellow-50/80 border-yellow-500 text-yellow-900 border border-yellow-100',
+    error: 'bg-red-50/80 border-ricoh-red text-red-900 border border-red-100',
+    info: 'bg-slate-50/80 border-blue-500 text-blue-900 border border-slate-100',
   };
   
   const icons = {

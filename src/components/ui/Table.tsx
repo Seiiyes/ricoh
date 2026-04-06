@@ -120,35 +120,35 @@ export function Table<T extends Record<string, any>>({
       {/* Búsqueda */}
       {searchable && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent text-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent text-sm transition-all shadow-sm hover:bg-white"
           />
         </div>
       )}
 
       {/* Tabla */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+      <div className="overflow-x-auto bg-white rounded-2xl shadow-xl border border-slate-100 transition-shadow hover:shadow-2xl duration-300">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-slate-50/80 border-b border-slate-100 backdrop-blur-sm">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-3 text-xs font-bold text-gray-700 uppercase tracking-wider ${
+                  className={`px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider ${
                     column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
-                  } ${sortable && column.sortable !== false ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                  } ${sortable && column.sortable !== false ? 'cursor-pointer hover:bg-slate-100/50 transition-colors' : ''}`}
                   style={{ width: column.width }}
                   onClick={() => column.sortable !== false && handleSort(column.key)}
                 >
                   <div className="flex items-center gap-2">
                     <span>{column.label}</span>
                     {sortable && column.sortable !== false && (
-                      <span className="text-gray-400">
+                      <span className="text-slate-400">
                         {sortKey === column.key ? (
                           sortDirection === 'asc' ? (
                             <ChevronUp size={16} />
@@ -165,10 +165,10 @@ export function Table<T extends Record<string, any>>({
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-slate-100">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={columns.length} className="px-6 py-8 text-center text-slate-500">
                   {emptyMessage}
                 </td>
               </tr>
@@ -176,13 +176,13 @@ export function Table<T extends Record<string, any>>({
               paginatedData.map((row) => (
                 <tr
                   key={keyExtractor(row)}
-                  className={`${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
+                  className={`${onRowClick ? 'cursor-pointer hover:bg-slate-50/80 active:bg-slate-100' : 'hover:bg-slate-50/40'} transition-colors duration-200`}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={`px-4 py-3 text-sm text-gray-900 ${
+                      className={`px-6 py-4 text-sm text-slate-700 ${
                         column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
                       }`}
                     >
@@ -198,25 +198,25 @@ export function Table<T extends Record<string, any>>({
 
       {/* Paginación */}
       {pagination && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="flex items-center justify-between px-2 pt-2">
+          <div className="text-sm text-slate-500 font-medium">
             Mostrando {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, sortedData.length)} de {sortedData.length}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 text-sm font-bold rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-ricoh-red disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               ← Anterior
             </button>
-            <span className="text-sm font-bold text-gray-700">
-              Página {currentPage} de {totalPages}
+            <span className="text-sm font-semibold text-slate-700 px-2">
+              Página <span className="text-ricoh-red">{currentPage}</span> de {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm font-bold rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-semibold rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-ricoh-red disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               Siguiente →
             </button>

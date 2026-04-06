@@ -1,13 +1,14 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { usePrinterStore } from "@/store/usePrinterStore";
 import { PrinterCard } from "../fleet/PrinterCard";
 import { DiscoveryModal } from "../discovery/DiscoveryModal";
 import { EditPrinterModal } from "../fleet/EditPrinterModal";
 import { Button, Input, Alert, Spinner } from "@/components/ui";
-import { Terminal as TerminalIcon, UserPlus, Loader2, Wifi, Send } from "lucide-react";
+import { UserPlus, Wifi, Send } from "lucide-react";
 import { printerDeviceToCardProps } from "@/utils/printerTransform";
 import { fetchPrinters, createUser, provisionUser, connectWebSocket, updatePrinter, refreshPrinterSNMP } from "@/services/printerService";
 import type { PrinterDevice } from "@/types";
+import { cn } from "@/lib/utils";
 
 export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscoveryOnly?: boolean }) => {
   const { printers, isLoading, setPrinters, setLoading, selectedPrinters, clearSelection } = usePrinterStore();
@@ -154,11 +155,11 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
       });
 
       // Convert selected printer IDs to numbers
-      const printerIds = selectedPrinters.map(id => {
+      const printerIds = selectedPrinters.map((id: string) => {
         // If ID is string like "192-168-1-100", find the actual printer ID
-        const printer = printers.find(p => p.id === id);
+        const printer = printers.find((p: PrinterDevice) => p.id === id);
         return printer ? parseInt(printer.id) : null;
-      }).filter(id => id !== null) as number[];
+      }).filter((id: number | null): id is number => id !== null);
 
       console.log('🔍 Debug - Selected printers:', selectedPrinters);
       console.log('🔍 Debug - Converted printer IDs:', printerIds);
@@ -194,20 +195,27 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC]">
+    <div className="flex flex-col h-screen bg-slate-50 relative">
+      {/* Background Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50">
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-red-100 rounded-full blur-[120px] animate-pulse-subtle"></div>
+        <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-slate-200 rounded-full blur-[100px]"></div>
+      </div>
       <div className="flex flex-1 overflow-hidden">
         {/* Left: User Form - Only show when not in discovery-only mode */}
         {!showDiscoveryOnly && (
-        <div className="w-[400px] border-r bg-white p-6 space-y-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] overflow-y-auto">
-          <div className="flex items-center gap-2 text-ricoh-red mb-8">
-            <UserPlus size={20} />
-            <h2 className="font-bold tracking-tight uppercase text-sm">Crear Usuario en Impresoras</h2>
+        <div className="w-[420px] bg-white/70 backdrop-blur-md border-r border-slate-200/60 p-8 space-y-8 shadow-[10px_0_40px_rgba(0,0,0,0.03)] overflow-y-auto relative z-20">
+          <div className="flex items-center gap-3 text-ricoh-red mb-8">
+            <div className="p-2 bg-red-50 rounded-lg">
+              <UserPlus size={20} />
+            </div>
+            <h2 className="font-black tracking-widest uppercase text-xs text-slate-800">Nuevo Usuario</h2>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Información Básica</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Información de Identidad</h3>
               <Input
                 label="Nombre Completo"
                 placeholder="Nombre del Usuario"
@@ -230,7 +238,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
 
             {/* Network Credentials */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Autenticación de Carpeta</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Credenciales de Red</h3>
               <Input
                 label="Nombre de usuario de inicio de sesión"
                 value={networkUsername}
@@ -250,123 +258,135 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             </div>
 
             {/* Available Functions */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Funciones Disponibles</h3>
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Permisos de Uso</h3>
               <div className="space-y-3">
                 {/* Copier */}
-                <div className="border-l-2 border-slate-200 pl-3">
-                  <label className="flex items-center gap-2 cursor-pointer mb-2">
-                    <input 
-                      type="checkbox" 
-                      checked={funcCopier}
-                      onChange={(e) => setFuncCopier(e.target.checked)}
-                      className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red"
-                    />
-                    <span className="text-xs font-bold">Copiadora</span>
+                <div className={cn("pl-4 border-l-2 transition-all", funcCopier ? "border-ricoh-red bg-red-50/30 p-3 rounded-r-xl" : "border-slate-100")}>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={cn("w-4 h-4 rounded border flex items-center justify-center transition-all", funcCopier ? "bg-ricoh-red border-ricoh-red" : "border-slate-300 group-hover:border-slate-400")}>
+                      <input 
+                        type="checkbox" 
+                        checked={funcCopier}
+                        onChange={(e) => setFuncCopier(e.target.checked)}
+                        className="sr-only"
+                      />
+                      {funcCopier && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                    </div>
+                    <span className={cn("text-xs font-bold transition-colors", funcCopier ? "text-slate-900" : "text-slate-500")}>Copiadora</span>
                   </label>
                   {funcCopier && (
-                    <div className="ml-6 space-y-1 bg-slate-50 p-2 rounded">
-                      <p className="text-[9px] text-slate-500 mb-1">Limitación modo copia color:</p>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="copierColor"
-                          checked={funcCopierColor}
-                          onChange={() => setFuncCopierColor(true)}
-                          className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
-                        />
-                        <span className="text-[11px] text-slate-600">A todo color</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="copierColor"
-                          checked={!funcCopierColor}
-                          onChange={() => setFuncCopierColor(false)}
-                          className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
-                        />
-                        <span className="text-[11px] text-slate-600">Blanco y Negro</span>
-                      </label>
+                    <div className="mt-3 space-y-2 pl-2">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Restricción de Color:</p>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="copierColor"
+                            checked={funcCopierColor}
+                            onChange={() => setFuncCopierColor(true)}
+                            className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
+                          />
+                          <span className="text-[11px] font-bold text-slate-600">Full Color</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="copierColor"
+                            checked={!funcCopierColor}
+                            onChange={() => setFuncCopierColor(false)}
+                            className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
+                          />
+                          <span className="text-[11px] font-bold text-slate-600">B/N Only</span>
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Printer */}
-                <div className="border-l-2 border-slate-200 pl-3">
-                  <label className="flex items-center gap-2 cursor-pointer mb-2">
-                    <input 
-                      type="checkbox" 
-                      checked={funcPrinter}
-                      onChange={(e) => setFuncPrinter(e.target.checked)}
-                      className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red"
-                    />
-                    <span className="text-xs font-bold">Impresora</span>
+                <div className={cn("pl-4 border-l-2 transition-all", funcPrinter ? "border-ricoh-red bg-red-50/30 p-3 rounded-r-xl" : "border-slate-100")}>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={cn("w-4 h-4 rounded border flex items-center justify-center transition-all", funcPrinter ? "bg-ricoh-red border-ricoh-red" : "border-slate-300 group-hover:border-slate-400")}>
+                      <input 
+                        type="checkbox" 
+                        checked={funcPrinter}
+                        onChange={(e) => setFuncPrinter(e.target.checked)}
+                        className="sr-only"
+                      />
+                      {funcPrinter && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                    </div>
+                    <span className={cn("text-xs font-bold transition-colors", funcPrinter ? "text-slate-900" : "text-slate-500")}>Impresora</span>
                   </label>
                   {funcPrinter && (
-                    <div className="ml-6 space-y-1 bg-slate-50 p-2 rounded">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="printerColor"
-                          checked={funcPrinterColor}
-                          onChange={() => setFuncPrinterColor(true)}
-                          className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
-                        />
-                        <span className="text-[11px] text-slate-600">Color</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="printerColor"
-                          checked={!funcPrinterColor}
-                          onChange={() => setFuncPrinterColor(false)}
-                          className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
-                        />
-                        <span className="text-[11px] text-slate-600">Blanco y Negro</span>
-                      </label>
+                    <div className="mt-3 space-y-2 pl-2">
+                       <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="printerColor"
+                            checked={funcPrinterColor}
+                            onChange={() => setFuncPrinterColor(true)}
+                            className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
+                          />
+                          <span className="text-[11px] font-bold text-slate-600">Color</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="printerColor"
+                            checked={!funcPrinterColor}
+                            onChange={() => setFuncPrinterColor(false)}
+                            className="w-3 h-3 text-ricoh-red focus:ring-ricoh-red"
+                          />
+                          <span className="text-[11px] font-bold text-slate-600">B/N</span>
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Other functions - Simple checkboxes */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-2">Otras funciones:</p>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={funcDocumentServer}
-                      onChange={(e) => setFuncDocumentServer(e.target.checked)}
-                      className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red"
-                    />
-                    <span className="text-xs">Document Server</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={funcFax}
-                      onChange={(e) => setFuncFax(e.target.checked)}
-                      className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red"
-                    />
-                    <span className="text-xs">Fax</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={funcScanner}
-                      onChange={(e) => setFuncScanner(e.target.checked)}
-                      className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red"
-                    />
-                    <span className="text-xs font-bold text-ricoh-red">Escáner</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={funcBrowser}
-                      onChange={(e) => setFuncBrowser(e.target.checked)}
-                      className="w-4 h-4 text-ricoh-red focus:ring-ricoh-red"
-                    />
-                    <span className="text-xs">Navegador</span>
-                  </label>
+                {/* Other functions */}
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-2">Funciones Auxiliares:</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        checked={funcDocumentServer}
+                        onChange={(e) => setFuncDocumentServer(e.target.checked)}
+                        className="w-4 h-4 text-ricoh-red rounded border-slate-300 focus:ring-ricoh-red"
+                      />
+                      <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Doc. Server</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        checked={funcFax}
+                        onChange={(e) => setFuncFax(e.target.checked)}
+                        className="w-4 h-4 text-ricoh-red rounded border-slate-300 focus:ring-ricoh-red"
+                      />
+                      <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Fax</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group bg-red-50/50 p-1.5 rounded-lg border border-red-100">
+                      <input 
+                        type="checkbox" 
+                        checked={funcScanner}
+                        onChange={(e) => setFuncScanner(e.target.checked)}
+                        className="w-4 h-4 text-ricoh-red rounded border-slate-300 focus:ring-ricoh-red"
+                      />
+                      <span className="text-[11px] font-black text-ricoh-red uppercase tracking-tighter">Escáner</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        checked={funcBrowser}
+                        onChange={(e) => setFuncBrowser(e.target.checked)}
+                        className="w-4 h-4 text-ricoh-red rounded border-slate-300 focus:ring-ricoh-red"
+                      />
+                      <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Navegador</span>
+                    </label>
+                  </div>
                 </div>
               </div>
               <Alert variant="warning" className="mt-3 text-[10px]">
@@ -376,36 +396,36 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
 
             {/* SMB Configuration */}
             <div className="space-y-4">
-              <h3 className="text-[10px] font-bold text-slate-600 uppercase border-b pb-1">Carpeta SMB</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Destino de Red (SMB)</h3>
               <Input
-                label="Ruta"
+                label="Ruta de Carpeta"
                 value={smbPath}
                 onChange={(e) => setSmbPath(e.target.value)}
                 placeholder="\\\\10.0.0.5\\scans\\"
-                helperText="El servidor y puerto se extraen automáticamente"
+                helperText="Servidor y puerto se extraen de la ruta"
                 variant="underline"
                 className="font-mono text-slate-500"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-200">
-            <p className="text-xs text-slate-500 mb-2">
-              Seleccionadas: <span className="font-bold text-ricoh-red">{selectedPrinters.length}</span> impresora(s)
-            </p>
+          <div className="pt-6 border-t border-slate-200">
+            <div className="flex items-center justify-between mb-4 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seleccionadas</span>
+              <span className="text-sm font-black text-ricoh-red">{selectedPrinters.length} Equipos</span>
+            </div>
+            <Button
+              variant="primary"
+              size="lg"
+              icon={<Send size={18} />}
+              loading={isProvisioning}
+              disabled={isProvisioning || selectedPrinters.length === 0 || !userName.trim() || !userPin.trim() || !networkPassword.trim()}
+              onClick={handleProvision}
+              className="w-full py-6 tracking-[0.2em] uppercase text-xs shadow-xl shadow-red-500/20 bg-ricoh-red hover:bg-red-700"
+            >
+              {isProvisioning ? 'Procesando ' : 'Enviar a Equipos'}
+            </Button>
           </div>
-
-          <Button
-            variant="secondary"
-            size="md"
-            icon={<Send size={14} />}
-            loading={isProvisioning}
-            disabled={isProvisioning || selectedPrinters.length === 0 || !userName.trim() || !userPin.trim() || !networkPassword.trim()}
-            onClick={handleProvision}
-            className="w-full py-3 tracking-widest"
-          >
-            {isProvisioning ? 'Configurando...' : 'Enviar Configuración'}
-          </Button>
         </div>
         )}
 
@@ -420,7 +440,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
                 onClick={() => setIsDiscoveryOpen(true)}
                 className="rounded-full"
               >
-                Descubrir Impresoras
+                Agregar Equipos
               </Button>
             </div>
           </div>
@@ -437,7 +457,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
                   onClick={() => setIsDiscoveryOpen(true)}
                   className="text-ricoh-red hover:underline text-sm font-bold"
                 >
-                  Haz clic en "Descubrir Impresoras" para escanear tu red
+                  Haz clic en "Agregar Equipos" para escanear tu red
                 </button>
               </div>
             ) : (

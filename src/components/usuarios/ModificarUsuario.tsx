@@ -371,7 +371,7 @@ export const ModificarUsuario = ({
                   className={`w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all group ${impresoraSeleccionada?.printer_id === p.printer_id ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center gap-2 w-full">
-                    <Printer size={14} className={impresoraSeleccionada?.printer_id === p.printer_id ? 'text-blue-400' : 'text-slate-500'} />
+                    <Printer size={14} className={impresoraSeleccionada?.printer_id === p.printer_id ? 'text-red-400' : 'text-slate-500'} />
                     <span className={`text-xs font-black truncate flex-1 text-left ${impresoraSeleccionada?.printer_id === p.printer_id ? 'text-white' : 'text-slate-400'}`}>
                       {p.printer_location || p.printer_name}
                     </span>
@@ -382,7 +382,7 @@ export const ModificarUsuario = ({
 
               <button
                 onClick={() => setTabActiva('equipos')}
-                className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border border-dashed ${tabActiva === 'equipos' ? 'bg-blue-600 text-white border-blue-400' : 'text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-300'}`}
+                className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border border-dashed ${tabActiva === 'equipos' ? 'bg-ricoh-red/20 text-ricoh-red border-ricoh-red/50' : 'text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-300'}`}
               >
                 <Plus size={14} /> Agregar o Quitar Impresoras
               </button>
@@ -403,7 +403,7 @@ export const ModificarUsuario = ({
         </div>
 
         {/* Área de Contenido */}
-        <div className="flex-1 flex flex-col bg-[#F9FAFB]">
+        <div className="flex-1 flex flex-col bg-slate-50 relative">
 
           {/* Header del contenido */}
           <div className="px-8 py-5 border-b border-slate-200 flex items-center justify-between bg-white">
@@ -524,19 +524,19 @@ export const ModificarUsuario = ({
 
             {tabActiva === 'permisos' && (
               <div className="animate-in fade-in duration-300 relative">
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-8 flex items-start gap-4">
-                  <div className="bg-blue-600 p-2 rounded-lg text-white">
+                <div className="bg-slate-100/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl p-5 mb-8 flex items-start gap-4 shadow-sm">
+                  <div className="bg-slate-800 p-2 rounded-xl text-white shadow-md">
                     <ShieldCheck size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-blue-900">Estás enviando cambios a la impresora</h4>
-                    <p className="text-xs text-blue-700 mt-1">Lo que elijas aquí se aplicará directamente en <b>{impresoraSeleccionada?.printer_location || impresoraSeleccionada?.printer_name}</b> al terminar.</p>
+                    <h4 className="text-sm font-bold text-slate-900 tracking-tight">Estás enviando cambios a la impresora</h4>
+                    <p className="text-xs text-slate-600 mt-1">Lo que elijas aquí se aplicará directamente en <b>{impresoraSeleccionada?.printer_location || impresoraSeleccionada?.printer_name}</b> al terminar.</p>
                   </div>
                 </div>
 
                 {cargandoPermisos && (
                   <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-2xl">
-                    <Spinner size="lg" text="Leyendo permisos reales..." className="text-blue-600" />
+                    <Spinner size="lg" text="Leyendo permisos reales..." className="text-ricoh-red" />
                     <p className="text-[10px] text-slate-500 font-bold mt-1 italic">Conectando con Ricoh @ {impresoraSeleccionada?.printer_ip}</p>
                   </div>
                 )}
@@ -587,7 +587,7 @@ export const ModificarUsuario = ({
                 onClick={handleGuardarTerminal}
                 loading={guardando || cargandoDatos}
                 icon={<Save size={16} />}
-                className="bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/20"
+                className="bg-ricoh-red hover:bg-red-700 shadow-xl shadow-red-500/20"
               >
                 {tabActiva === 'permisos' ? 'Aplicar en Impresora' : 'Guardar Ajustes'}
               </Button>

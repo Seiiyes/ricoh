@@ -128,6 +128,8 @@ docs/
 | [fixes/FIX_ERRORES_AUTENTICACION_Y_VALIDACION.md](fixes/FIX_ERRORES_AUTENTICACION_Y_VALIDACION.md) | Errores autenticación | ✅ Resuelto |
 | [fixes/FIX_LOOP_INFINITO_APICLIENT.md](fixes/FIX_LOOP_INFINITO_APICLIENT.md) | Loop infinito apiClient | ✅ Resuelto |
 | [fixes/FIX_EXPORT_FILENAME_CORS.md](fixes/FIX_EXPORT_FILENAME_CORS.md) | Content-Disposition bloqueado por CORS | ✅ Resuelto |
+| [fixes/FIX_REFERENCIA_CN_DASHBOARD.md](fixes/FIX_REFERENCIA_CN_DASHBOARD.md) | ReferenceError: cn as not defined (Dashboard) | ✅ Resuelto |
+| [desarrollo/mejoras/MODERNIZACION_UI_UX_PREMIUM_2026.md](desarrollo/mejoras/MODERNIZACION_UI_UX_PREMIUM_2026.md) | Modernización UI/UX Premium Abril 2026 | ✅ Completado |
 
 ---
 
@@ -243,6 +245,6 @@ Ver carpeta: [desarrollo/verificacion/](desarrollo/verificacion/)
 
 ---
 
-**Última Actualización**: 31 de Marzo de 2026  
-**Versión**: 3.0.1  
-**Total Documentos**: 151+
+**Última Actualización**: 06 de Abril de 2026  
+**Versión**: 3.1.1  
+**Total Documentos**: 153+

@@ -159,153 +159,153 @@ const AdminUserModal = ({ adminUser, onClose, onSave }: AdminUserModalProps) => 
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-up flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
             {adminUser ? 'Editar Usuario Admin' : 'Nuevo Usuario Admin'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-ricoh-red hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:ring-offset-1"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium animate-fade-in">
               {errors.general}
             </div>
           )}
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             {!adminUser && (
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Username <span className="text-ricoh-red">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.username ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm ${
+                    errors.username ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                   }`}
                   placeholder="usuario_admin"
                 />
                 {errors.username && (
-                  <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                  <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.username}</p>
                 )}
-                <p className="text-gray-500 text-xs mt-1">Solo minúsculas, números, guiones y guiones bajos</p>
+                <p className="text-slate-400 text-xs mt-1.5">Solo minúsculas, números, guiones y guiones bajos</p>
               </div>
             )}
             
             {!adminUser && (
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contraseña <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Contraseña <span className="text-ricoh-red">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handlePasswordChange(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
-                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm pr-10 ${
+                      errors.password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none focus:text-ricoh-red"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
                 
                 {/* Requisitos de contraseña */}
                 {formData.password && (
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="mt-2.5 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all ${getPasswordStrengthColor()}`}
+                          className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
                           style={{ width: `${(passwordStrength / 5) * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-600 font-medium">{getPasswordStrengthText()}</span>
+                      <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">{getPasswordStrengthText()}</span>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className={`flex items-center gap-1 ${formData.password.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-medium">
+                      <div className={`flex items-center gap-1.5 ${formData.password.length >= 8 ? 'text-green-600' : 'text-slate-400'}`}>
                         <span>{formData.password.length >= 8 ? '✓' : '○'}</span>
                         <span>Mínimo 8 caracteres</span>
                       </div>
-                      <div className={`flex items-center gap-1 ${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <div className={`flex items-center gap-1.5 ${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-slate-400'}`}>
                         <span>{/[a-z]/.test(formData.password) ? '✓' : '○'}</span>
                         <span>Una minúscula (a-z)</span>
                       </div>
-                      <div className={`flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <div className={`flex items-center gap-1.5 ${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-slate-400'}`}>
                         <span>{/[A-Z]/.test(formData.password) ? '✓' : '○'}</span>
                         <span>Una mayúscula (A-Z)</span>
                       </div>
-                      <div className={`flex items-center gap-1 ${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <div className={`flex items-center gap-1.5 ${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-slate-400'}`}>
                         <span>{/[0-9]/.test(formData.password) ? '✓' : '○'}</span>
                         <span>Un número (0-9)</span>
                       </div>
-                      <div className={`flex items-center gap-1 ${/[^a-zA-Z0-9]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <div className={`flex items-center gap-1.5 ${/[^a-zA-Z0-9]/.test(formData.password) ? 'text-green-600' : 'text-slate-400'}`}>
                         <span>{/[^a-zA-Z0-9]/.test(formData.password) ? '✓' : '○'}</span>
-                        <span>Un carácter especial (!@#$%)</span>
+                        <span>Un carácter especial</span>
                       </div>
                     </div>
                   </div>
                 )}
                 
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                  <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.password}</p>
                 )}
               </div>
             )}
             
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre Completo <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Nombre Completo <span className="text-ricoh-red">*</span>
               </label>
               <input
                 type="text"
                 value={formData.nombre_completo}
                 onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.nombre_completo ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm ${
+                  errors.nombre_completo ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                 }`}
               />
               {errors.nombre_completo && (
-                <p className="text-red-500 text-sm mt-1">{errors.nombre_completo}</p>
+                <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.nombre_completo}</p>
               )}
             </div>
             
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Email <span className="text-ricoh-red">*</span>
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:bg-white transition-colors shadow-sm ${
+                  errors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                 }`}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.email}</p>
               )}
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rol <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Rol <span className="text-ricoh-red">*</span>
               </label>
               <select
                 value={formData.rol}
@@ -317,7 +317,7 @@ const AdminUserModal = ({ adminUser, onClose, onSave }: AdminUserModalProps) => 
                     empresa_id: newRol === 'superadmin' ? null : formData.empresa_id,
                   });
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent shadow-sm transition-colors"
               >
                 <option value="admin">Admin</option>
                 <option value="superadmin">Superadmin</option>
@@ -327,15 +327,15 @@ const AdminUserModal = ({ adminUser, onClose, onSave }: AdminUserModalProps) => 
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Empresa {formData.rol !== 'superadmin' && <span className="text-red-500">*</span>}
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Empresa {formData.rol !== 'superadmin' && <span className="text-ricoh-red">*</span>}
               </label>
               <select
                 value={formData.empresa_id || ''}
                 onChange={(e) => setFormData({ ...formData, empresa_id: e.target.value ? Number(e.target.value) : null })}
                 disabled={formData.rol === 'superadmin'}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  errors.empresa_id ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 border bg-slate-50/50 hover:bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red disabled:opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed shadow-sm transition-colors ${
+                  errors.empresa_id ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-transparent'
                 }`}
               >
                 <option value="">Seleccionar empresa</option>
@@ -346,28 +346,35 @@ const AdminUserModal = ({ adminUser, onClose, onSave }: AdminUserModalProps) => 
                 ))}
               </select>
               {errors.empresa_id && (
-                <p className="text-red-500 text-sm mt-1">{errors.empresa_id}</p>
+                <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.empresa_id}</p>
               )}
               {formData.rol === 'superadmin' && (
-                <p className="text-gray-500 text-xs mt-1">Superadmin no requiere empresa</p>
+                <p className="text-slate-400 text-xs mt-1.5">Superadmin no requiere empresa</p>
               )}
             </div>
           </div>
           
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-5 py-2.5 text-slate-600 font-medium bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative overflow-hidden px-6 py-2.5 bg-ricoh-red text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-[0_4px_14px_0_rgba(227,6,19,0.2)] hover:shadow-[0_6px_20px_rgba(227,6,19,0.3)] disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
             >
-              {loading ? 'Guardando...' : 'Guardar'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Guardando...
+                </span>
+              ) : (
+                'Guardar Usuario'
+              )}
             </button>
           </div>
         </form>

@@ -7,6 +7,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.2.0] - 2026-04-06
+
+### ✨ Modernización UI/UX Premium
+- **Glassmorphism**: Implementación de sistema de diseño basado en transparencias y desenfoque.
+- **Ricoh Red**: Integración del color corporativo en toda la plataforma.
+- **Core Components**: Refactorización de Button, Input, Modal, Table, Badge, Tabs.
+- **Módulos**: Modernización completa de Fleet, Discovery, Governance y Contadores.
+- **Tipografía**: Adopción global de la fuente Inter.
+- **Animaciones**: Micro-animaciones añadidas para mejorar el feedback del usuario.
+
+---
+
 ## [2.1.1] - 2026-03-31
 
 ### 🔧 Fixed

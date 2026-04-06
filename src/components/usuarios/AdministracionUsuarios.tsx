@@ -74,7 +74,7 @@ export const AdministracionUsuarios = () => {
       console.log('📊 Usuarios sincronizados:', response.users?.length || 0);
       
       if (response.success) {
-        notify.success('Sincronización completada', response.message);
+        notify.success('Usuarios actualizados', response.message);
         
         // Recargar usuarios de la base de datos
         await cargarUsuarios();
@@ -87,11 +87,11 @@ export const AdministracionUsuarios = () => {
           console.warn('⚠️ No se recibieron usuarios en la respuesta');
         }
       } else {
-        notify.error('Error en la sincronización', 'No se pudieron sincronizar los usuarios');
+        notify.error('Error al actualizar', 'No se pudieron actualizar los usuarios desde los equipos');
       }
     } catch (error: any) {
-      console.error('Error al sincronizar:', error);
-      notify.error('Error al sincronizar', parseApiError(error, 'No se pudieron obtener los usuarios de las impresoras'));
+      console.error('Error al actualizar:', error);
+      notify.error('Error al actualizar', parseApiError(error, 'No se pudieron obtener los usuarios de las impresoras'));
     } finally {
       setSincronizando(false);
     }
@@ -196,63 +196,67 @@ export const AdministracionUsuarios = () => {
   }, [busqueda, filtroEstado, mostrarOrigen]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC]">
+    <div className="flex flex-col h-full bg-slate-50 relative">
       {/* Encabezado */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="px-6 py-4">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] sticky top-0 z-20">
+        <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Users className="text-ricoh-red" size={24} />
-              <h1 className="text-xl font-bold text-industrial-gray uppercase tracking-tight">
-                Administración de Usuarios
+              <div className="p-2.5 bg-red-50 text-ricoh-red rounded-xl">
+                <Users size={22} />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+                Gestión de Usuarios
               </h1>
             </div>
 
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-3 items-center">
               {/* Selector de modo de sincronización */}
-              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+              <div className="flex items-center bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/50 shadow-inner">
                 <button
                   onClick={() => setModoSincronizacion('todos')}
-                  className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors ${
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${
                     modoSincronizacion === 'todos'
-                      ? 'bg-white text-slate-700 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                   }`}
                 >
                   Todos
                 </button>
                 <button
                   onClick={() => setModoSincronizacion('especifico')}
-                  className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded transition-colors ${
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${
                     modoSincronizacion === 'especifico'
-                      ? 'bg-white text-slate-700 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                   }`}
                 >
-                  Usuario Específico
+                  Por código
                 </button>
               </div>
 
               {/* Campo de código de usuario (solo visible en modo específico) */}
               {modoSincronizacion === 'especifico' && (
-                <input
-                  type="text"
-                  placeholder="Código de usuario (ej: 1234)"
-                  value={codigoUsuarioBuscar}
-                  onChange={(e) => setCodigoUsuarioBuscar(e.target.value)}
-                  className="px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div className="animate-fade-in relative transition-all duration-300">
+                  <input
+                    type="text"
+                    placeholder="Ej: 1234"
+                    value={codigoUsuarioBuscar}
+                    onChange={(e) => setCodigoUsuarioBuscar(e.target.value)}
+                    className="w-32 px-4 py-2 border border-slate-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red transition-all"
+                  />
+                </div>
               )}
 
               <Button
                 variant="primary"
-                size="sm"
-                icon={<RefreshCw size={14} className={sincronizando ? 'animate-spin' : ''} />}
+                size="md"
+                icon={<RefreshCw size={16} className={sincronizando ? 'animate-spin' : ''} />}
                 onClick={handleSincronizar}
                 disabled={sincronizando || (modoSincronizacion === 'especifico' && !codigoUsuarioBuscar.trim())}
-                className="rounded-full"
+                className="font-semibold shadow-md hover:shadow-lg transition-all"
               >
-                {sincronizando ? 'Sincronizando...' : modoSincronizacion === 'especifico' ? 'Buscar Usuario' : 'Sincronizar'}
+                {sincronizando ? 'Actualizando...' : modoSincronizacion === 'especifico' ? 'Buscar' : 'Actualizar desde Equipos'}
               </Button>
             </div>
           </div>
@@ -271,30 +275,30 @@ export const AdministracionUsuarios = () => {
             </div>
 
             {/* Filtro de estado */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 p-1.5 bg-slate-100/50 rounded-xl border border-slate-200/50">
               <button
                 onClick={() => setFiltroEstado('todos')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${filtroEstado === 'todos'
-                    ? 'bg-industrial-gray text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-sm ${filtroEstado === 'todos'
+                    ? 'bg-white text-slate-800 border border-slate-200'
+                    : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-700 border border-transparent'
                   }`}
               >
                 Todos
               </button>
               <button
                 onClick={() => setFiltroEstado('activos')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${filtroEstado === 'activos'
-                    ? 'bg-industrial-gray text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-sm ${filtroEstado === 'activos'
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-transparent text-slate-500 hover:bg-green-50/50 hover:text-green-700 border border-transparent'
                   }`}
               >
                 Activos
               </button>
               <button
                 onClick={() => setFiltroEstado('inactivos')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${filtroEstado === 'inactivos'
-                    ? 'bg-industrial-gray text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-sm ${filtroEstado === 'inactivos'
+                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-transparent text-slate-500 hover:bg-red-50/50 hover:text-red-700 border border-transparent'
                   }`}
               >
                 Inactivos
@@ -308,8 +312,8 @@ export const AdministracionUsuarios = () => {
               <span className="text-xs text-slate-600 font-semibold">Mostrar:</span>
               <button
                 onClick={() => setMostrarOrigen('todos')}
-                className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${mostrarOrigen === 'todos'
-                    ? 'bg-purple-600 text-white'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${mostrarOrigen === 'todos'
+                    ? 'bg-slate-800 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
               >
@@ -317,8 +321,8 @@ export const AdministracionUsuarios = () => {
               </button>
               <button
                 onClick={() => setMostrarOrigen('db')}
-                className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${mostrarOrigen === 'db'
-                    ? 'bg-purple-600 text-white'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${mostrarOrigen === 'db'
+                    ? 'bg-slate-800 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
               >
@@ -326,8 +330,8 @@ export const AdministracionUsuarios = () => {
               </button>
               <button
                 onClick={() => setMostrarOrigen('impresora')}
-                className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-lg transition-colors ${mostrarOrigen === 'impresora'
-                    ? 'bg-purple-600 text-white'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${mostrarOrigen === 'impresora'
+                    ? 'bg-slate-800 text-white shadow-md'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
               >
@@ -352,12 +356,12 @@ export const AdministracionUsuarios = () => {
               {busqueda
                 ? 'Intenta con otra búsqueda'
                 : usuariosImpresora.length === 0
-                  ? 'Sincroniza con las impresoras para ver usuarios'
+                  ? 'Actualiza la lista para ver usuarios de los equipos'
                   : 'No hay usuarios disponibles'}
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 animate-slide-up relative overflow-hidden">
             <TablaUsuarios
               usuarios={usuariosPaginados}
               onEditar={handleEditarUsuario}

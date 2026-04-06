@@ -83,9 +83,9 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-slate-50 border-b border-slate-200">
+    <div className="overflow-x-auto rounded-2xl">
+      <table className="w-full text-left border-collapse">
+        <thead className="bg-slate-50/80 border-b border-slate-100 backdrop-blur-sm sticky top-0">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
               <button
@@ -158,7 +158,7 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-200">
+        <tbody className="divide-y divide-slate-100/50">
           {usuariosOrdenados.map((usuario) => (
             <FilaUsuario
               key={usuario.id}

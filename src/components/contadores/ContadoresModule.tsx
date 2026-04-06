@@ -3,7 +3,8 @@ import { DashboardView } from './dashboard/DashboardView';
 import { PrinterDetailView } from './detail/PrinterDetailView';
 import { CierresView } from './cierres/CierresView';
 import { Tabs } from '@/components/ui';
-import { BarChart3, Calendar } from 'lucide-react';
+import { BarChart3, Calendar, Activity } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type CounterView = 'resumen' | 'printer-detail' | 'cierres';
 type Tab = 'resumen' | 'cierres';
@@ -30,48 +31,66 @@ export const ContadoresModule: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header con pestañas */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-2 mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">CONTADORES</h1>
+    <div className="h-full flex flex-col bg-slate-50 relative">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30 select-none">
+        <div className="absolute top-[10%] left-[5%] w-[600px] h-[600px] bg-red-100 rounded-full blur-[140px]"></div>
+        <div className="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] bg-slate-200 rounded-full blur-[120px]"></div>
+      </div>
+ 
+      {/* Header Premium */}
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl border-b border-slate-200 px-8 py-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-ricoh-red to-red-600 rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgb(206,17,38,0.25)] ring-4 ring-red-50">
+              <Activity className="text-white" size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Gestión de Lecturas</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Control de Consumo y Facturación</p>
+            </div>
           </div>
           
-          {/* Pestañas */}
           {currentView !== 'printer-detail' && (
-            <Tabs
-              tabs={[
-                { id: 'resumen', label: 'Resumen', icon: <BarChart3 size={16} /> },
-                { id: 'cierres', label: 'Cierres', icon: <Calendar size={16} /> }
-              ]}
-              activeTab={activeTab}
-              onChange={(tab) => handleTabChange(tab as Tab)}
-              variant="underline"
-            />
+            <div className="bg-slate-100/50 p-1 rounded-xl border border-slate-200/60">
+              <Tabs
+                tabs={[
+                  { id: 'resumen', label: 'Estado de Equipos', icon: <BarChart3 size={15} /> },
+                  { id: 'cierres', label: 'Historial de Cierres', icon: <Calendar size={15} /> }
+                ]}
+                activeTab={activeTab}
+                onChange={(tab) => handleTabChange(tab as Tab)}
+                variant="pills"
+              />
+            </div>
           )}
         </div>
       </div>
-
+ 
       {/* Contenido */}
-      <div className="flex-1 overflow-auto">
-        {currentView === 'resumen' && (
-          <DashboardView onNavigateToPrinter={handleNavigateToPrinter} />
-        )}
-        
-        {currentView === 'cierres' && (
-          <CierresView />
-        )}
-        
-        {currentView === 'printer-detail' && selectedPrinterId && (
-          <PrinterDetailView
-            printerId={selectedPrinterId}
-            onNavigateBack={handleNavigateBack}
-          />
-        )}
+      <div className="flex-1 overflow-auto relative z-10 custom-scrollbar">
+        <div className="max-w-[1600px] mx-auto p-8">
+          {currentView === 'resumen' && (
+            <div className="animate-fade-in">
+              <DashboardView onNavigateToPrinter={handleNavigateToPrinter} />
+            </div>
+          )}
+          
+          {currentView === 'cierres' && (
+            <div className="animate-fade-in">
+              <CierresView />
+            </div>
+          )}
+          
+          {currentView === 'printer-detail' && selectedPrinterId && (
+            <div className="animate-slide-up">
+              <PrinterDetailView
+                printerId={selectedPrinterId}
+                onNavigateBack={handleNavigateBack}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

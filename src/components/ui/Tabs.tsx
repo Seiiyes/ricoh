@@ -41,22 +41,22 @@ export const Tabs: React.FC<TabsProps> = ({
 
   const variantStyles = {
     default: {
-      container: 'bg-gray-100 rounded-lg p-1',
-      tab: 'rounded-lg transition-all',
-      active: 'bg-white text-ricoh-red shadow-sm',
-      inactive: 'text-gray-600 hover:text-gray-900',
+      container: 'bg-slate-100/80 rounded-xl p-1 backdrop-blur-sm',
+      tab: 'rounded-xl transition-all duration-300',
+      active: 'bg-white text-ricoh-red shadow-[0_2px_10px_rgba(0,0,0,0.08)]',
+      inactive: 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50',
     },
     pills: {
       container: 'gap-2',
-      tab: 'rounded-full transition-all',
-      active: 'bg-ricoh-red text-white',
-      inactive: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+      tab: 'rounded-full transition-all duration-300',
+      active: 'bg-ricoh-red text-white shadow-md',
+      inactive: 'bg-slate-100/80 text-slate-600 hover:bg-slate-200 hover:text-slate-900 backdrop-blur-sm',
     },
     underline: {
-      container: 'border-b border-gray-200',
-      tab: 'border-b-2 border-transparent transition-all',
+      container: 'border-b border-slate-200',
+      tab: 'border-b-2 border-transparent transition-all duration-300',
       active: 'text-ricoh-red border-ricoh-red',
-      inactive: 'text-gray-600 hover:text-gray-900 hover:border-gray-300',
+      inactive: 'text-slate-500 hover:text-slate-900 hover:border-slate-300',
     },
   };
 

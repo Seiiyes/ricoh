@@ -95,7 +95,7 @@ export const GestorEquipos = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-          <span className="text-blue-600">🏢</span> Gestión de Acceso
+          <span className="text-ricoh-red">🏢</span> Gestión de Acceso
         </h3>
         <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">
           {equiposSeleccionados.length} equipos activos
@@ -119,8 +119,8 @@ export const GestorEquipos = ({
                 </div>
               ) : (
                 asignados.map(equipo => (
-                  <div key={equipo.id} className="group relative bg-white border-2 border-blue-100 p-4 rounded-xl flex items-center gap-4 shadow-sm hover:border-blue-400 transition-all">
-                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+                  <div key={equipo.id} className="group relative bg-white border-2 border-slate-100 p-4 rounded-xl flex items-center gap-4 shadow-sm hover:border-ricoh-red/30 transition-all">
+                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-red-50 group-hover:text-ricoh-red transition-colors">
                       <Printer size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -170,9 +170,9 @@ export const GestorEquipos = ({
       )}
 
       {cambiosPendientes && (
-        <div className="bg-slate-900 rounded-2xl p-4 flex items-center justify-between shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="bg-slate-900 ring-1 ring-white/10 rounded-2xl p-4 flex items-center justify-between shadow-2xl animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+            <div className="w-2 h-2 rounded-full bg-ricoh-red animate-pulse"></div>
             <p className="text-xs font-bold text-white uppercase tracking-widest">Tienes cambios en los equipos</p>
           </div>
           <div className="flex gap-2">
@@ -188,7 +188,7 @@ export const GestorEquipos = ({
               onClick={handleGuardarCambios}
               loading={guardando}
               size="sm"
-              className="bg-blue-600 hover:bg-blue-500"
+              className="bg-ricoh-red hover:bg-red-700 shadow-lg shadow-red-500/20"
             >
               {guardando ? 'Procesando...' : 'Aplicar Cambios'}
             </Button>

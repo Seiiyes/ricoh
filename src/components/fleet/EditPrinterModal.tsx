@@ -108,18 +108,18 @@ export const EditPrinterModal = ({ isOpen, onClose, onSave, printer }: EditPrint
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-6 border-t border-slate-200 bg-slate-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
-        <Button variant="ghost" onClick={onClose}>
+      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl">
+        <Button variant="ghost" onClick={onClose} className="font-bold text-slate-500 hover:text-slate-700">
           Cancelar
         </Button>
         <Button
-          variant="primary"
-          icon={<Save size={16} />}
           onClick={handleSave}
           loading={isSaving}
           disabled={!hostname.trim()}
+          icon={<Save size={18} />}
+          className="bg-ricoh-red hover:bg-red-700 shadow-xl shadow-red-500/20 px-8"
         >
-          Guardar
+          Guardar Cambios
         </Button>
       </div>
     </Modal>

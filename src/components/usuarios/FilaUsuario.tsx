@@ -62,7 +62,7 @@ export const FilaUsuario = ({
 
   return (
     <>
-      <tr className="hover:bg-slate-50 transition-colors">
+      <tr className="hover:bg-slate-50/80 transition-all duration-300 group">
         {/* Origen */}
         <td className="px-4 py-3 text-center">
           {usuario.en_db === false ? (
@@ -170,7 +170,7 @@ export const FilaUsuario = ({
             size="sm"
             icon={<Edit2 size={14} />}
             onClick={onEditar}
-            className="text-ricoh-red hover:bg-red-50"
+            className="text-ricoh-red hover:bg-red-50/80 opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
           >
             Editar
           </Button>
@@ -179,18 +179,19 @@ export const FilaUsuario = ({
 
       {/* Fila expandida - Mostrar impresoras si existen */}
       {expandido && usuario.impresoras && usuario.impresoras.length > 0 && (
-        <tr className="bg-blue-50">
-          <td colSpan={9} className="px-4 py-4">
+        <tr className="bg-red-50/30 animate-fade-in shadow-inner">
+          <td colSpan={9} className="px-4 py-6 border-l-4 border-ricoh-red bg-gradient-to-r from-red-50/50 to-transparent">
             <div className="ml-8">
-              <h4 className="text-xs font-bold text-slate-600 uppercase mb-3">
-                🖨️ Impresoras donde está registrado este usuario
+              <h4 className="text-xs font-bold text-slate-800 uppercase mb-4 tracking-wider flex items-center gap-2">
+                <span className="p-1.5 bg-white rounded shadow-sm">🖨️</span>
+                Impresoras donde está registrado este usuario
               </h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {usuario.impresoras.map((impresora, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-3 bg-white border border-blue-200 rounded-lg p-3"
+                    className="flex items-start gap-4 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <span className="text-2xl">🖨️</span>
                     <div className="flex-1 min-w-0">
@@ -210,10 +211,13 @@ export const FilaUsuario = ({
                 ))}
               </div>
               
-              <div className="mt-3 p-3 bg-blue-100 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800">
-                  💡 Este usuario está registrado en <span className="font-bold">{usuario.impresoras.length}</span> impresora(s).
-                  {!usuario.en_db && ' Al editar, se guardará en la base de datos.'}
+              <div className="mt-4 p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <p className="text-sm text-slate-600 flex items-center gap-2">
+                  <span className="text-ricoh-red">💡</span>
+                  <span>
+                    Este usuario está registrado en <span className="font-bold text-slate-800">{usuario.impresoras.length}</span> impresora(s).
+                    {!usuario.en_db && ' Al editar, se guardará en la base de datos.'}
+                  </span>
                 </p>
               </div>
             </div>
@@ -223,21 +227,21 @@ export const FilaUsuario = ({
       
       {/* Fila expandida - Equipos asignados (solo para usuarios de DB sin impresoras) */}
       {expandido && usuario.origen !== 'impresora' && (!usuario.impresoras || usuario.impresoras.length === 0) && (
-        <tr className="bg-slate-50">
-          <td colSpan={9} className="px-4 py-4">
+        <tr className="bg-slate-50/50 animate-fade-in shadow-inner">
+          <td colSpan={9} className="px-4 py-6 border-l-4 border-slate-300 bg-gradient-to-r from-slate-100/50 to-transparent">
             <div className="ml-8">
-              <h4 className="text-xs font-bold text-slate-600 uppercase mb-2">
+              <h4 className="text-xs font-bold text-slate-700 uppercase mb-4 tracking-wider">
                 Equipos Asignados
               </h4>
               
               {cargandoEquipos ? (
-                <Spinner size="sm" text="Cargando equipos..." />
+                <Spinner size="sm" text="Cargando equipos..." className="text-ricoh-red" />
               ) : equipos.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {equipos.map((equipo) => (
                     <div
                       key={equipo.id}
-                      className="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2"
+                      className="flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div
                         className={`w-2 h-2 rounded-full ${

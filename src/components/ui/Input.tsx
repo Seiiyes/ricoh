@@ -15,25 +15,25 @@ export const Input: React.FC<InputProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'w-full py-2 px-3 text-sm transition-colors focus:outline-none';
+  const baseStyles = 'w-full py-2.5 px-4 text-sm transition-all duration-300 focus:outline-none bg-slate-50/50 hover:bg-white shadow-sm';
   
   const variantStyles = {
-    default: `border rounded-lg ${
+    default: `border rounded-xl ${
       error 
-        ? 'border-red-500 focus:ring-2 focus:ring-red-500' 
-        : 'border-gray-300 focus:ring-2 focus:ring-ricoh-red focus:border-ricoh-red'
+        ? 'border-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50/30' 
+        : 'border-slate-200 focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white'
     }`,
-    underline: `border-0 border-b-2 rounded-none px-0 ${
+    underline: `border-0 border-b-2 rounded-none px-0 bg-transparent shadow-none hover:bg-transparent ${
       error 
-        ? 'border-red-500 focus:border-red-600' 
-        : 'border-gray-200 focus:border-ricoh-red'
+        ? 'border-red-400 focus:border-red-500' 
+        : 'border-slate-200 focus:border-ricoh-red'
     }`,
   };
   
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {label && (
-        <label className="block text-xs font-bold text-gray-600 uppercase">
+        <label className="block text-sm font-semibold text-slate-700">
           {label}
         </label>
       )}

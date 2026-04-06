@@ -92,9 +92,9 @@ export const EmpresaAutocomplete = ({
     <div className="relative" ref={dropdownRef}>
       {/* Label */}
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-500 ml-1 opacity-80">*</span>}
         </label>
       )}
 
@@ -113,10 +113,10 @@ export const EmpresaAutocomplete = ({
           placeholder={placeholder}
           disabled={disabled}
           className={`
-            w-full pl-10 pr-20 py-2 border rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-blue-500
-            disabled:bg-gray-100 disabled:cursor-not-allowed
-            ${error ? 'border-red-500' : 'border-gray-300'}
+            w-full pl-10 pr-20 py-2.5 border rounded-xl shadow-sm transition-all duration-300
+            focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent bg-slate-50/50 hover:bg-white
+            disabled:bg-slate-100 disabled:cursor-not-allowed
+            ${error ? 'border-red-400 focus:ring-red-500 hover:border-red-500' : 'border-slate-200 hover:border-slate-300'}
           `}
         />
 
@@ -151,17 +151,17 @@ export const EmpresaAutocomplete = ({
 
       {/* Dropdown */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
+        <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-slate-100 rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
           {/* Search Input */}
-          <div className="p-2 border-b border-gray-200 bg-gray-50">
+          <div className="p-2 border-b border-slate-100 bg-slate-50/80">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar empresa..."
-                className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ricoh-red bg-white shadow-sm"
               />
             </div>
           </div>
@@ -184,24 +184,24 @@ export const EmpresaAutocomplete = ({
                     type="button"
                     onClick={() => handleSelect(empresa)}
                     className={`
-                      w-full px-4 py-2.5 text-left hover:bg-blue-50 transition-colors
-                      border-b border-gray-100 last:border-b-0
-                      ${value === empresa.razon_social ? 'bg-blue-50' : ''}
+                      w-full px-4 py-3 text-left hover:bg-red-50 transition-colors
+                      border-b border-slate-50 last:border-b-0
+                      ${value === empresa.razon_social ? 'bg-red-50/60' : ''}
                     `}
                   >
-                    <div className="flex items-start gap-2">
-                      <Building2 size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-3">
+                      <Building2 size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
+                        <p className="font-semibold text-slate-800 truncate">
                           {empresa.razon_social}
                         </p>
                         {empresa.nombre_comercial !== empresa.razon_social && (
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-xs text-slate-500 truncate mt-0.5">
                             {empresa.nombre_comercial}
                           </p>
                         )}
                         {empresa.nit && (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs font-medium text-slate-400 mt-0.5">
                             NIT: {empresa.nit}
                           </p>
                         )}
@@ -211,7 +211,7 @@ export const EmpresaAutocomplete = ({
                 ))}
                 
                 {empresas.length === 50 && (
-                  <div className="p-2 text-xs text-center text-gray-500 bg-gray-50 border-t border-gray-200">
+                  <div className="p-3 text-xs text-center font-medium text-slate-500 bg-slate-50 border-t border-slate-100">
                     Mostrando primeras 50 empresas. Use la búsqueda para filtrar.
                   </div>
                 )}
