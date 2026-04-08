@@ -61,8 +61,9 @@ class ContadorUsuarioResponse(BaseModel):
     """Response schema for user counter"""
     id: int
     printer_id: int
-    codigo_usuario: str
-    nombre_usuario: str
+    user_id: int  # ← Campo real en DB
+    codigo_usuario: str  # ← Campo computado desde users
+    nombre_usuario: str  # ← Campo computado desde users
     
     # Totales
     total_paginas: int
@@ -111,6 +112,16 @@ class ContadorUsuarioResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
+    @classmethod
+    def from_orm_with_user(cls, contador, user):
+        """Crea una instancia desde ORM con datos de usuario"""
+        data = {
+            **{k: getattr(contador, k) for k in contador.__dict__ if not k.startswith('_')},
+            'codigo_usuario': user.codigo_de_usuario if user else str(contador.user_id),
+            'nombre_usuario': user.name if user else f"Usuario {contador.user_id}"
+        }
+        return cls(**data)
 
 
 class CierreMensualResponse(BaseModel):
@@ -155,6 +166,28 @@ class CierreMensualResponse(BaseModel):
 class CierreRequest(BaseModel):
     """Request schema for creating any type of close"""
     printer_id: int = Field(..., gt=0, description="ID de la impresora")
+    tipo_periodo: str = Field(..., description="Tipo de período: diario, semanal, mensual, personalizado")
+    fecha_inicio: date = Field(..., description="Fecha de inicio del período")
+    fecha_fin: date = Field(..., description="Fecha de fin del período")
+    cerrado_por: Optional[str] = Field(None, max_length=100, description="Usuario que realiza el cierre")
+    notas: Optional[str] = Field(None, max_length=1000, description="Notas adicionales")
+    
+    @validator('tipo_periodo')
+    def validate_tipo_periodo(cls, v):
+        tipos_validos = ['diario', 'semanal', 'mensual', 'personalizado']
+        if v not in tipos_validos:
+            raise ValueError(f'tipo_periodo debe ser uno de: {", ".join(tipos_validos)}')
+        return v
+    
+    @validator('fecha_fin')
+    def validate_fechas(cls, v, values):
+        if 'fecha_inicio' in values and v < values['fecha_inicio']:
+            raise ValueError('fecha_fin debe ser mayor o igual a fecha_inicio')
+        return v
+
+
+class CierreMasivoRequest(BaseModel):
+    """Request schema for creating closes in all printers"""
     tipo_periodo: str = Field(..., description="Tipo de período: diario, semanal, mensual, personalizado")
     fecha_inicio: date = Field(..., description="Fecha de inicio del período")
     fecha_fin: date = Field(..., description="Fecha de fin del período")
@@ -226,8 +259,9 @@ class CierreMensualUsuarioResponse(BaseModel):
     """Response schema for monthly close user snapshot"""
     id: int
     cierre_mensual_id: int
-    codigo_usuario: str
-    nombre_usuario: str
+    user_id: int  # ← Campo real en DB
+    codigo_usuario: str  # ← Campo computado desde users
+    nombre_usuario: str  # ← Campo computado desde users
     
     # Contadores al cierre
     total_paginas: int
@@ -254,6 +288,16 @@ class CierreMensualUsuarioResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
+    @classmethod
+    def from_orm_with_user(cls, cierre_usuario, user):
+        """Crea una instancia desde ORM con datos de usuario"""
+        data = {
+            **{k: getattr(cierre_usuario, k) for k in cierre_usuario.__dict__ if not k.startswith('_')},
+            'codigo_usuario': user.codigo_de_usuario if user else str(cierre_usuario.user_id),
+            'nombre_usuario': user.name if user else f"Usuario {cierre_usuario.user_id}"
+        }
+        return cls(**data)
 
 
 class CierreMensualDetalleResponse(BaseModel):
@@ -380,6 +424,27 @@ class ComparacionCierresResponse(BaseModel):
     # Estadísticas
     total_usuarios_activos: int
     promedio_consumo_por_usuario: float
+
+
+class CierreResult(BaseModel):
+    """Resultado de un cierre individual en operación masiva"""
+    printer_id: int
+    printer_name: str
+    success: bool
+    cierre_id: Optional[int] = None
+    total_paginas: int = 0
+    usuarios_count: int = 0
+    error: Optional[str] = None
+
+
+class CloseAllPrintersResponse(BaseModel):
+    """Response schema for close all printers operation"""
+    success: bool
+    message: str
+    successful: int
+    failed: int
+    total: int
+    results: List[CierreResult]
 
 
 

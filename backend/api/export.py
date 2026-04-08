@@ -12,7 +12,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 from db.database import get_db
-from db.models import CierreMensual, CierreMensualUsuario, Printer
+from db.models import CierreMensual, CierreMensualUsuario, Printer, User
 from middleware.auth_middleware import get_current_user
 from services.company_filter_service import CompanyFilterService
 
@@ -63,13 +63,18 @@ async def export_cierre(
     for usuario in usuarios:
         # Solo incluir usuarios con consumo
         if usuario.consumo_total > 0:
+            # Obtener datos del usuario desde la tabla users
+            user = db.query(User).filter(User.id == usuario.user_id).first()
+            codigo = user.codigo_de_usuario if user else str(usuario.user_id)
+            nombre = user.name if user else f"Usuario {usuario.user_id}"
+            
             bn = usuario.impresora_bn + usuario.copiadora_bn + usuario.escaner_bn
             color = usuario.impresora_color + usuario.copiadora_color + usuario.escaner_color
             total = usuario.consumo_total
             
             writer.writerow([
-                f'[{usuario.codigo_usuario}]',
-                f'[{usuario.nombre_usuario}]',
+                f'[{codigo}]',
+                f'[{nombre}]',
                 bn,
                 color,
                 total,
@@ -129,12 +134,12 @@ async def export_comparacion(
     if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
-    # Crear mapa de usuarios
-    usuarios_c1 = {u.codigo_usuario: u for u in cierre1.usuarios}
-    usuarios_c2 = {u.codigo_usuario: u for u in cierre2.usuarios}
+    # Crear mapa de usuarios por user_id
+    usuarios_c1 = {u.user_id: u for u in cierre1.usuarios}
+    usuarios_c2 = {u.user_id: u for u in cierre2.usuarios}
     
-    # Todos los códigos únicos
-    codigos = set(usuarios_c1.keys()).union(set(usuarios_c2.keys()))
+    # Todos los user_ids únicos
+    user_ids = set(usuarios_c1.keys()).union(set(usuarios_c2.keys()))
     
     # Crear CSV en memoria
     output = io.StringIO()
@@ -149,11 +154,14 @@ async def export_comparacion(
     suma_color = 0
     suma_total = 0
     
-    for codigo in codigos:
-        u1 = usuarios_c1.get(codigo)
-        u2 = usuarios_c2.get(codigo)
+    for user_id in user_ids:
+        u1 = usuarios_c1.get(user_id)
+        u2 = usuarios_c2.get(user_id)
         
-        nombre = u2.nombre_usuario if u2 else (u1.nombre_usuario if u1 else codigo)
+        # Obtener datos del usuario desde la tabla users
+        user = db.query(User).filter(User.id == user_id).first()
+        codigo = user.codigo_de_usuario if user else str(user_id)
+        nombre = user.name if user else f"Usuario {user_id}"
         
         # Calcular diferencia (puede ser negativa si hay correcciones)
         total_c1 = u1.total_paginas if u1 else 0
@@ -272,12 +280,17 @@ async def export_cierre_excel(
     for usuario in usuarios:
         # Solo incluir usuarios con consumo
         if usuario.consumo_total > 0:
+            # Obtener datos del usuario desde la tabla users
+            user = db.query(User).filter(User.id == usuario.user_id).first()
+            codigo = user.codigo_de_usuario if user else str(usuario.user_id)
+            nombre = user.name if user else f"Usuario {usuario.user_id}"
+            
             bn = usuario.impresora_bn + usuario.copiadora_bn + usuario.escaner_bn
             color = usuario.impresora_color + usuario.copiadora_color + usuario.escaner_color
             total = usuario.consumo_total
             
-            ws.cell(row=row, column=1, value=f'[{usuario.codigo_usuario}]')
-            ws.cell(row=row, column=2, value=f'[{usuario.nombre_usuario}]')
+            ws.cell(row=row, column=1, value=f'[{codigo}]')
+            ws.cell(row=row, column=2, value=f'[{nombre}]')
             ws.cell(row=row, column=3, value=bn)
             ws.cell(row=row, column=4, value=color)
             ws.cell(row=row, column=5, value=total)
@@ -350,12 +363,12 @@ async def export_comparacion_excel(
     if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
-    # Crear mapa de usuarios
-    usuarios_c1 = {u.codigo_usuario: u for u in cierre1.usuarios}
-    usuarios_c2 = {u.codigo_usuario: u for u in cierre2.usuarios}
+    # Crear mapa de usuarios por user_id
+    usuarios_c1 = {u.user_id: u for u in cierre1.usuarios}
+    usuarios_c2 = {u.user_id: u for u in cierre2.usuarios}
     
-    # Todos los códigos únicos
-    codigos = set(usuarios_c1.keys()).union(set(usuarios_c2.keys()))
+    # Todos los user_ids únicos
+    user_ids = set(usuarios_c1.keys()).union(set(usuarios_c2.keys()))
     
     # Crear workbook
     wb = Workbook()
@@ -381,11 +394,14 @@ async def export_comparacion_excel(
     suma_color = 0
     suma_total = 0
     
-    for codigo in codigos:
-        u1 = usuarios_c1.get(codigo)
-        u2 = usuarios_c2.get(codigo)
+    for user_id in user_ids:
+        u1 = usuarios_c1.get(user_id)
+        u2 = usuarios_c2.get(user_id)
         
-        nombre = u2.nombre_usuario if u2 else (u1.nombre_usuario if u1 else codigo)
+        # Obtener datos del usuario desde la tabla users
+        user = db.query(User).filter(User.id == user_id).first()
+        codigo = user.codigo_de_usuario if user else str(user_id)
+        nombre = user.name if user else f"Usuario {user_id}"
         
         # Valores del período 1
         total_c1 = u1.total_paginas if u1 else 0

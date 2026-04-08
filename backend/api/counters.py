@@ -9,7 +9,8 @@ from .counter_schemas import (
     ContadorImpresoraResponse, ContadorUsuarioResponse, 
     CierreMensualResponse, CierreMensualDetalleResponse,
     CierreMensualUsuarioResponse, CierreRequest, CierreMensualRequest,
-    ReadCounterResponse, ComparacionCierresResponse
+    CierreMasivoRequest, ReadCounterResponse, ComparacionCierresResponse, 
+    CloseAllPrintersResponse
 )
 from services.counter_service import CounterService
 from services.close_service import CloseService
@@ -40,6 +41,9 @@ async def get_latest_counter(printer_id: int, db: Session = Depends(get_db), cur
 @router.get("/users/{printer_id}", response_model=List[ContadorUsuarioResponse], status_code=status.HTTP_200_OK)
 async def get_user_counters_latest(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener los últimos contadores por usuario de una impresora"""
+    from db.models import User
+    from sqlalchemy.orm import joinedload
+    
     # Validar acceso a la impresora
     printer = db.query(Printer).filter(Printer.id == printer_id).first()
     if not printer:
@@ -48,7 +52,21 @@ async def get_user_counters_latest(printer_id: int, db: Session = Depends(get_db
     if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
-    return CounterService.get_user_counters_latest(db, printer_id)
+    # Obtener contadores con JOIN de users
+    contadores = CounterService.get_user_counters_latest(db, printer_id)
+    
+    # Serializar con datos de usuario
+    result = []
+    for contador in contadores:
+        user = db.query(User).filter(User.id == contador.user_id).first()
+        contador_dict = {
+            **{k: getattr(contador, k) for k in contador.__dict__ if not k.startswith('_')},
+            'codigo_usuario': user.codigo_de_usuario if user else str(contador.user_id),
+            'nombre_usuario': user.name if user else f"Usuario {contador.user_id}"
+        }
+        result.append(ContadorUsuarioResponse(**contador_dict))
+    
+    return result
 
 
 @router.get("/latest/{printer_id}", status_code=status.HTTP_200_OK)
@@ -72,7 +90,19 @@ async def get_latest_counters_with_printer(printer_id: int, db: Session = Depend
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
     
     # Get latest user counters
-    counters = CounterService.get_user_counters_latest(db, printer_id)
+    from db.models import User
+    contadores = CounterService.get_user_counters_latest(db, printer_id)
+    
+    # Serializar contadores con datos de usuario
+    counters_serialized = []
+    for contador in contadores:
+        user = db.query(User).filter(User.id == contador.user_id).first()
+        contador_dict = {
+            **{k: getattr(contador, k) for k in contador.__dict__ if not k.startswith('_')},
+            'codigo_usuario': user.codigo_de_usuario if user else str(contador.user_id),
+            'nombre_usuario': user.name if user else f"Usuario {contador.user_id}"
+        }
+        counters_serialized.append(contador_dict)
     
     # Prepare printer response with capabilities
     printer_dict = {
@@ -107,8 +137,8 @@ async def get_latest_counters_with_printer(printer_id: int, db: Session = Depend
     
     return {
         "printer": printer_dict,
-        "counters": counters,
-        "total_users": len(counters)
+        "counters": counters_serialized,
+        "total_users": len(counters_serialized)
     }
 
 
@@ -290,6 +320,115 @@ async def create_monthly_close(request: CierreMensualRequest, db: Session = Depe
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+@router.post("/close-all", response_model=CloseAllPrintersResponse, status_code=status.HTTP_200_OK)
+async def create_close_all_printers(request: CierreMasivoRequest, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    """
+    Crea cierres para TODAS las impresoras activas simultáneamente
+    
+    IMPORTANTE: Este endpoint lee automáticamente los contadores de todas las impresoras
+    antes de crear los cierres, garantizando que los snapshots sean actuales.
+    
+    - **tipo_periodo**: Tipo de período (diario, semanal, mensual, personalizado)
+    - **fecha_inicio**: Fecha de inicio del período
+    - **fecha_fin**: Fecha de fin del período
+    - **cerrado_por**: Usuario que realiza el cierre (para auditoría)
+    - **notas**: Notas adicionales (opcional)
+    
+    Retorna un resumen de cierres exitosos y fallidos.
+    Solo crea cierres en impresoras a las que el usuario tiene acceso.
+    """
+    try:
+        print(f"\n{'='*80}")
+        print(f"🔒 INICIANDO CIERRE MASIVO EN TODAS LAS IMPRESORAS")
+        print(f"{'='*80}\n")
+        
+        # Obtener todas las impresoras activas con acceso del usuario
+        query = db.query(Printer).filter(Printer.status != 'offline')
+        
+        # Aplicar filtro de empresa
+        query = CompanyFilterService.apply_filter(query, current_user)
+        
+        printers = query.all()
+        print(f"📊 Total de impresoras a cerrar: {len(printers)}")
+        
+        if not printers:
+            return {
+                "success": True,
+                "message": "No hay impresoras disponibles para cerrar",
+                "successful": 0,
+                "failed": 0,
+                "total": 0,
+                "results": []
+            }
+        
+        # PASO 1: Leer contadores de todas las impresoras primero
+        print(f"\n📖 PASO 1: Leyendo contadores de todas las impresoras...")
+        lecturas_exitosas = 0
+        lecturas_fallidas = 0
+        
+        for printer in printers:
+            try:
+                print(f"📖 Leyendo impresora {printer.id}: {printer.hostname}")
+                
+                # Leer contador total
+                contador_total = CounterService.read_printer_counters(db, printer.id)
+                
+                # Leer contadores de usuarios si aplica
+                if printer.tiene_contador_usuario or printer.usar_contador_ecologico:
+                    contadores_usuarios = CounterService.read_user_counters(db, printer.id)
+                    print(f"✅ Leídos: total + {len(contadores_usuarios)} usuarios")
+                else:
+                    print(f"✅ Leído: total (sin usuarios)")
+                
+                lecturas_exitosas += 1
+                
+            except Exception as e:
+                print(f"❌ Error leyendo {printer.hostname}: {str(e)}")
+                lecturas_fallidas += 1
+        
+        print(f"\n📊 Lecturas completadas: {lecturas_exitosas} exitosas, {lecturas_fallidas} fallidas")
+        
+        # Hacer commit de todas las lecturas
+        print(f"💾 Guardando lecturas en base de datos...")
+        db.commit()
+        print(f"✅ Lecturas guardadas")
+        
+        # PASO 2: Crear cierres en todas las impresoras
+        print(f"\n🔒 PASO 2: Creando cierres...")
+        
+        # Obtener empresa_id del usuario si aplica
+        empresa_id = None
+        if hasattr(current_user, 'empresa_id') and current_user.empresa_id:
+            empresa_id = current_user.empresa_id
+        
+        resultado = CloseService.create_close_all_printers(
+            db=db,
+            fecha_inicio=request.fecha_inicio,
+            fecha_fin=request.fecha_fin,
+            tipo_periodo=request.tipo_periodo,
+            cerrado_por=request.cerrado_por,
+            notas=request.notas,
+            empresa_id=empresa_id
+        )
+        
+        print(f"\n{'='*80}")
+        print(f"📊 RESUMEN FINAL:")
+        print(f"   Total: {resultado['total']}")
+        print(f"   Exitosos: {resultado['successful']}")
+        print(f"   Fallidos: {resultado['failed']}")
+        print(f"{'='*80}\n")
+        
+        return resultado
+        
+    except Exception as e:
+        print(f"❌ Error inesperado: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al crear cierres masivos: {str(e)}"
+        )
+
 @router.post("/close", response_model=CierreMensualResponse, status_code=status.HTTP_201_CREATED)
 async def create_close(request: CierreRequest, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
@@ -346,8 +485,12 @@ async def create_close(request: CierreRequest, db: Session = Depends(get_db), cu
             # Mostrar primeros 5 usuarios para debugging
             if usuarios_count > 0:
                 print(f"   Primeros usuarios:")
+                from db.models import User
                 for u in usuarios[:5]:
-                    print(f"     - {u.codigo_usuario}: {u.nombre_usuario} ({u.total_paginas} páginas)")
+                    user = db.query(User).filter(User.id == u.user_id).first()
+                    codigo = user.codigo_de_usuario if user else str(u.user_id)
+                    nombre = user.name if user else f"Usuario {u.user_id}"
+                    print(f"     - {codigo}: {nombre} ({u.total_paginas} páginas)")
         else:
             print(f"⚠️ Impresora NO tiene contador por usuario configurado")
         
@@ -483,6 +626,8 @@ async def get_close_by_id(cierre_id: int, db: Session = Depends(get_db), current
 @router.get("/monthly/{cierre_id}/users", response_model=List[CierreMensualUsuarioResponse], status_code=status.HTTP_200_OK)
 async def get_close_users(cierre_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtiene los usuarios de un cierre"""
+    from db.models import User
+    
     cierre = db.query(CierreMensual).filter(CierreMensual.id == cierre_id).first()
     if not cierre:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cierre no encontrado")
@@ -494,8 +639,19 @@ async def get_close_users(cierre_id: int, db: Session = Depends(get_db), current
     
     if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a este cierre")
-        
-    return cierre.usuarios
+    
+    # Serializar usuarios con datos de user
+    result = []
+    for usuario in cierre.usuarios:
+        user = db.query(User).filter(User.id == usuario.user_id).first()
+        usuario_dict = {
+            **{k: getattr(usuario, k) for k in usuario.__dict__ if not k.startswith('_')},
+            'codigo_usuario': user.codigo_de_usuario if user else str(usuario.user_id),
+            'nombre_usuario': user.name if user else f"Usuario {usuario.user_id}"
+        }
+        result.append(CierreMensualUsuarioResponse(**usuario_dict))
+    
+    return result
 
 @router.get("/monthly/{cierre_id}/detail", response_model=CierreMensualDetalleResponse, status_code=status.HTTP_200_OK)
 async def get_close_detail(
@@ -536,11 +692,22 @@ async def get_close_detail(
     
     # Apply search filter
     if search:
+        from db.models import User
         search_term = f"%{search}%"
-        usuarios_query = usuarios_query.filter(
-            (CierreMensualUsuario.nombre_usuario.ilike(search_term)) |
-            (CierreMensualUsuario.codigo_usuario.ilike(search_term))
-        )
+        # Buscar por user_id que coincida con usuarios que tengan el código o nombre
+        user_ids = db.query(User.id).filter(
+            (User.codigo_de_usuario.ilike(search_term)) |
+            (User.name.ilike(search_term))
+        ).all()
+        user_ids_list = [uid[0] for uid in user_ids]
+        
+        if user_ids_list:
+            usuarios_query = usuarios_query.filter(
+                CierreMensualUsuario.user_id.in_(user_ids_list)
+            )
+        else:
+            # Si no se encontraron usuarios, retornar query vacío
+            usuarios_query = usuarios_query.filter(CierreMensualUsuario.user_id == -1)
     
     # Get total count
     total_usuarios = usuarios_query.count()
@@ -550,6 +717,18 @@ async def get_close_detail(
     usuarios = usuarios_query.order_by(
         CierreMensualUsuario.total_paginas.desc()
     ).offset(offset).limit(page_size).all()
+    
+    # Serializar usuarios con datos de user
+    from db.models import User
+    usuarios_serialized = []
+    for usuario in usuarios:
+        user = db.query(User).filter(User.id == usuario.user_id).first()
+        usuario_dict = {
+            **{k: getattr(usuario, k) for k in usuario.__dict__ if not k.startswith('_')},
+            'codigo_usuario': user.codigo_de_usuario if user else str(usuario.user_id),
+            'nombre_usuario': user.name if user else f"Usuario {usuario.user_id}"
+        }
+        usuarios_serialized.append(CierreMensualUsuarioResponse(**usuario_dict))
     
     # Create response dict with all required fields
     response = CierreMensualDetalleResponse(
@@ -575,7 +754,7 @@ async def get_close_detail(
         hash_verificacion=cierre.hash_verificacion,
         created_at=cierre.created_at,
         printer=printer,
-        usuarios=usuarios,
+        usuarios=usuarios_serialized,
         total_usuarios=total_usuarios,
         page=page,
         page_size=page_size,
@@ -608,20 +787,26 @@ async def verificar_coherencia_comparativo(cierre1_id: int, cierre2_id: int, db:
     # Diferencia del contador general
     diff_total_contador = cierre2.total_paginas - cierre1.total_paginas
     
-    # Calcular suma de usuarios
-    usuarios1 = {u.codigo_usuario: u for u in cierre1.usuarios}
-    usuarios2 = {u.codigo_usuario: u for u in cierre2.usuarios}
+    # Calcular suma de usuarios usando user_id
+    from db.models import User
+    usuarios1 = {u.user_id: u for u in cierre1.usuarios}
+    usuarios2 = {u.user_id: u for u in cierre2.usuarios}
     
-    codigos = set(usuarios1.keys()).union(set(usuarios2.keys()))
+    user_ids = set(usuarios1.keys()).union(set(usuarios2.keys()))
     
     suma_bn = 0
     suma_color = 0
     suma_total = 0
     usuarios_con_consumo = []
     
-    for codigo in codigos:
-        u1 = usuarios1.get(codigo)
-        u2 = usuarios2.get(codigo)
+    for user_id in user_ids:
+        u1 = usuarios1.get(user_id)
+        u2 = usuarios2.get(user_id)
+        
+        # Obtener datos del usuario
+        user = db.query(User).filter(User.id == user_id).first()
+        codigo = user.codigo_de_usuario if user else str(user_id)
+        nombre = user.name if user else f"Usuario {user_id}"
         
         # Totales acumulados
         total1 = u1.total_paginas if u1 else 0
@@ -645,7 +830,7 @@ async def verificar_coherencia_comparativo(cierre1_id: int, cierre2_id: int, db:
             
             usuarios_con_consumo.append({
                 'codigo': codigo,
-                'nombre': u2.nombre_usuario if u2 else u1.nombre_usuario,
+                'nombre': nombre,
                 'diff_bn': diff_bn,
                 'diff_color': diff_color,
                 'diff_total': diff_total

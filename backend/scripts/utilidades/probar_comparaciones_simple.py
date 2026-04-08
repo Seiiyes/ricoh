@@ -71,9 +71,9 @@ def main():
             else:
                 print(f"    ✓ Diferencia positiva - crecimiento normal")
             
-            # Verificar usuarios
-            usuarios_base = {u.codigo_usuario: u for u in cierre_base.usuarios}
-            usuarios_comparado = {u.codigo_usuario: u for u in cierre_comparado.usuarios}
+            # Verificar usuarios (ahora usando user_id)
+            usuarios_base = {u.user_id: u for u in cierre_base.usuarios}
+            usuarios_comparado = {u.user_id: u for u in cierre_comparado.usuarios}
             
             usuarios_nuevos = set(usuarios_comparado.keys()) - set(usuarios_base.keys())
             usuarios_desaparecidos = set(usuarios_base.keys()) - set(usuarios_comparado.keys())
@@ -86,9 +86,14 @@ def main():
             
             if len(usuarios_nuevos) > 0:
                 print(f"\n    Primeros 5 usuarios nuevos:")
-                for codigo in list(usuarios_nuevos)[:5]:
-                    u = usuarios_comparado[codigo]
-                    print(f"      [{codigo}] {u.nombre_usuario} - {u.total_paginas:,} páginas")
+                for user_id in list(usuarios_nuevos)[:5]:
+                    u = usuarios_comparado[user_id]
+                    # Obtener datos del usuario desde la tabla users
+                    from db.models import User
+                    user = db.query(User).filter(User.id == user_id).first()
+                    codigo = user.codigo_de_usuario if user else str(user_id)
+                    nombre = user.name if user else f"Usuario {user_id}"
+                    print(f"      [{codigo}] {nombre} - {u.total_paginas:,} páginas")
             
             print(f"\n  ✓ Datos correctos para comparación")
         

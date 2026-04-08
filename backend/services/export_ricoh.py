@@ -76,11 +76,18 @@ def formatear_nombre(nombre: str) -> str:
     return f"[{nombre}]"
 
 
-def crear_fila_usuario(usuario: CierreMensualUsuario) -> list:
+def crear_fila_usuario(usuario: CierreMensualUsuario, db: Session = None) -> list:
     """Crea una fila de datos para un usuario (52 columnas)"""
+    # Obtener datos del usuario desde la tabla users
+    from db.models import User
+    user = db.query(User).filter(User.id == usuario.user_id).first() if db and usuario.user_id else None
+    
+    codigo = user.codigo_de_usuario if user else str(usuario.user_id)
+    nombre = user.name if user else f"Usuario {usuario.user_id}"
+    
     fila = [
-        formatear_codigo(usuario.codigo_usuario),
-        formatear_nombre(usuario.nombre_usuario),
+        formatear_codigo(codigo),
+        formatear_nombre(nombre),
         usuario.total_paginas,
         usuario.total_bn,
         usuario.total_color,
@@ -263,10 +270,10 @@ def exportar_comparacion_ricoh(
     ws1.append(COLUMNAS_PERIODO)
     aplicar_formato_encabezado(ws1)
     
-    # Usuarios ordenados
-    usuarios1 = sorted(cierre1.usuarios, key=lambda u: u.codigo_usuario)
+    # Usuarios ordenados por user_id
+    usuarios1 = sorted(cierre1.usuarios, key=lambda u: u.user_id)
     for usuario in usuarios1:
-        fila = crear_fila_usuario(usuario)
+        fila = crear_fila_usuario(usuario, db)
         ws1.append(fila)
     
     # Fila de totales
@@ -283,10 +290,10 @@ def exportar_comparacion_ricoh(
     ws2.append(COLUMNAS_PERIODO)
     aplicar_formato_encabezado(ws2)
     
-    # Usuarios ordenados
-    usuarios2 = sorted(cierre2.usuarios, key=lambda u: u.codigo_usuario)
+    # Usuarios ordenados por user_id
+    usuarios2 = sorted(cierre2.usuarios, key=lambda u: u.user_id)
     for usuario in usuarios2:
-        fila = crear_fila_usuario(usuario)
+        fila = crear_fila_usuario(usuario, db)
         ws2.append(fila)
     
     # Fila de totales
@@ -330,12 +337,12 @@ def exportar_comparacion_ricoh(
         cell.font = header_font
         cell.alignment = Alignment(horizontal='center', vertical='center')
     
-    # Crear diccionario de usuarios de ambos períodos
-    usuarios1_dict = {u.codigo_usuario: u for u in cierre1.usuarios}
-    usuarios2_dict = {u.codigo_usuario: u for u in cierre2.usuarios}
+    # Crear diccionario de usuarios de ambos períodos por user_id
+    usuarios1_dict = {u.user_id: u for u in cierre1.usuarios}
+    usuarios2_dict = {u.user_id: u for u in cierre2.usuarios}
     
-    # Obtener todos los códigos únicos y ordenarlos
-    todos_codigos = sorted(set(usuarios1_dict.keys()) | set(usuarios2_dict.keys()))
+    # Obtener todos los user_ids únicos y ordenarlos
+    todos_user_ids = sorted(set(usuarios1_dict.keys()) | set(usuarios2_dict.keys()))
     
     # Variables para sumar el consumo total de usuarios
     suma_consumo_bn = 0
@@ -343,9 +350,15 @@ def exportar_comparacion_ricoh(
     suma_consumo_total = 0
     
     # Agregar filas de usuarios con DIFERENCIAS (consumo)
-    for codigo in todos_codigos:
-        usuario1 = usuarios1_dict.get(codigo)
-        usuario2 = usuarios2_dict.get(codigo)
+    for user_id in todos_user_ids:
+        usuario1 = usuarios1_dict.get(user_id)
+        usuario2 = usuarios2_dict.get(user_id)
+        
+        # Obtener datos del usuario desde la tabla users
+        from db.models import User
+        user = db.query(User).filter(User.id == user_id).first()
+        codigo = user.codigo_de_usuario if user else str(user_id)
+        nombre = user.name if user else f"Usuario {user_id}"
         
         # Calcular diferencias (consumo del período)
         total1 = usuario1.total_paginas if usuario1 else 0
@@ -359,9 +372,6 @@ def exportar_comparacion_ricoh(
         color1 = usuario1.total_color if usuario1 else 0
         color2 = usuario2.total_color if usuario2 else 0
         consumo_color = color2 - color1
-        
-        # Usar el nombre del usuario que exista
-        nombre = usuario2.nombre_usuario if usuario2 else usuario1.nombre_usuario
         
         # Agregar fila según capacidades
         if has_color:

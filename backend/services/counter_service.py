@@ -111,6 +111,7 @@ class CounterService:
         Lee y guarda contadores por usuario de una impresora
         Detecta automáticamente si usar getUserCounter o getEcoCounter
         También detecta y actualiza las capacidades de la impresora
+        NUEVO: Sincroniza automáticamente usuarios detectados con tabla users
         
         Args:
             db: Sesión de base de datos
@@ -125,6 +126,9 @@ class CounterService:
             raise ValueError(f"Impresora con ID {printer_id} no encontrada")
         
         try:
+            # Importar servicio de sincronización
+            from services.user_sync_service import UserSyncService
+            
             contadores_creados = []
             users_data = []
             
@@ -145,10 +149,17 @@ class CounterService:
                     # Validar datos del usuario usando ValidationService
                     ValidationService.validate_user_counter_data(user, tipo_contador)
                     
-                    contador = ContadorUsuario(
-                        printer_id=printer_id,
+                    # ✓ NUEVO: Sincronizar usuario automáticamente
+                    user_id = UserSyncService.sync_user_from_counter(
                         codigo_usuario=str(user['codigo_usuario']),
                         nombre_usuario=user['nombre_usuario'],
+                        db=db,
+                        printer_id=printer_id
+                    )
+                    
+                    contador = ContadorUsuario(
+                        printer_id=printer_id,
+                        user_id=user_id,  # ← FK normalizada
                         
                         # Totales
                         total_paginas=user['total_paginas'],
@@ -208,10 +219,17 @@ class CounterService:
                     # Validar datos del usuario usando ValidationService
                     ValidationService.validate_user_counter_data(user, tipo_contador)
                     
-                    contador = ContadorUsuario(
-                        printer_id=printer_id,
+                    # ✓ NUEVO: Sincronizar usuario automáticamente
+                    user_id = UserSyncService.sync_user_from_counter(
                         codigo_usuario=str(user['codigo_usuario']),
                         nombre_usuario=user['nombre_usuario'],
+                        db=db,
+                        printer_id=printer_id
+                    )
+                    
+                    contador = ContadorUsuario(
+                        printer_id=printer_id,
+                        user_id=user_id,  # ← FK normalizada
                         
                         # Totales (solo tenemos total_paginas_actual)
                         total_paginas=user['total_paginas_actual'],
@@ -271,10 +289,11 @@ class CounterService:
         return CloseService.close_month_helper(db, printer_id, year, month, cerrado_por, notas)
     
     @staticmethod
-    def _calcular_consumo_usuario(db: Session, printer_id: int, codigo_usuario: str, 
+    def _calcular_consumo_usuario(db: Session, printer_id: int, user_id: int, 
                                   year: int, month: int, cierre_anterior: Optional[CierreMensual]) -> Optional[Dict]:
         """
         Calcula el consumo mensual de un usuario
+        OBSOLETO: Este método ya no se usa. Ver CloseService.create_close()
         
         Returns:
             Dict con datos del usuario y consumo, o None si no hay datos
@@ -292,12 +311,18 @@ class CounterService:
         
         lectura_actual = db.query(ContadorUsuario).filter(
             ContadorUsuario.printer_id == printer_id,
-            ContadorUsuario.codigo_usuario == codigo_usuario,
+            ContadorUsuario.user_id == user_id,
             ContadorUsuario.created_at <= fecha_fin_mes
         ).order_by(ContadorUsuario.created_at.desc()).first()
         
         if not lectura_actual:
             return None
+        
+        # Obtener datos del usuario desde la tabla users
+        from db.models import User
+        user = db.query(User).filter(User.id == user_id).first()
+        codigo = user.codigo_de_usuario if user else str(user_id)
+        nombre = user.name if user else f"Usuario {user_id}"
         
         # Última lectura del mes anterior
         lectura_anterior = None
@@ -318,7 +343,7 @@ class CounterService:
             
             lectura_anterior = db.query(ContadorUsuario).filter(
                 ContadorUsuario.printer_id == printer_id,
-                ContadorUsuario.codigo_usuario == codigo_usuario,
+                ContadorUsuario.user_id == user_id,
                 ContadorUsuario.created_at <= fecha_fin_mes_anterior
             ).order_by(ContadorUsuario.created_at.desc()).first()
         
@@ -341,8 +366,8 @@ class CounterService:
             consumo_fax = 0
         
         return {
-            'codigo_usuario': lectura_actual.codigo_usuario,
-            'nombre_usuario': lectura_actual.nombre_usuario,
+            'codigo_usuario': codigo,
+            'nombre_usuario': nombre,
             'contador_actual': lectura_actual.total_paginas,
             'total_bn': lectura_actual.total_bn,
             'total_color': lectura_actual.total_color,

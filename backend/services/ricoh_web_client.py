@@ -600,22 +600,35 @@ class RicohWebClient:
                         
                     for entry in data:
                         if len(entry) >= 5:
-                            # Detectar formato basado en si el primer elemento es string vacío
-                            # .253 format: ['',1,'00001','YESICA GARCIA',1,'AB','','','1717',...]
-                            # .252 format: [231,1,'00001','YESICA GARCIA','1717',...]
+                            # Detectar formato basado en cantidad de campos y primer elemento
+                            # Formato .253: ['',1,'00001','YESICA GARCIA',1,'AB','','','1717','','\\\\SERVER\\path'] (11 campos)
+                            # Formato .252 (9 campos): [231,1,'00001','YESICA GARCIA','1717',...,'\\\\SERVER\\path'] 
+                            # Formato .252 (8 campos): [167,1,'00001','JULIAN','0116',...,'\\\\SERVER\\path']
                             
-                            if entry[0] == '' and len(entry) >= 9:
-                                # Formato .253 (con campo vacío al inicio)
+                            if entry[0] == '' and len(entry) >= 11:
+                                # Formato .253 (impresora .253)
                                 idx = str(entry[2])      # entry_index
                                 name = str(entry[3])     # nombre
-                                code = str(entry[8])     # código real está más adelante
-                                folder = str(entry[11]) if len(entry) >= 12 else ""
+                                code = str(entry[8])     # código de usuario
+                                folder = str(entry[10]) if len(entry) >= 11 else ""  # carpeta SMB en posición 10
+                            elif len(entry) == 9:
+                                # Formato .252 con 9 campos (impresora .252)
+                                idx = str(entry[2])      # entry_index
+                                name = str(entry[3])     # nombre
+                                code = str(entry[4])     # código
+                                folder = str(entry[8]) if len(entry) >= 9 else ""  # carpeta SMB en posición 8
+                            elif len(entry) == 8:
+                                # Formato .252 con 8 campos (impresoras .250, .251, .250 en 110)
+                                idx = str(entry[2])      # entry_index
+                                name = str(entry[3])     # nombre
+                                code = str(entry[4])     # código
+                                folder = str(entry[7]) if len(entry) >= 8 else ""  # carpeta SMB en posición 7
                             else:
-                                # Formato .252 (formato estándar)
-                                idx = str(entry[2])
-                                name = str(entry[3])
-                                code = str(entry[4])
-                                folder = str(entry[7]) if len(entry) >= 8 else ""
+                                # Formato desconocido, usar valores por defecto
+                                idx = str(entry[2]) if len(entry) > 2 else ""
+                                name = str(entry[3]) if len(entry) > 3 else ""
+                                code = str(entry[4]) if len(entry) > 4 else ""
+                                folder = ""
                             
                             # Debug: mostrar primeros 3 usuarios del primer batch
                             if batch == 1 and len(all_users) < 3:

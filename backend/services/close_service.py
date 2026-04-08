@@ -226,22 +226,23 @@ class CloseService:
             
             usuarios_snapshot = []
             
-            usuarios_codigos = db.query(ContadorUsuario.codigo_usuario).filter(
-                ContadorUsuario.printer_id == printer_id
+            # Obtener usuarios únicos por user_id (normalizado)
+            usuarios_ids = db.query(ContadorUsuario.user_id).filter(
+                ContadorUsuario.printer_id == printer_id,
+                ContadorUsuario.user_id.isnot(None)  # Solo usuarios con user_id
             ).distinct().all()
             
-            print(f"\n📋 Procesando {len(usuarios_codigos)} usuarios únicos...")
+            print(f"\n📋 Procesando {len(usuarios_ids)} usuarios únicos...")
             
-            for (codigo,) in usuarios_codigos:
+            for (user_id,) in usuarios_ids:
                 consumo = CloseService._calcular_consumo_usuario(
-                    db, printer_id, codigo, fecha_inicio, fecha_fin, cierre_anterior
+                    db, printer_id, user_id, fecha_inicio, fecha_fin, cierre_anterior
                 )
                 
                 if consumo:
                     usuario_cierre = CierreMensualUsuario(
                         cierre_mensual_id=cierre.id,
-                        codigo_usuario=consumo['codigo_usuario'],
-                        nombre_usuario=consumo['nombre_usuario'],
+                        user_id=consumo['user_id'],  # ← NORMALIZADO
                         
                         total_paginas=consumo['contador_actual'],
                         total_bn=consumo['total_bn'],
@@ -324,13 +325,16 @@ class CloseService:
     def _calcular_consumo_usuario(
         db: Session,
         printer_id: int,
-        codigo_usuario: str,
+        user_id: int,  # ← CAMBIO: ahora recibe user_id en lugar de codigo_usuario
         fecha_inicio: date,
         fecha_fin: date,
         cierre_anterior: Optional[CierreMensual]
     ) -> Optional[Dict]:
         """
         Calcula el consumo de un usuario en un período
+        
+        Args:
+            user_id: ID del usuario (FK a tabla users) - NORMALIZADO
         
         Returns:
             Dict con información del consumo o None si no hay datos
@@ -340,30 +344,23 @@ class CloseService:
         # Obtener contador más reciente del usuario DENTRO DEL PERÍODO
         fecha_fin_datetime = datetime.combine(fecha_fin, datetime.max.time())
         
+        # ← CAMBIO: Buscar por user_id en lugar de codigo_usuario
         contador_actual = db.query(ContadorUsuario).filter(
             ContadorUsuario.printer_id == printer_id,
-            ContadorUsuario.codigo_usuario == codigo_usuario,
+            ContadorUsuario.user_id == user_id,
             ContadorUsuario.fecha_lectura <= fecha_fin_datetime
         ).order_by(ContadorUsuario.fecha_lectura.desc()).first()
         
         if not contador_actual:
             return None
         
-        # DEBUG: Imprimir valores del contador actual (solo primeros 5 usuarios)
-        if codigo_usuario in ['1717', '5130', '1923', '9930', '2902']:
-            print(f"   Usuario {codigo_usuario} ({contador_actual.nombre_usuario}):")
-            print(f"      fecha_lectura: {contador_actual.fecha_lectura}")
-            print(f"      total_paginas: {contador_actual.total_paginas}")
-            print(f"      total_bn: {contador_actual.total_bn}")
-            print(f"      copiadora_bn: {contador_actual.copiadora_bn}")
-            print(f"      impresora_bn: {contador_actual.impresora_bn}")
-        
         # Si hay cierre anterior, obtener contador del usuario en ese cierre
         contador_anterior = None
         if cierre_anterior:
+            # ← CAMBIO: Buscar por user_id en lugar de codigo_usuario
             contador_anterior = db.query(CierreMensualUsuario).filter(
                 CierreMensualUsuario.cierre_mensual_id == cierre_anterior.id,
-                CierreMensualUsuario.codigo_usuario == codigo_usuario
+                CierreMensualUsuario.user_id == user_id
             ).first()
         
         # Calcular consumo
@@ -379,9 +376,10 @@ class CloseService:
             consumo_fax = contador_actual.fax_bn - contador_anterior.fax_bn
         else:
             # Primer cierre: buscar contador al inicio del período
+            # ← CAMBIO: Buscar por user_id en lugar de codigo_usuario
             contador_inicio = db.query(ContadorUsuario).filter(
                 ContadorUsuario.printer_id == printer_id,
-                ContadorUsuario.codigo_usuario == codigo_usuario,
+                ContadorUsuario.user_id == user_id,
                 ContadorUsuario.fecha_lectura >= fecha_inicio,
                 ContadorUsuario.fecha_lectura <= fecha_fin
             ).order_by(ContadorUsuario.fecha_lectura.asc()).first()
@@ -405,8 +403,7 @@ class CloseService:
                 consumo_fax = 0
         
         return {
-            'codigo_usuario': codigo_usuario,
-            'nombre_usuario': contador_actual.nombre_usuario,
+            'user_id': user_id,  # ← Retornar user_id
             'contador_actual': contador_actual.total_paginas,
             'total_bn': contador_actual.total_bn,
             'total_color': contador_actual.total_color,
@@ -497,18 +494,22 @@ class CloseService:
         dias_entre_cierres = (cierre_reciente.fecha_cierre.date() - cierre_antiguo.fecha_cierre.date()).days
         
         # Comparación de usuarios
-        # 1. Armar mapa de usuarios de ambos cierres por codigo_usuario
-        usuarios_antiguos = {u.codigo_usuario: u for u in cierre_antiguo.usuarios}
-        usuarios_recientes = {u.codigo_usuario: u for u in cierre_reciente.usuarios}
+        # 1. Armar mapa de usuarios de ambos cierres por user_id (normalizado)
+        usuarios_antiguos = {u.user_id: u for u in cierre_antiguo.usuarios if u.user_id}
+        usuarios_recientes = {u.user_id: u for u in cierre_reciente.usuarios if u.user_id}
         
-        codigos_unicos = set(usuarios_antiguos.keys()).union(set(usuarios_recientes.keys()))
+        user_ids_unicos = set(usuarios_antiguos.keys()).union(set(usuarios_recientes.keys()))
         
         usuarios_comparacion = []
-        for codigo in codigos_unicos:
-            u_antiguo = usuarios_antiguos.get(codigo)
-            u_reciente = usuarios_recientes.get(codigo)
+        for user_id in user_ids_unicos:
+            u_antiguo = usuarios_antiguos.get(user_id)
+            u_reciente = usuarios_recientes.get(user_id)
             
-            nombre = u_reciente.nombre_usuario if u_reciente else u_antiguo.nombre_usuario
+            # Obtener información del usuario desde la tabla users
+            from db.models import User
+            user = db.query(User).filter(User.id == user_id).first()
+            codigo = user.codigo_de_usuario if user else str(user_id)
+            nombre = user.name if user else f"Usuario {user_id}"
             
             # Contadores acumulados
             total_c1 = u_antiguo.total_paginas if u_antiguo else 0
@@ -607,4 +608,98 @@ class CloseService:
             "top_usuarios_disminucion": top_disminucion,
             "total_usuarios_activos": activos,
             "promedio_consumo_por_usuario": round(promedio, 2)
+        }
+
+    @staticmethod
+    def create_close_all_printers(
+        db: Session,
+        fecha_inicio: date,
+        fecha_fin: date,
+        tipo_periodo: str = 'personalizado',
+        cerrado_por: Optional[str] = None,
+        notas: Optional[str] = None,
+        empresa_id: Optional[int] = None
+    ) -> Dict:
+        """
+        Crea cierres para todas las impresoras activas simultáneamente
+        
+        Args:
+            db: Sesión de base de datos
+            fecha_inicio: Fecha de inicio del período
+            fecha_fin: Fecha de fin del período
+            tipo_periodo: Tipo de período ('diario', 'semanal', 'mensual', 'personalizado')
+            cerrado_por: Usuario que realiza el cierre
+            notas: Notas adicionales
+            empresa_id: ID de empresa para filtrar impresoras (opcional)
+            
+        Returns:
+            Dict con estadísticas de cierres creados
+        """
+        # Obtener todas las impresoras activas
+        query = db.query(Printer).filter(Printer.status != 'offline')
+        
+        # Filtrar por empresa si se especifica
+        if empresa_id:
+            query = query.filter(Printer.empresa_id == empresa_id)
+        
+        printers = query.all()
+        
+        if not printers:
+            return {
+                "success": True,
+                "message": "No hay impresoras disponibles",
+                "successful": 0,
+                "failed": 0,
+                "total": 0,
+                "results": []
+            }
+        
+        results = []
+        successful = 0
+        failed = 0
+        
+        for printer in printers:
+            try:
+                # Crear cierre para esta impresora
+                cierre = CloseService.create_close(
+                    db=db,
+                    printer_id=printer.id,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
+                    tipo_periodo=tipo_periodo,
+                    cerrado_por=cerrado_por,
+                    notas=notas,
+                    validar_secuencia=False  # No validar secuencia en cierres masivos
+                )
+                
+                results.append({
+                    "printer_id": printer.id,
+                    "printer_name": printer.hostname,
+                    "success": True,
+                    "cierre_id": cierre.id,
+                    "total_paginas": cierre.total_paginas,
+                    "usuarios_count": len(cierre.usuarios),
+                    "error": None
+                })
+                successful += 1
+                
+            except Exception as e:
+                results.append({
+                    "printer_id": printer.id,
+                    "printer_name": printer.hostname,
+                    "success": False,
+                    "cierre_id": None,
+                    "total_paginas": 0,
+                    "usuarios_count": 0,
+                    "error": str(e)
+                })
+                failed += 1
+        
+        return {
+            "success": True,
+            "message": f"Cierres completados: {successful} exitosos, {failed} fallidos",
+            "successful": successful,
+            "failed": failed,
+            "total": len(printers),
+            "results": results
         }

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { CierreMensual } from './types';
 import { ListaCierres } from './ListaCierres';
 import { CierreModal } from './CierreModal';
+import { CierreMasivoModal } from './CierreMasivoModal';
 import { CierreDetalleModal } from './CierreDetalleModal';
 import { ComparacionPage } from './ComparacionPage';
 import { Button, Spinner, Alert } from '@/components/ui';
-import { RefreshCw, Plus, BarChart3, Filter, SlidersHorizontal, Calculator, Printer as PrinterIcon } from 'lucide-react';
+import { RefreshCw, Plus, BarChart3, Filter, SlidersHorizontal, Calculator, Printer as PrinterIcon, Layers } from 'lucide-react';
 import closeService from '@/services/closeService';
 import apiClient from '@/services/apiClient';
 import { parseApiError } from '@/utils/errorHandler';
@@ -25,6 +26,7 @@ export const CierresView: React.FC = () => {
 
   // Modals
   const [cierreModalOpen, setCierreModalOpen] = useState(false);
+  const [cierreMasivoModalOpen, setCierreMasivoModalOpen] = useState(false);
   const [detalleModalOpen, setDetalleModalOpen] = useState(false);
   const [selectedCierre, setSelectedCierre] = useState<CierreMensual | null>(null);
 
@@ -64,6 +66,7 @@ export const CierresView: React.FC = () => {
   };
 
   const handleCierreSuccess = () => { loadCierres(); setCierreModalOpen(false); };
+  const handleCierreMasivoSuccess = () => { loadCierres(); setCierreMasivoModalOpen(false); };
   const selectedPrinterData = printers.find(p => p.id === selectedPrinter);
 
   // Si estamos en modo comparación, mostrar la sub-vista completa
@@ -149,6 +152,16 @@ export const CierresView: React.FC = () => {
             )}
  
             <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setCierreMasivoModalOpen(true)}
+              icon={<Layers size={18} />}
+              className="rounded-2xl border-ricoh-red text-ricoh-red font-bold hover:bg-red-50 h-[52px] px-8"
+            >
+              Cierre Masivo
+            </Button>
+
+            <Button
               variant="primary"
               size="lg"
               onClick={() => setCierreModalOpen(true)}
@@ -202,6 +215,13 @@ export const CierresView: React.FC = () => {
           printerName={selectedPrinterData?.hostname}
           onClose={() => setCierreModalOpen(false)}
           onSuccess={handleCierreSuccess}
+        />
+      )}
+
+      {cierreMasivoModalOpen && (
+        <CierreMasivoModal
+          onClose={() => setCierreMasivoModalOpen(false)}
+          onSuccess={handleCierreMasivoSuccess}
         />
       )}
  

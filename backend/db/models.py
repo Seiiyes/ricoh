@@ -322,9 +322,8 @@ class ContadorUsuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     printer_id = Column(Integer, ForeignKey("printers.id", ondelete="CASCADE"), nullable=False, index=True)
     
-    # Usuario
-    codigo_usuario = Column(String(8), nullable=False, index=True)
-    nombre_usuario = Column(String(100), nullable=False)
+    # Usuario (normalizado) - ÚNICO CAMPO DE REFERENCIA
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=False, index=True)
     
     # Total impresiones
     total_paginas = Column(Integer, default=0, nullable=False)
@@ -373,9 +372,10 @@ class ContadorUsuario(Base):
 
     # Relationships
     printer = relationship("Printer")
+    user = relationship("User")  # ← NUEVO
 
     def __repr__(self):
-        return f"<ContadorUsuario(printer_id={self.printer_id}, codigo={self.codigo_usuario}, total={self.total_paginas})>"
+        return f"<ContadorUsuario(printer_id={self.printer_id}, user_id={self.user_id}, total={self.total_paginas})>"
 
 
 class CierreMensual(Base):
@@ -442,9 +442,8 @@ class CierreMensualUsuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     cierre_mensual_id = Column(Integer, ForeignKey("cierres_mensuales.id", ondelete="CASCADE"), nullable=False, index=True)
     
-    # Usuario
-    codigo_usuario = Column(String(8), nullable=False, index=True)
-    nombre_usuario = Column(String(100), nullable=False)
+    # Usuario (normalizado) - ÚNICO CAMPO DE REFERENCIA
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=False, index=True)
     
     # Contadores al cierre (snapshot inmutable)
     total_paginas = Column(Integer, nullable=False)
@@ -472,6 +471,7 @@ class CierreMensualUsuario(Base):
 
     # Relationships
     cierre = relationship("CierreMensual", back_populates="usuarios")
+    user = relationship("User")  # ← NUEVO
 
     def __repr__(self):
-        return f"<CierreMensualUsuario(cierre_id={self.cierre_mensual_id}, codigo={self.codigo_usuario}, consumo={self.consumo_total})>"
+        return f"<CierreMensualUsuario(cierre_id={self.cierre_mensual_id}, user_id={self.user_id}, consumo={self.consumo_total})>"

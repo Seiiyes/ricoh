@@ -13,6 +13,14 @@ export interface CreateCloseRequest {
   notas?: string;
 }
 
+export interface CreateCierreMasivoRequest {
+  tipo_periodo: 'diario' | 'semanal' | 'mensual' | 'personalizado';
+  fecha_inicio: string; // YYYY-MM-DD
+  fecha_fin: string; // YYYY-MM-DD
+  cerrado_por?: string;
+  notas?: string;
+}
+
 export interface CierreMensual {
   id: number;
   printer_id: number;
@@ -49,12 +57,39 @@ export interface ComparacionCierres {
   usuarios_cierre2: any[];
 }
 
+export interface CierreResult {
+  printer_id: number;
+  printer_name: string;
+  success: boolean;
+  cierre_id?: number;
+  total_paginas: number;
+  usuarios_count: number;
+  error?: string;
+}
+
+export interface CloseAllPrintersResponse {
+  success: boolean;
+  message: string;
+  successful: number;
+  failed: number;
+  total: number;
+  results: CierreResult[];
+}
+
 export const closeService = {
   /**
    * Crear un nuevo cierre mensual
    */
   createClose: async (data: CreateCloseRequest): Promise<CierreMensual> => {
     const response = await apiClient.post<CierreMensual>('/api/counters/close', data);
+    return response.data;
+  },
+
+  /**
+   * Crear cierres en todas las impresoras simultáneamente
+   */
+  createCloseAllPrinters: async (data: CreateCierreMasivoRequest): Promise<CloseAllPrintersResponse> => {
+    const response = await apiClient.post<CloseAllPrintersResponse>('/api/counters/close-all', data);
     return response.data;
   },
 

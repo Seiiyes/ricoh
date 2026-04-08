@@ -64,6 +64,7 @@ from api.auth import router as auth_router
 from api.empresas import router as empresas_router
 from api.admin_users import router as admin_users_router
 from api.ddos_admin import router as ddos_admin_router
+from api.sync import router as sync_router  # ← NUEVO
 
 # Import middleware
 from middleware.ddos_protection import DDoSProtectionMiddleware
@@ -275,6 +276,7 @@ app.include_router(provisioning_router)
 app.include_router(discovery_router)
 app.include_router(counters_router)
 app.include_router(export_router)
+app.include_router(sync_router)  # ← NUEVO
 
 
 # Root endpoint
