@@ -81,7 +81,7 @@ const Dashboard = () => {
           <NavButton
             to="/administracion"
             icon={<UserCog size={20} />}
-            label="Mis Impresoras"
+            label="Gestión de Usuarios"
           />
           
           <NavButton

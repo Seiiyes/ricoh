@@ -195,7 +195,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 relative">
+    <div className="flex flex-col h-[calc(100vh-80px)] bg-slate-50 relative rounded-2xl overflow-hidden shadow-sm border border-slate-200/60">
       {/* Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-red-100 rounded-full blur-[120px] animate-pulse-subtle"></div>
@@ -204,17 +204,17 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
       <div className="flex flex-1 overflow-hidden">
         {/* Left: User Form - Only show when not in discovery-only mode */}
         {!showDiscoveryOnly && (
-        <div className="w-[420px] bg-white/70 backdrop-blur-md border-r border-slate-200/60 p-8 space-y-8 shadow-[10px_0_40px_rgba(0,0,0,0.03)] overflow-y-auto relative z-20">
-          <div className="flex items-center gap-3 text-ricoh-red mb-8">
+        <div className="w-[420px] flex flex-col bg-white/70 backdrop-blur-md border-r border-slate-200/60 p-6 shadow-[10px_0_40px_rgba(0,0,0,0.03)] relative z-20">
+          <div className="flex items-center gap-3 text-ricoh-red mb-5 shrink-0">
             <div className="p-2 bg-red-50 rounded-lg">
               <UserPlus size={20} />
             </div>
             <h2 className="font-black tracking-widest uppercase text-xs text-slate-800">Nuevo Usuario</h2>
           </div>
           
-          <div className="space-y-8">
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-5 pb-4">
             {/* Basic Information */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Información de Identidad</h3>
               <Input
                 label="Nombre Completo"
@@ -237,7 +237,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             </div>
 
             {/* Network Credentials */}
-            <div className="space-y-4">
+            <div className="space-y-3 border-t border-slate-100 pt-3">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Credenciales de Red</h3>
               <Input
                 label="Nombre de usuario de inicio de sesión"
@@ -258,7 +258,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             </div>
 
             {/* Available Functions */}
-            <div className="space-y-5">
+            <div className="space-y-3 border-t border-slate-100 pt-3">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Permisos de Uso</h3>
               <div className="space-y-3">
                 {/* Copier */}
@@ -395,7 +395,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             </div>
 
             {/* SMB Configuration */}
-            <div className="space-y-4">
+            <div className="space-y-3 border-t border-slate-100 pt-3">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2">Destino de Red (SMB)</h3>
               <Input
                 label="Ruta de Carpeta"
@@ -409,8 +409,8 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-200">
-            <div className="flex items-center justify-between mb-4 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+          <div className="pt-4 mt-2 border-t border-slate-200 shrink-0">
+            <div className="flex items-center justify-between mb-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seleccionadas</span>
               <span className="text-sm font-black text-ricoh-red">{selectedPrinters.length} Equipos</span>
             </div>

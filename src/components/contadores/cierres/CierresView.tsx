@@ -12,8 +12,10 @@ import apiClient from '@/services/apiClient';
 import { parseApiError } from '@/utils/errorHandler';
 import { cn } from '@/lib/utils';
 import type { Printer } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const CierresView: React.FC = () => {
+  const { user } = useAuth();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedPrinter, setSelectedPrinter] = useState<number | null>(null);
   const [printers, setPrinters] = useState<Printer[]>([]);
@@ -26,6 +28,7 @@ export const CierresView: React.FC = () => {
 
   // Modals
   const [cierreModalOpen, setCierreModalOpen] = useState(false);
+  const [cierreModalFechas, setCierreModalFechas] = useState<{ inicio: string; fin: string } | null>(null);
   const [cierreMasivoModalOpen, setCierreMasivoModalOpen] = useState(false);
   const [detalleModalOpen, setDetalleModalOpen] = useState(false);
   const [selectedCierre, setSelectedCierre] = useState<CierreMensual | null>(null);
@@ -65,9 +68,14 @@ export const CierresView: React.FC = () => {
     }
   };
 
-  const handleCierreSuccess = () => { loadCierres(); setCierreModalOpen(false); };
+  const handleCierreSuccess = () => { loadCierres(); setCierreModalOpen(false); setCierreModalFechas(null); };
   const handleCierreMasivoSuccess = () => { loadCierres(); setCierreMasivoModalOpen(false); };
   const selectedPrinterData = printers.find(p => p.id === selectedPrinter);
+
+  const handleCreateCierre = (fechaInicio: string, fechaFin: string) => {
+    setCierreModalFechas({ inicio: fechaInicio, fin: fechaFin });
+    setCierreModalOpen(true);
+  };
 
   // Si estamos en modo comparación, mostrar la sub-vista completa
   if (vistaActual === 'comparacion') {
@@ -151,15 +159,18 @@ export const CierresView: React.FC = () => {
               </Button>
             )}
  
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setCierreMasivoModalOpen(true)}
-              icon={<Layers size={18} />}
-              className="rounded-2xl border-ricoh-red text-ricoh-red font-bold hover:bg-red-50 h-[52px] px-8"
-            >
-              Cierre Masivo
-            </Button>
+            {/* Botón Cierre Masivo - Solo para superadmin */}
+            {user?.rol === 'superadmin' && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setCierreMasivoModalOpen(true)}
+                icon={<Layers size={18} />}
+                className="rounded-2xl border-ricoh-red text-ricoh-red font-bold hover:bg-red-50 h-[52px] px-8"
+              >
+                Cierre Masivo
+              </Button>
+            )}
 
             <Button
               variant="primary"
@@ -202,7 +213,7 @@ export const CierresView: React.FC = () => {
               year={selectedYear}
               tipoPeriodo="personalizado"
               cierres={cierres}
-              onCreateCierre={() => setCierreModalOpen(true)}
+              onCreateCierre={handleCreateCierre}
               onViewDetalle={(cierre) => { setSelectedCierre(cierre); setDetalleModalOpen(true); }}
             />
           </div>
@@ -213,7 +224,9 @@ export const CierresView: React.FC = () => {
         <CierreModal
           printerId={selectedPrinter}
           printerName={selectedPrinterData?.hostname}
-          onClose={() => setCierreModalOpen(false)}
+          fechaInicio={cierreModalFechas?.inicio}
+          fechaFin={cierreModalFechas?.fin}
+          onClose={() => { setCierreModalOpen(false); setCierreModalFechas(null); }}
           onSuccess={handleCierreSuccess}
         />
       )}

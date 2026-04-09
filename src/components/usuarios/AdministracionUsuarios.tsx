@@ -16,11 +16,9 @@ export const AdministracionUsuarios = () => {
     usuarios,
     cargando,
     busqueda,
-    filtroEstado,
     setUsuarios,
     setCargando,
     setBusqueda,
-    setFiltroEstado,
     obtenerUsuariosFiltrados,
   } = useUsuarioStore();
 
@@ -39,13 +37,12 @@ export const AdministracionUsuarios = () => {
   // Cargar usuarios al montar el componente
   useEffect(() => {
     cargarUsuarios();
-  }, [filtroEstado]);
+  }, []);
 
   const cargarUsuarios = async () => {
     try {
       setCargando(true);
-      const soloActivos = filtroEstado === 'activos';
-      const resultado = await obtenerUsuarios(0, 100, soloActivos);
+      const resultado = await obtenerUsuarios(0, 5000, false); // Cargar todos los usuarios
       setUsuarios(resultado);
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
@@ -193,12 +190,12 @@ export const AdministracionUsuarios = () => {
   // Resetear a página 1 cuando cambie el filtro
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroEstado, mostrarOrigen]);
+  }, [busqueda, mostrarOrigen]);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 relative">
       {/* Encabezado */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] sticky top-0 z-20">
+      <div className="bg-white border-b border-slate-100 shadow-sm">
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -261,49 +258,15 @@ export const AdministracionUsuarios = () => {
             </div>
           </div>
 
-          {/* Barra de búsqueda y filtros */}
-          <div className="mt-4 flex gap-4 items-center">
-            {/* Búsqueda */}
-            <div className="flex-1">
-              <Input
-                type="search"
-                placeholder="Buscar por nombre, código, empresa o centro de costos..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                icon={<Search size={18} />}
-              />
-            </div>
-
-            {/* Filtro de estado */}
-            <div className="flex gap-2 p-1.5 bg-slate-100/50 rounded-xl border border-slate-200/50">
-              <button
-                onClick={() => setFiltroEstado('todos')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-sm ${filtroEstado === 'todos'
-                    ? 'bg-white text-slate-800 border border-slate-200'
-                    : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-700 border border-transparent'
-                  }`}
-              >
-                Todos
-              </button>
-              <button
-                onClick={() => setFiltroEstado('activos')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-sm ${filtroEstado === 'activos'
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'bg-transparent text-slate-500 hover:bg-green-50/50 hover:text-green-700 border border-transparent'
-                  }`}
-              >
-                Activos
-              </button>
-              <button
-                onClick={() => setFiltroEstado('inactivos')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-sm ${filtroEstado === 'inactivos'
-                    ? 'bg-red-50 text-red-700 border border-red-200'
-                    : 'bg-transparent text-slate-500 hover:bg-red-50/50 hover:text-red-700 border border-transparent'
-                  }`}
-              >
-                Inactivos
-              </button>
-            </div>
+          {/* Barra de búsqueda */}
+          <div className="mt-4">
+            <Input
+              type="search"
+              placeholder="Buscar por nombre, código, empresa o centro de costos..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              icon={<Search size={18} />}
+            />
           </div>
 
           {/* Filtro de origen (solo visible si hay usuarios sincronizados) */}

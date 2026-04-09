@@ -156,13 +156,6 @@ export const FilaUsuario = ({
           </div>
         </td>
 
-        {/* Estado */}
-        <td className="px-4 py-3 text-center">
-          <Badge variant={usuario.is_active ? "success" : "error"}>
-            {usuario.is_active ? "Activo" : "Inactivo"}
-          </Badge>
-        </td>
-
         {/* Acciones */}
         <td className="px-4 py-3 text-center">
           <Button

@@ -181,26 +181,28 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
                     "summary_message": f"Error durante aprovisionamiento: {str(prov_error)}"
                 }
         
-        # Build response
-        response_data = {
-            **new_user.__dict__,
-            "provisioning_results": provisioning_results
-        }
-        
-        return response_data
+        # Build response using Pydantic model for proper serialization
+        user_response = UserResponse.model_validate(new_user)
+        return UserCreateResponse(
+            **user_response.model_dump(),
+            provisioning_results=provisioning_results
+        )
         
     except Exception as e:
-        logger.error(f"❌ Error creating user: {e}")
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"❌ Error creating user: {type(e).__name__}")
+        logger.error(f"Error details: {error_trace}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create user: {str(e)}"
+            detail=f"Failed to create user: {type(e).__name__}"
         )
 
 
 @router.get("/", response_model=UserListResponse)
 async def get_users(
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    page_size: int = Query(20, ge=1, le=10000, description="Items per page"),
     active_only: bool = True,
     search: Optional[str] = Query(None, description="Search by name or code"),
     db: Session = Depends(get_db)

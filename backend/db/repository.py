@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from datetime import datetime
 
-from .models import User, Printer, UserPrinterAssignment, PrinterStatus
+from .models import User, Printer, UserPrinterAssignment, PrinterStatus, SMBServer, NetworkCredential
 
 
 class UserRepository:
@@ -23,14 +23,52 @@ class UserRepository:
                func_scanner: bool = False, func_browser: bool = False,
                empresa: Optional[str] = None, centro_costos: Optional[str] = None) -> User:
         """Create a new user with complete configuration"""
+        
+        # 1. Get or create SMB Server
+        smb_server_obj = db.query(SMBServer).filter(
+            SMBServer.server_address == smb_server,
+            SMBServer.port == smb_port
+        ).first()
+        
+        if not smb_server_obj:
+            smb_server_obj = SMBServer(
+                server_address=smb_server,
+                port=smb_port,
+                description=f"Servidor SMB {smb_server}",
+                is_default=False
+            )
+            db.add(smb_server_obj)
+            db.flush()  # Get the ID without committing
+        
+        # 2. Get or create Network Credential
+        network_cred_obj = db.query(NetworkCredential).filter(
+            NetworkCredential.username == network_username
+        ).first()
+        
+        if not network_cred_obj:
+            network_cred_obj = NetworkCredential(
+                username=network_username,
+                password_encrypted=network_password_encrypted,
+                description="Credenciales de red para acceso SMB",
+                is_default=False
+            )
+            db.add(network_cred_obj)
+            db.flush()  # Get the ID without committing
+        
+        # 3. Create user with normalized references
         user = User(
             name=name,
             codigo_de_usuario=codigo_de_usuario,
+            # Old columns (still exist for compatibility)
             network_username=network_username,
             network_password_encrypted=network_password_encrypted,
             smb_server=smb_server,
             smb_port=smb_port,
             smb_path=smb_path,
+            # New normalized foreign keys
+            smb_server_id=smb_server_obj.id,
+            network_credential_id=network_cred_obj.id,
+            # Functions
             func_copier=func_copier,
             func_copier_color=func_copier_color,
             func_printer=func_printer,
@@ -39,9 +77,10 @@ class UserRepository:
             func_fax=func_fax,
             func_scanner=func_scanner,
             func_browser=func_browser,
-            empresa=empresa,
             centro_costos=centro_costos
         )
+        # Note: empresa parameter is ignored for now as it should be empresa_id
+        # TODO: Update API to accept empresa_id instead of empresa string
         db.add(user)
         db.commit()
         db.refresh(user)

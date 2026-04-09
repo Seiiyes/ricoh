@@ -8,7 +8,7 @@ interface TablaUsuariosProps {
   onEditar: (usuario: Usuario) => void;
 }
 
-type CampoOrden = 'origen' | 'nombre' | 'codigo' | 'empresa' | 'centro_costos' | 'impresoras' | 'estado';
+type CampoOrden = 'origen' | 'nombre' | 'codigo' | 'empresa' | 'centro_costos' | 'impresoras';
 type DireccionOrden = 'asc' | 'desc' | null;
 
 export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
@@ -49,8 +49,6 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
         return (usuario.centro_costos || '').toLowerCase();
       case 'impresoras':
         return usuario.impresoras?.length || 0;
-      case 'estado':
-        return usuario.is_active ? 1 : 0;
       default:
         return '';
     }
@@ -84,8 +82,8 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
 
   return (
     <div className="overflow-x-auto rounded-2xl">
-      <table className="w-full text-left border-collapse">
-        <thead className="bg-slate-50/80 border-b border-slate-100 backdrop-blur-sm sticky top-0">
+      <table className="w-full text-left border-collapse relative">
+        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
               <button
@@ -143,15 +141,6 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
             </th>
             <th className="px-4 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">
               Permisos
-            </th>
-            <th className="px-4 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">
-              <button
-                onClick={() => handleOrdenar('estado')}
-                className="flex items-center gap-1 hover:text-ricoh-red transition-colors mx-auto"
-              >
-                Estado
-                <IconoOrden campo="estado" />
-              </button>
             </th>
             <th className="px-4 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">
               Acciones

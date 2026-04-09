@@ -24,6 +24,38 @@ class PrinterStatus(str, enum.Enum):
     MAINTENANCE = "maintenance"
 
 
+class SMBServer(Base):
+    """SMB Server configuration (normalized)"""
+    __tablename__ = "smb_servers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    server_address = Column(String(255), nullable=False)
+    port = Column(Integer, nullable=False, default=21)
+    description = Column(String(500))
+    is_default = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    users = relationship("User", back_populates="smb_server_rel")
+
+
+class NetworkCredential(Base):
+    """Network credentials (normalized)"""
+    __tablename__ = "network_credentials"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(255), nullable=False, unique=True)
+    password_encrypted = Column(Text, nullable=False)
+    description = Column(String(500))
+    is_default = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    users = relationship("User", back_populates="network_credential_rel")
+
+
 class User(Base):
     """
     User model for printer provisioning
@@ -61,6 +93,10 @@ class User(Base):
     empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="RESTRICT"), nullable=True, index=True)
     centro_costos = Column(String(100), nullable=True, index=True)  # Centro de costos (antes department)
     
+    # Normalized Foreign Keys (new schema)
+    smb_server_id = Column(Integer, ForeignKey("smb_servers.id", ondelete="RESTRICT"), nullable=False)
+    network_credential_id = Column(Integer, ForeignKey("network_credentials.id", ondelete="RESTRICT"), nullable=False)
+    
     # Metadata
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -68,6 +104,8 @@ class User(Base):
 
     # Relationships
     empresa = relationship("Empresa", back_populates="users")
+    smb_server_rel = relationship("SMBServer", back_populates="users")
+    network_credential_rel = relationship("NetworkCredential", back_populates="users")
     printer_assignments = relationship(
         "UserPrinterAssignment",
         back_populates="user",

@@ -20,8 +20,8 @@ export const Input: React.FC<InputProps> = ({
   const variantStyles = {
     default: `border rounded-xl ${
       error 
-        ? 'border-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50/30' 
-        : 'border-slate-200 focus:ring-2 focus:ring-ricoh-red focus:border-transparent focus:bg-white'
+        ? 'border-red-400 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 bg-red-50/30' 
+        : 'border-slate-200 focus:ring-4 focus:ring-ricoh-red/20 focus:border-ricoh-red focus:bg-white'
     }`,
     underline: `border-0 border-b-2 rounded-none px-0 bg-transparent shadow-none hover:bg-transparent ${
       error 

@@ -35,9 +35,12 @@ class SensitiveDataFilter(logging.Filter):
         # Mask passwords and tokens in log messages
         if hasattr(record, 'msg'):
             msg = str(record.msg)
-            # Mask password fields
-            if 'password' in msg.lower():
-                record.msg = msg.replace(record.msg, '[REDACTED]')
+            # Mask password values (but keep error messages)
+            if 'password' in msg.lower() and 'error' not in msg.lower() and 'traceback' not in msg.lower():
+                import re
+                # Only mask actual password values, not the word "password"
+                msg = re.sub(r'(password["\']?\s*[:=]\s*["\']?)([^"\'}\s,]+)', r'\1[REDACTED]', msg, flags=re.IGNORECASE)
+                record.msg = msg
             # Mask tokens (show only first and last 4 chars)
             if 'token' in msg.lower() and len(msg) > 20:
                 if 'eyJ' in msg:  # JWT token

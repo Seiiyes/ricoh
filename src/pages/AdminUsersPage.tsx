@@ -218,31 +218,31 @@ const AdminUsersPage = () => {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
                   <thead className="bg-slate-50 border-b border-slate-100">
                     <tr>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[12%]">
                         Username
                       </th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[16%]">
                         Nombre Completo
                       </th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[16%]">
                         Email
                       </th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[10%]">
                         Rol
                       </th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[14%]">
                         Empresa
                       </th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[9%]">
                         Estado
                       </th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">
                         Último Login
                       </th>
-                      <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest w-[8%]">
                         Acciones
                       </th>
                     </tr>
@@ -250,32 +250,32 @@ const AdminUsersPage = () => {
                   <tbody className="bg-white divide-y divide-slate-100">
                     {adminUsers.map((user) => (
                       <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-slate-800">{user.username}</div>
+                        <td className="px-4 py-4">
+                          <div className="text-sm font-semibold text-slate-800 truncate" title={user.username}>{user.username}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-slate-500">{user.nombre_completo}</div>
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-slate-500 truncate" title={user.nombre_completo}>{user.nombre_completo}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-slate-500">{user.email}</div>
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-slate-500 truncate" title={user.email}>{user.email}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4">
                           <span
-                            className={`inline-flex px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border ${getRoleBadgeColor(
+                            className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${getRoleBadgeColor(
                               user.rol
                             )} shadow-sm`}
                           >
                             {user.rol}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-slate-500">
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-slate-500 truncate" title={user.empresa?.razon_social || '-'}>
                             {user.empresa?.razon_social || '-'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4">
                           <span
-                            className={`inline-flex items-center px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border ${
+                            className={`inline-flex items-center px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${
                               user.is_active
                                 ? 'bg-green-50 text-green-700 border-green-200'
                                 : 'bg-red-50 text-red-700 border-red-200'
@@ -284,17 +284,17 @@ const AdminUsersPage = () => {
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-slate-500">{formatDate(user.last_login)}</div>
+                        <td className="px-4 py-4">
+                          <div className="text-xs text-slate-500 truncate" title={formatDate(user.last_login)}>{formatDate(user.last_login)}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => handleEdit(user)}
                               className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Editar"
                             >
-                              <Edit2 size={16} />
+                              <Edit2 size={15} />
                             </button>
                             {user.is_active && (
                               <button
@@ -302,7 +302,7 @@ const AdminUsersPage = () => {
                                 className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Desactivar"
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={15} />
                               </button>
                             )}
                           </div>

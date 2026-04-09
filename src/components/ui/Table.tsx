@@ -132,9 +132,9 @@ export function Table<T extends Record<string, any>>({
       )}
 
       {/* Tabla */}
-      <div className="overflow-x-auto bg-white rounded-2xl shadow-xl border border-slate-100 transition-shadow hover:shadow-2xl duration-300">
-        <table className="w-full">
-          <thead className="bg-slate-50/80 border-b border-slate-100 backdrop-blur-sm">
+      <div className="overflow-x-auto overflow-y-auto max-h-[70vh] bg-white rounded-2xl shadow-xl border border-slate-100 transition-shadow hover:shadow-2xl duration-300">
+        <table className="w-full relative">
+          <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
             <tr>
               {columns.map((column) => (
                 <th
@@ -176,13 +176,13 @@ export function Table<T extends Record<string, any>>({
               paginatedData.map((row) => (
                 <tr
                   key={keyExtractor(row)}
-                  className={`${onRowClick ? 'cursor-pointer hover:bg-slate-50/80 active:bg-slate-100' : 'hover:bg-slate-50/40'} transition-colors duration-200`}
+                  className={`${onRowClick ? 'cursor-pointer hover:bg-blue-50/50 active:bg-blue-100/50' : 'hover:bg-slate-50/70'} transition-all duration-200 group`}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={`px-6 py-4 text-sm text-slate-700 ${
+                      className={`px-6 py-4 text-sm text-slate-800 font-medium group-hover:text-slate-900 transition-colors ${
                         column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
                       }`}
                     >

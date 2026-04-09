@@ -21,10 +21,14 @@ export async function obtenerUsuarios(
   soloActivos: boolean = true
 ): Promise<Usuario[]> {
   try {
+    // Convertir skip/limit a page/page_size requeridos por el backend
+    const page = Math.floor(skip / limit) + 1;
+    const page_size = limit;
+    
     const response = await apiClient.get('/users/', {
       params: {
-        skip,
-        limit,
+        page,
+        page_size,
         active_only: soloActivos,
       },
     });
