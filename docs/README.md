@@ -36,18 +36,25 @@ Guías de usuario y manuales
 
 ### 🔧 [fixes/](fixes/)
 Documentación de correcciones y bugs resueltos
+- [FIX_EXPORTACION_EXCEL_SOLO_10_USUARIOS.md](fixes/FIX_EXPORTACION_EXCEL_SOLO_10_USUARIOS.md) - Exportación completa de usuarios en Excel/CSV con mapeo correcto de campos
+- [FIX_BUSY_Y_CONTRASENA_ESCANER.md](fixes/FIX_BUSY_Y_CONTRASENA_ESCANER.md) - Estrategia dos pasadas para impresoras ocupadas y configuración automática de contraseña
+- [FIX_SERIALIZACION_EMPRESA_Y_SYNC_USUARIOS.md](fixes/FIX_SERIALIZACION_EMPRESA_Y_SYNC_USUARIOS.md) - Serialización de empresa en UserResponse y sincronización correcta de usuarios con foreign keys
+- [FIX_ERROR_ASIGNAR_EMPRESA_USUARIO.md](fixes/FIX_ERROR_ASIGNAR_EMPRESA_USUARIO.md) - ⚠️ DEPRECADO - Conversión automática de nombre de empresa a ID (reemplazado por fix de serialización)
 - Fixes de CORS
 - Correcciones de sincronización
 - Soluciones de errores específicos
 
 ### 📊 [resumen/](resumen/)
 Resúmenes de sesiones y progreso del proyecto
-- Resúmenes de sesiones
+- [RESUMEN_TRABAJO_20_ABRIL_2026.md](resumen/RESUMEN_TRABAJO_20_ABRIL_2026.md) - Fix exportación Excel/CSV mapeo de campos + Mejora UI botones de cierre
+- [RESUMEN_TRABAJO_15_MARZO_09_ABRIL_2026.md](resumen/RESUMEN_TRABAJO_15_MARZO_09_ABRIL_2026.md) - Sistema de autenticación, bugs críticos, modernización UI/UX
+- [RESUMEN_TRABAJO_13_16_ABRIL_2026.md](resumen/RESUMEN_TRABAJO_13_16_ABRIL_2026.md) - Fixes de impresoras BUSY, contraseña escáner, asignación empresa
 - Progreso de implementaciones
 - Snapshots del proyecto
 
 ### 💻 [desarrollo/](desarrollo/)
 Documentación técnica de desarrollo
+- [MEJORA_UI_BOTONES_CIERRE.md](desarrollo/MEJORA_UI_BOTONES_CIERRE.md) - Reorganización de botones de cierre y mejora de etiquetas
 - Análisis y planificación
 - Refactorizaciones
 - Verificaciones y auditorías
@@ -82,4 +89,4 @@ Para ver el índice completo de todos los documentos, consulta:
 
 ---
 
-**Última actualización:** 30 de Marzo de 2026
+**Última actualización:** 20 de Abril de 2026

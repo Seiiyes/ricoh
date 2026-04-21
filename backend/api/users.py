@@ -286,6 +286,33 @@ async def update_user(
     # Update only provided fields
     update_data = user_update.dict(exclude_unset=True)
     
+    # Handle empresa field: convert empresa name to empresa_id
+    if 'empresa' in update_data:
+        empresa_value = update_data.pop('empresa')  # Remove empresa from update_data
+        
+        if empresa_value:
+            # Import Empresa model
+            from db.models_auth import Empresa
+            
+            # Try to find empresa by razon_social or nit
+            empresa_obj = db.query(Empresa).filter(
+                or_(
+                    Empresa.razon_social == empresa_value,
+                    Empresa.nit == empresa_value
+                )
+            ).first()
+            
+            if empresa_obj:
+                update_data['empresa_id'] = empresa_obj.id
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Empresa '{empresa_value}' not found"
+                )
+        else:
+            # If empresa is None or empty, set empresa_id to None
+            update_data['empresa_id'] = None
+    
     try:
         updated_user = UserRepository.update(db, user_id, **update_data)
         return updated_user

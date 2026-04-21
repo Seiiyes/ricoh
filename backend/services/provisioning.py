@@ -86,9 +86,11 @@ class ProvisioningService:
         # Provision to each printer sequentially
         ricoh_client = get_ricoh_web_client()
         results = []
+        busy_printers = []  # Lista de impresoras que están ocupadas
         
         logger.info(f"Starting provisioning to {len(printers)} printer(s)...")
         
+        # Primera pasada: intentar todas las impresoras
         for printer in printers:
             result = ProvisioningService._provision_to_single_printer(
                 db=db,
@@ -98,7 +100,30 @@ class ProvisioningService:
                 ricoh_client=ricoh_client,
                 retry_strategy=retry_strategy
             )
-            results.append(result)
+            
+            # Si está BUSY, guardar para reintentar después
+            if result['status'] == 'failed' and 'ocupada' in result.get('error_message', '').lower():
+                logger.info(f"⏸️  Impresora {printer.hostname} está BUSY, se reintentará después")
+                busy_printers.append((printer, result))
+            else:
+                results.append(result)
+        
+        # Segunda pasada: reintentar impresoras BUSY
+        if busy_printers:
+            logger.info(f"🔄 Reintentando {len(busy_printers)} impresora(s) que estaban ocupadas...")
+            time.sleep(10)  # Esperar 10 segundos antes de reintentar
+            
+            for printer, old_result in busy_printers:
+                logger.info(f"🔄 Reintentando impresora {printer.hostname}...")
+                result = ProvisioningService._provision_to_single_printer(
+                    db=db,
+                    user=user,
+                    printer=printer,
+                    ricoh_payload=ricoh_payload,
+                    ricoh_client=ricoh_client,
+                    retry_strategy=retry_strategy
+                )
+                results.append(result)
         
         # Calculate summary
         successful = [r for r in results if r['status'] == 'success']

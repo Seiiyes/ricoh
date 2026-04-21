@@ -248,7 +248,7 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
                     onChange={(e) => setManualIP(e.target.value)}
                     placeholder="192.168.1.100"
                     disabled={isCheckingManual}
-                    className="text-slate-300 font-mono"
+                    className="text-slate-700 font-mono placeholder:text-slate-400"
                   />
                   <Input
                     variant="underline"
@@ -258,7 +258,7 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
                     onChange={(e) => setManualPort(e.target.value)}
                     placeholder="161"
                     disabled={isCheckingManual}
-                    className="text-slate-300 font-mono"
+                    className="text-slate-700 font-mono placeholder:text-slate-400"
                   />
                 </div>
                 

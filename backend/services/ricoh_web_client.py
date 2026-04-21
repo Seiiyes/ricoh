@@ -1159,7 +1159,7 @@ class RicohWebClient:
                     ('wayTo', 'adrsList.cgi'),
                     ('isSelfPasswordEditMode', 'false'),
                     ('isLocalAuthPasswordUpdated', 'false'),
-                    ('isFolderAuthPasswordUpdated', 'false'),
+                    ('isFolderAuthPasswordUpdated', 'true'),  # CAMBIADO: Siempre actualizar contraseña
                     ('entryTagInfoIn', '1'),
                     ('entryTagInfoIn', '1'),
                     ('entryTagInfoIn', '1'),
@@ -1174,6 +1174,9 @@ class RicohWebClient:
                     ('isEncryptAlways', 'false'),
                     ('folderProtocolIn', 'SMB_O'),
                     ('folderPathNameIn', '\\\\TIC-0122\\Escaner'),
+                    # AGREGADO: Contraseña de carpeta (Temporal2021)
+                    ('folderAuthPasswordIn', 'Temporal2021'),
+                    ('folderAuthPasswordConfirmIn', 'Temporal2021'),
                 ]
 
                 # Agregar funciones seleccionadas
@@ -1181,6 +1184,7 @@ class RicohWebClient:
                     payload.append(('availableFuncIn', func))
 
                 logger.info(f"   Enviando: {len(payload)} campos + {len(active_funcs)} funciones")
+                logger.info(f"   🔐 Contraseña de carpeta: Temporal2021")
 
                 # 8. Enviar actualización
                 update_url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
@@ -1197,13 +1201,13 @@ class RicohWebClient:
                 if resp.status_code == 200:
                     # Verificar que no haya errores en la respuesta
                     if "BADFLOW" not in resp.text and "Error" not in resp.text:
-                        logger.info(f"Actualizacion exitosa en {printer_ip}")
+                        logger.info(f"✅ Actualización exitosa en {printer_ip}")
                         return True
                     else:
-                        logger.error(f"La impresora rechazo la actualizacion: {resp.text[:200]}")
+                        logger.error(f"❌ La impresora rechazó la actualización: {resp.text[:200]}")
                         return False
 
-                logger.error(f"La impresora rechazo la actualizacion (Status {resp.status_code})")
+                logger.error(f"❌ La impresora rechazó la actualización (Status {resp.status_code})")
                 return False
 
             except Exception as e:

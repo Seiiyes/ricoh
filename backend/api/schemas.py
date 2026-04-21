@@ -175,8 +175,22 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: Optional[datetime]
     
+    @validator('empresa', pre=True, always=True)
+    def serialize_empresa(cls, v):
+        """Convert Empresa object to string (razon_social)"""
+        if v is None:
+            return None
+        # If it's already a string, return it
+        if isinstance(v, str):
+            return v
+        # If it's an Empresa object, return razon_social
+        if hasattr(v, 'razon_social'):
+            return v.razon_social
+        return str(v)
+    
     class Config:
         from_attributes = True
+
 
 
 class UserListResponse(BaseModel):

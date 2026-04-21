@@ -2,17 +2,21 @@ import { useState } from 'react';
 import { DashboardView } from './dashboard/DashboardView';
 import { PrinterDetailView } from './detail/PrinterDetailView';
 import { CierresView } from './cierres/CierresView';
-import { Tabs } from '@/components/ui';
-import { BarChart3, Calendar, Activity } from 'lucide-react';
+import { CierreMasivoModal } from './cierres/CierreMasivoModal';
+import { Tabs, Button } from '@/components/ui';
+import { BarChart3, Calendar, Activity, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type CounterView = 'resumen' | 'printer-detail' | 'cierres';
 type Tab = 'resumen' | 'cierres';
 
 export const ContadoresModule: React.FC = () => {
+  const { user } = useAuth();
   const [currentView, setCurrentView] = useState<CounterView>('resumen');
   const [activeTab, setActiveTab] = useState<Tab>('resumen');
   const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
+  const [cierreMasivoModalOpen, setCierreMasivoModalOpen] = useState(false);
 
   const handleNavigateToPrinter = (printerId: number) => {
     setSelectedPrinterId(printerId);
@@ -28,6 +32,11 @@ export const ContadoresModule: React.FC = () => {
     setActiveTab(tab);
     setCurrentView(tab);
     setSelectedPrinterId(null);
+  };
+
+  const handleCierreMasivoSuccess = () => {
+    setCierreMasivoModalOpen(false);
+    // Recargar datos si es necesario
   };
 
   return (
@@ -52,16 +61,31 @@ export const ContadoresModule: React.FC = () => {
           </div>
           
           {currentView !== 'printer-detail' && (
-            <div className="bg-slate-100/50 p-1 rounded-xl border border-slate-200/60">
-              <Tabs
-                tabs={[
-                  { id: 'resumen', label: 'Estado de Equipos', icon: <BarChart3 size={15} /> },
-                  { id: 'cierres', label: 'Historial de Cierres', icon: <Calendar size={15} /> }
-                ]}
-                activeTab={activeTab}
-                onChange={(tab) => handleTabChange(tab as Tab)}
-                variant="pills"
-              />
+            <div className="flex items-center gap-4">
+              <div className="bg-slate-100/50 p-1 rounded-xl border border-slate-200/60">
+                <Tabs
+                  tabs={[
+                    { id: 'resumen', label: 'Estado de Equipos', icon: <BarChart3 size={15} /> },
+                    { id: 'cierres', label: 'Historial de Cierres', icon: <Calendar size={15} /> }
+                  ]}
+                  activeTab={activeTab}
+                  onChange={(tab) => handleTabChange(tab as Tab)}
+                  variant="pills"
+                />
+              </div>
+
+              {/* Botón Cierre Masivo - Solo para superadmin */}
+              {user?.rol === 'superadmin' && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setCierreMasivoModalOpen(true)}
+                  icon={<Layers size={18} />}
+                  className="rounded-2xl border-ricoh-red text-ricoh-red font-bold hover:bg-red-50 h-[52px] px-8"
+                >
+                  Cierre Masivo
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -92,6 +116,14 @@ export const ContadoresModule: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de Cierre Masivo */}
+      {cierreMasivoModalOpen && (
+        <CierreMasivoModal
+          onClose={() => setCierreMasivoModalOpen(false)}
+          onSuccess={handleCierreMasivoSuccess}
+        />
+      )}
     </div>
   );
 };

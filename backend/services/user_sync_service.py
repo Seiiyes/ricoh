@@ -107,23 +107,23 @@ class UserSyncService:
             # Usar carpeta compartida genérica como fallback
             final_smb_path = "\\\\192.168.91.5\\Escaner"
         
-        # Usuario no existe, crear automáticamente con código FORMATEADO
-        new_user = User(
+        # Usuario no existe, crear automáticamente con código FORMATEADO usando UserRepository
+        from db.repository import UserRepository
+        from services.encryption_service import EncryptionService
+        
+        new_user = UserRepository.create(
+            db=db,
             name=nombre_usuario,
             codigo_de_usuario=codigo_formateado,  # ← Código formateado a 4 dígitos (ej: "0547")
             network_username="reliteltda\\scaner",  # Valor por defecto del sistema
-            network_password_encrypted="",  # Sin password inicial
+            network_password_encrypted=EncryptionService.encrypt(""),  # Sin password inicial
             smb_server="192.168.91.5",  # Servidor SMB por defecto
             smb_port=21,
             smb_path=final_smb_path,  # Ruta desde libreta o genérica
             func_copier=False,  # Permisos deshabilitados por defecto
             func_printer=False,  # Se habilitan manualmente según necesidad
-            func_scanner=False,
-            is_active=True  # Usuario activo (detectado en equipo)
+            func_scanner=False
         )
-        
-        db.add(new_user)
-        db.flush()  # Para obtener el ID sin hacer commit
         
         printer_info = f" en impresora {printer_id}" if printer_id else ""
         codigo_info = f" (formateado: '{codigo_usuario}' → '{codigo_formateado}')" if codigo_usuario != codigo_formateado else ""
@@ -179,21 +179,23 @@ class UserSyncService:
                 if user:
                     existing += 1
                 else:
-                    # Crear usuario
-                    new_user = User(
+                    # Crear usuario usando UserRepository
+                    from db.repository import UserRepository
+                    from services.encryption_service import EncryptionService
+                    
+                    new_user = UserRepository.create(
+                        db=db,
                         name=nombre,
                         codigo_de_usuario=codigo,
                         network_username="reliteltda\\scaner",
-                        network_password_encrypted="",
+                        network_password_encrypted=EncryptionService.encrypt(""),
                         smb_server="192.168.91.5",
                         smb_port=21,
                         smb_path="\\\\PENDIENTE\\Escaner",  # Placeholder - configurar manualmente
                         func_copier=False,
                         func_printer=False,
-                        func_scanner=False,
-                        is_active=True
+                        func_scanner=False
                     )
-                    db.add(new_user)
                     created += 1
                     
                     # Commit cada 50 usuarios para evitar transacciones muy largas
@@ -334,21 +336,23 @@ class UserSyncService:
                     else:
                         existing += 1
                 else:
-                    # Usuario no existe - crear con ruta SMB desde libreta y código FORMATEADO
-                    new_user = User(
+                    # Usuario no existe - crear con ruta SMB desde libreta y código FORMATEADO usando UserRepository
+                    from db.repository import UserRepository
+                    from services.encryption_service import EncryptionService
+                    
+                    new_user = UserRepository.create(
+                        db=db,
                         name=nombre,
                         codigo_de_usuario=codigo_formateado,  # ← Código formateado a 4 dígitos
                         network_username="reliteltda\\scaner",
-                        network_password_encrypted="",
+                        network_password_encrypted=EncryptionService.encrypt(""),
                         smb_server="192.168.91.5",
                         smb_port=21,
                         smb_path=carpeta if carpeta else "\\\\192.168.91.5\\Escaner",
                         func_copier=False,
                         func_printer=False,
-                        func_scanner=False,
-                        is_active=True
+                        func_scanner=False
                     )
-                    db.add(new_user)
                     created += 1
                     
                     codigo_info = f" (formateado: '{codigo}' → '{codigo_formateado}')" if codigo != codigo_formateado else ""

@@ -112,11 +112,19 @@ class UserRepository:
     @staticmethod
     def update(db: Session, user_id: int, **kwargs) -> Optional[User]:
         """Update user fields"""
+        from sqlalchemy.inspection import inspect
+        
         user = db.query(User).filter(User.id == user_id).first()
         if user:
+            # Get valid column names (exclude relationships)
+            mapper = inspect(User)
+            valid_columns = {col.key for col in mapper.columns}
+            
             for key, value in kwargs.items():
-                if hasattr(user, key):
+                # Only update if it's a valid column (not a relationship)
+                if key in valid_columns:
                     setattr(user, key, value)
+            
             db.commit()
             db.refresh(user)
         return user
