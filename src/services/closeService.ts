@@ -6,7 +6,6 @@ import apiClient from './apiClient';
 
 export interface CreateCloseRequest {
   printer_id: number;
-  tipo_periodo: 'diario' | 'semanal' | 'mensual' | 'personalizado';
   fecha_inicio: string; // YYYY-MM-DD
   fecha_fin: string; // YYYY-MM-DD
   cerrado_por?: string;
@@ -14,7 +13,6 @@ export interface CreateCloseRequest {
 }
 
 export interface CreateCierreMasivoRequest {
-  tipo_periodo: 'diario' | 'semanal' | 'mensual' | 'personalizado';
   fecha_inicio: string; // YYYY-MM-DD
   fecha_fin: string; // YYYY-MM-DD
   cerrado_por?: string;

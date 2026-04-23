@@ -139,7 +139,6 @@ def test_crear_cierre_completo(db):
         cierre = CloseService.create_close(
             db=db,
             printer_id=printer.id,
-            tipo_periodo='personalizado',
             fecha_inicio=date.today(),
             fecha_fin=date.today(),
             cerrado_por='test_integracion',

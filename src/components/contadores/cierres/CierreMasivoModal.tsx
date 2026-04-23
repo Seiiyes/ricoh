@@ -42,7 +42,6 @@ export const CierreMasivoModal: React.FC<CierreMasivoModalProps> = ({ onClose, o
 
     try {
       const response = await closeService.createCloseAllPrinters({
-        tipo_periodo: 'diario',
         fecha_inicio: fechaActual,
         fecha_fin: fechaActual,
         cerrado_por: nombreUsuario,
@@ -107,15 +106,6 @@ export const CierreMasivoModal: React.FC<CierreMasivoModalProps> = ({ onClose, o
                   <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 font-bold">
                     {nombreUsuario}
                   </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tipo de Cierre
-                </label>
-                <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 font-bold">
-                  Cierre Diario
                 </div>
               </div>
             </div>

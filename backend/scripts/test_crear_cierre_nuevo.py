@@ -48,7 +48,6 @@ def main():
         cierre = CloseService.create_close(
             db=db,
             printer_id=printer.id,
-            tipo_periodo='personalizado',
             fecha_inicio=fecha_inicio,
             fecha_fin=fecha_fin,
             cerrado_por='test_script',

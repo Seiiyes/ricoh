@@ -45,7 +45,6 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
       // Usar las fechas del estado (que pueden venir de props o ser hoy)
       await closeService.createClose({
         printer_id: printerId,
-        tipo_periodo: 'diario',
         fecha_inicio: fechaInicioState,
         fecha_fin: fechaFinState,
         cerrado_por: nombreUsuario,
@@ -138,15 +137,6 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
               <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 font-bold">
                 {nombreUsuario}
               </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Tipo de Cierre
-            </label>
-            <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 font-bold">
-              Cierre {fechaInicioState === fechaFinState ? 'Diario' : 'Personalizado'}
             </div>
           </div>
         </div>

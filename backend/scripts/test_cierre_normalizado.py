@@ -57,7 +57,6 @@ def main():
         if ultimo_cierre:
             print(f"\n📅 Último cierre:")
             print(f"   Período: {ultimo_cierre.fecha_inicio} a {ultimo_cierre.fecha_fin}")
-            print(f"   Tipo: {ultimo_cierre.tipo_periodo}")
             print(f"   Total páginas: {ultimo_cierre.total_paginas:,}")
             
             # Verificar cuántos usuarios tienen user_id en el último cierre
@@ -91,7 +90,6 @@ def main():
         # Verificar si ya existe un cierre para hoy
         cierre_existente = db.query(CierreMensual).filter(
             CierreMensual.printer_id == printer.id,
-            CierreMensual.tipo_periodo == 'diario',
             CierreMensual.fecha_inicio == fecha_hoy,
             CierreMensual.fecha_fin == fecha_hoy
         ).first()
@@ -109,7 +107,6 @@ def main():
                     printer_id=printer.id,
                     fecha_inicio=fecha_hoy,
                     fecha_fin=fecha_hoy,
-                    tipo_periodo='diario',
                     cerrado_por='test_script',
                     notas='Cierre de prueba para verificar normalización'
                 )

@@ -98,7 +98,7 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
                     cierre.diferencia_total > 0 ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-slate-300'
                   }`}></div>
                   <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                    {cierre.tipo_periodo}
+                    {formatDate(cierre.fecha_inicio)}
                   </span>
                 </div>
                 <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">

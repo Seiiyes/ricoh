@@ -328,7 +328,6 @@ async def create_close_all_printers(request: CierreMasivoRequest, db: Session = 
     IMPORTANTE: Este endpoint lee automáticamente los contadores de todas las impresoras
     antes de crear los cierres, garantizando que los snapshots sean actuales.
     
-    - **tipo_periodo**: Tipo de período (diario, semanal, mensual, personalizado)
     - **fecha_inicio**: Fecha de inicio del período
     - **fecha_fin**: Fecha de fin del período
     - **cerrado_por**: Usuario que realiza el cierre (para auditoría)
@@ -405,7 +404,6 @@ async def create_close_all_printers(request: CierreMasivoRequest, db: Session = 
             db=db,
             fecha_inicio=request.fecha_inicio,
             fecha_fin=request.fecha_fin,
-            tipo_periodo=request.tipo_periodo,
             cerrado_por=request.cerrado_por,
             notas=request.notas,
             empresa_id=empresa_id
@@ -437,8 +435,10 @@ async def create_close(request: CierreRequest, db: Session = Depends(get_db), cu
     IMPORTANTE: Este endpoint lee automáticamente los contadores de la impresora
     antes de crear el cierre, garantizando que el snapshot sea actual.
     
+    Un cierre es simplemente un snapshot de contadores en un momento dado.
+    El usuario decide cómo interpretarlo (diario, semanal, mensual, etc.)
+    
     - **printer_id**: ID de la impresora
-    - **tipo_periodo**: Tipo de período (diario, semanal, mensual, personalizado)
     - **fecha_inicio**: Fecha de inicio del período
     - **fecha_fin**: Fecha de fin del período
     - **cerrado_por**: Usuario que realiza el cierre (opcional)
@@ -457,7 +457,6 @@ async def create_close(request: CierreRequest, db: Session = Depends(get_db), cu
         # El cierre ES una lectura - guardamos un snapshot del estado actual
         print(f"\n{'='*80}")
         print(f"📖 CREANDO CIERRE PARA IMPRESORA {request.printer_id}")
-        print(f"   Tipo: {request.tipo_periodo}")
         print(f"   Período: {request.fecha_inicio} a {request.fecha_fin}")
         print(f"   Configuración impresora:")
         print(f"     - tiene_contador_usuario: {printer.tiene_contador_usuario}")
@@ -506,7 +505,6 @@ async def create_close(request: CierreRequest, db: Session = Depends(get_db), cu
             printer_id=request.printer_id,
             fecha_inicio=request.fecha_inicio,
             fecha_fin=request.fecha_fin,
-            tipo_periodo=request.tipo_periodo,
             cerrado_por=request.cerrado_por,
             notas=request.notas
         )
@@ -598,8 +596,7 @@ def get_monthly_close_specific(printer_id: int, year: int, month: int, db: Sessi
     cierre = db.query(CierreMensual).filter(
         CierreMensual.printer_id == printer_id,
         CierreMensual.anio == year,
-        CierreMensual.mes == month,
-        CierreMensual.tipo_periodo == 'mensual'
+        CierreMensual.mes == month
     ).first()
     
     if not cierre:

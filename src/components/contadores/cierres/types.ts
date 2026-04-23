@@ -7,7 +7,6 @@ import type { PrinterDevice } from '@/types';
 export interface CierreMensual {
   id: number;
   printer_id: number;
-  tipo_periodo: 'diario' | 'semanal' | 'mensual' | 'personalizado';
   fecha_inicio: string; // ISO date
   fecha_fin: string; // ISO date
   anio: number;
@@ -114,7 +113,6 @@ export interface ComparacionCierres {
 
 export interface CierreRequest {
   printer_id: number;
-  tipo_periodo: 'diario' | 'semanal' | 'mensual' | 'personalizado';
   fecha_inicio: string; // ISO date
   fecha_fin: string; // ISO date
   cerrado_por?: string;

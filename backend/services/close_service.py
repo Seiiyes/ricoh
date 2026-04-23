@@ -26,7 +26,6 @@ class CloseService:
         printer_id: int,
         fecha_inicio: date,
         fecha_fin: date,
-        tipo_periodo: str = 'personalizado',
         cerrado_por: Optional[str] = None,
         notas: Optional[str] = None,
         validar_secuencia: bool = True
@@ -34,12 +33,14 @@ class CloseService:
         """
         Crea un cierre de contadores para cualquier período
         
+        Un cierre es simplemente un snapshot de contadores en un momento dado.
+        El usuario decide cómo interpretarlo (diario, semanal, mensual, etc.)
+        
         Args:
             db: Sesión de base de datos
             printer_id: ID de la impresora
             fecha_inicio: Fecha de inicio del período
             fecha_fin: Fecha de fin del período
-            tipo_periodo: Tipo de período ('diario', 'semanal', 'mensual', 'personalizado')
             cerrado_por: Usuario que realiza el cierre
             notas: Notas adicionales
             validar_secuencia: Si True, valida que no haya gaps en cierres mensuales
@@ -52,25 +53,20 @@ class CloseService:
             
         Examples:
             # Cierre diario
-            create_close(db, 1, date(2026, 3, 3), date(2026, 3, 3), 'diario')
+            create_close(db, 1, date(2026, 3, 3), date(2026, 3, 3))
             
             # Cierre semanal
-            create_close(db, 1, date(2026, 3, 1), date(2026, 3, 7), 'semanal')
+            create_close(db, 1, date(2026, 3, 1), date(2026, 3, 7))
             
             # Cierre mensual
-            create_close(db, 1, date(2026, 3, 1), date(2026, 3, 31), 'mensual')
+            create_close(db, 1, date(2026, 3, 1), date(2026, 3, 31))
         """
         
         # ====================================================================
         # VALIDACIONES PREVIAS
         # ====================================================================
         
-        # 1. Validar tipo de período
-        tipos_validos = ['diario', 'semanal', 'mensual', 'personalizado']
-        if tipo_periodo not in tipos_validos:
-            raise ValueError(f"Tipo de período inválido. Debe ser uno de: {', '.join(tipos_validos)}")
-        
-        # 2. Validar fechas
+        # 1. Validar fechas
         if fecha_fin < fecha_inicio:
             raise ValueError("La fecha de fin debe ser mayor o igual a la fecha de inicio")
         
@@ -78,28 +74,12 @@ class CloseService:
         if dias_periodo > 365:
             raise ValueError("El período no puede ser mayor a 1 año")
         
-        # 3. Verificar que la impresora existe
+        # 2. Verificar que la impresora existe
         printer = db.query(Printer).filter(Printer.id == printer_id).first()
         if not printer:
             raise ValueError(f"Impresora {printer_id} no encontrada")
         
-        # 4. Verificar que no exista cierre duplicado del mismo tipo y período
-        # Permitir solapamientos de diferentes tipos (ej: mensual + diarios)
-        duplicado = db.query(CierreMensual).filter(
-            CierreMensual.printer_id == printer_id,
-            CierreMensual.tipo_periodo == tipo_periodo,
-            CierreMensual.fecha_inicio == fecha_inicio,
-            CierreMensual.fecha_fin == fecha_fin
-        ).first()
-        
-        if duplicado:
-            raise ValueError(
-                f"Ya existe un cierre {tipo_periodo} para el período {fecha_inicio} a {fecha_fin}. "
-                f"Cerrado por: {duplicado.cerrado_por or 'N/A'} "
-                f"Fecha: {duplicado.fecha_cierre.strftime('%Y-%m-%d %H:%M')}"
-            )
-        
-        # 5. Validar que el período no sea futuro
+        # 3. Validar que el período no sea futuro
         fecha_actual = date.today()
         if fecha_inicio > fecha_actual:
             raise ValueError("No se puede cerrar un período futuro")
@@ -192,7 +172,6 @@ class CloseService:
             
             cierre = CierreMensual(
                 printer_id=printer_id,
-                tipo_periodo=tipo_periodo,
                 fecha_inicio=fecha_inicio,
                 fecha_fin=fecha_fin,
                 anio=fecha_inicio.year,
@@ -309,7 +288,7 @@ class CloseService:
             # CALCULAR HASH DE VERIFICACIÓN
             # ====================================================================
             
-            hash_data = f"{cierre.printer_id}{cierre.tipo_periodo}{cierre.fecha_inicio}{cierre.fecha_fin}{cierre.total_paginas}{count}"
+            hash_data = f"{cierre.printer_id}{cierre.fecha_inicio}{cierre.fecha_fin}{cierre.total_paginas}{count}"
             cierre.hash_verificacion = hashlib.sha256(hash_data.encode()).hexdigest()
             
             db.commit()
@@ -443,7 +422,6 @@ class CloseService:
             printer_id=printer_id,
             fecha_inicio=fecha_inicio,
             fecha_fin=fecha_fin,
-            tipo_periodo='mensual',
             cerrado_por=cerrado_por,
             notas=notas,
             validar_secuencia=True
@@ -615,7 +593,6 @@ class CloseService:
         db: Session,
         fecha_inicio: date,
         fecha_fin: date,
-        tipo_periodo: str = 'personalizado',
         cerrado_por: Optional[str] = None,
         notas: Optional[str] = None,
         empresa_id: Optional[int] = None
@@ -627,7 +604,6 @@ class CloseService:
             db: Sesión de base de datos
             fecha_inicio: Fecha de inicio del período
             fecha_fin: Fecha de fin del período
-            tipo_periodo: Tipo de período ('diario', 'semanal', 'mensual', 'personalizado')
             cerrado_por: Usuario que realiza el cierre
             notas: Notas adicionales
             empresa_id: ID de empresa para filtrar impresoras (opcional)
@@ -666,7 +642,6 @@ class CloseService:
                     printer_id=printer.id,
                     fecha_inicio=fecha_inicio,
                     fecha_fin=fecha_fin,
-                    tipo_periodo=tipo_periodo,
                     cerrado_por=cerrado_por,
                     notas=notas,
                     validar_secuencia=False  # No validar secuencia en cierres masivos

@@ -123,7 +123,7 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                 <option value="">Seleccionar...</option>
                 {cierres.map((cierre) => (
                   <option key={cierre.id} value={cierre.id}>
-                    {cierre.tipo_periodo.charAt(0).toUpperCase() + cierre.tipo_periodo.slice(1)} - {formatDate(cierre.fecha_inicio)}
+                    {formatDate(cierre.fecha_inicio)}
                     {cierre.fecha_inicio !== cierre.fecha_fin && <> a {formatDate(cierre.fecha_fin)}</>}
                   </option>
                 ))}
@@ -142,7 +142,7 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                 <option value="">Seleccionar...</option>
                 {cierres.map((cierre) => (
                   <option key={cierre.id} value={cierre.id}>
-                    {cierre.tipo_periodo.charAt(0).toUpperCase() + cierre.tipo_periodo.slice(1)} - {formatDate(cierre.fecha_inicio)}
+                    {formatDate(cierre.fecha_inicio)}
                     {cierre.fecha_inicio !== cierre.fecha_fin && <> a {formatDate(cierre.fecha_fin)}</>}
                   </option>
                 ))}
@@ -171,9 +171,6 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase mb-1">Período Base</p>
-                    <p className="font-semibold text-gray-900">
-                      {comparacion.cierre1.tipo_periodo.charAt(0).toUpperCase() + comparacion.cierre1.tipo_periodo.slice(1)}
-                    </p>
                     <p className="text-gray-600">
                       {formatDate(comparacion.cierre1.fecha_inicio)}
                       {comparacion.cierre1.fecha_inicio !== comparacion.cierre1.fecha_fin && 
@@ -186,9 +183,6 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase mb-1">Período Comparado</p>
-                    <p className="font-semibold text-gray-900">
-                      {comparacion.cierre2.tipo_periodo.charAt(0).toUpperCase() + comparacion.cierre2.tipo_periodo.slice(1)}
-                    </p>
                     <p className="text-gray-600">
                       {formatDate(comparacion.cierre2.fecha_inicio)}
                       {comparacion.cierre2.fecha_inicio !== comparacion.cierre2.fecha_fin && 

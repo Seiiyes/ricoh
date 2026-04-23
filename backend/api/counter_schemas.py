@@ -129,8 +129,7 @@ class CierreMensualResponse(BaseModel):
     id: int
     printer_id: int
     
-    # Tipo y período (agregado en migración 008)
-    tipo_periodo: str  # diario, semanal, mensual, personalizado
+    # Fechas del período
     fecha_inicio: date
     fecha_fin: date
     
@@ -166,18 +165,10 @@ class CierreMensualResponse(BaseModel):
 class CierreRequest(BaseModel):
     """Request schema for creating any type of close"""
     printer_id: int = Field(..., gt=0, description="ID de la impresora")
-    tipo_periodo: str = Field(..., description="Tipo de período: diario, semanal, mensual, personalizado")
     fecha_inicio: date = Field(..., description="Fecha de inicio del período")
     fecha_fin: date = Field(..., description="Fecha de fin del período")
     cerrado_por: Optional[str] = Field(None, max_length=100, description="Usuario que realiza el cierre")
     notas: Optional[str] = Field(None, max_length=1000, description="Notas adicionales")
-    
-    @validator('tipo_periodo')
-    def validate_tipo_periodo(cls, v):
-        tipos_validos = ['diario', 'semanal', 'mensual', 'personalizado']
-        if v not in tipos_validos:
-            raise ValueError(f'tipo_periodo debe ser uno de: {", ".join(tipos_validos)}')
-        return v
     
     @validator('fecha_fin')
     def validate_fechas(cls, v, values):
@@ -188,18 +179,10 @@ class CierreRequest(BaseModel):
 
 class CierreMasivoRequest(BaseModel):
     """Request schema for creating closes in all printers"""
-    tipo_periodo: str = Field(..., description="Tipo de período: diario, semanal, mensual, personalizado")
     fecha_inicio: date = Field(..., description="Fecha de inicio del período")
     fecha_fin: date = Field(..., description="Fecha de fin del período")
     cerrado_por: Optional[str] = Field(None, max_length=100, description="Usuario que realiza el cierre")
     notas: Optional[str] = Field(None, max_length=1000, description="Notas adicionales")
-    
-    @validator('tipo_periodo')
-    def validate_tipo_periodo(cls, v):
-        tipos_validos = ['diario', 'semanal', 'mensual', 'personalizado']
-        if v not in tipos_validos:
-            raise ValueError(f'tipo_periodo debe ser uno de: {", ".join(tipos_validos)}')
-        return v
     
     @validator('fecha_fin')
     def validate_fechas(cls, v, values):

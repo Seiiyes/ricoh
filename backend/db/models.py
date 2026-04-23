@@ -426,10 +426,7 @@ class CierreMensual(Base):
     id = Column(Integer, primary_key=True, index=True)
     printer_id = Column(Integer, ForeignKey("printers.id", ondelete="CASCADE"), nullable=False, index=True)
     
-    # Tipo de período (agregado en migración 008)
-    tipo_periodo = Column(String(20), default='mensual', nullable=False)  # diario, semanal, mensual, personalizado
-    
-    # Fechas del período (agregado en migración 008)
+    # Fechas del período
     fecha_inicio = Column(Date, nullable=False)
     fecha_fin = Column(Date, nullable=False)
     
@@ -467,7 +464,7 @@ class CierreMensual(Base):
     usuarios = relationship("CierreMensualUsuario", back_populates="cierre", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<CierreMensual(printer_id={self.printer_id}, tipo={self.tipo_periodo}, periodo={self.fecha_inicio} a {self.fecha_fin}, total={self.total_paginas})>"
+        return f"<CierreMensual(printer_id={self.printer_id}, periodo={self.fecha_inicio} a {self.fecha_fin}, total={self.total_paginas})>"
 
 
 class CierreMensualUsuario(Base):
