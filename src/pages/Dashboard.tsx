@@ -8,10 +8,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { ProvisioningPanel } from '../components/governance/ProvisioningPanel';
 import { AdministracionUsuarios } from '../components/usuarios/AdministracionUsuarios';
 import { ContadoresModule } from '../components/contadores/ContadoresModule';
-import { UserCog, UserPlus, Search, BarChart3, Building2, Users, LogOut, ChevronDown } from 'lucide-react';
+import { UserCog, UserPlus, Search, BarChart3, Building2, Users, LogOut, ChevronDown, LayoutDashboard, Printer, TrendingUp } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import EmpresasPage from './EmpresasPage';
 import AdminUsersPage from './AdminUsersPage';
+import OverviewDashboard from './OverviewDashboard';
+import FleetManagementPage from './FleetManagementPage';
+import AnalyticsPage from './AnalyticsPage';
 import { cn } from '../lib/utils';
 
 const Dashboard = () => {
@@ -61,8 +64,16 @@ const Dashboard = () => {
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Equipment Manager</p>
         </div>
         
-        <div className="relative z-10 flex-1 py-6 overflow-y-auto custom-scrollbar px-4 space-y-2">
+        <div className="relative z-10 flex-1 py-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
           <div className="px-4 pb-4">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Visión General</p>
+          </div>
+
+          <NavButton to="/overview" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+          <NavButton to="/fleet" icon={<Printer size={20} />} label="Gestión de Equipos" />
+          <NavButton to="/analytics" icon={<TrendingUp size={20} />} label="Reportes & Analytics" />
+
+          <div className="px-4 pb-4 pt-6">
              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Operaciones</p>
           </div>
           
@@ -92,7 +103,7 @@ const Dashboard = () => {
           
           {/* Opciones solo para superadmin */}
           {user?.rol === 'superadmin' && (
-            <div className="pt-8 space-y-2">
+            <div className="pt-6 space-y-2">
               <div className="px-4 pb-4">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
                   Sistema & Control
@@ -165,7 +176,10 @@ const Dashboard = () => {
           
           <div className="max-w-[1600px] mx-auto relative z-10 min-h-full">
             <Routes>
-              <Route path="/" element={<Navigate to="/descubrimiento" replace />} />
+              <Route path="/" element={<Navigate to="/overview" replace />} />
+              <Route path="/overview" element={<OverviewDashboard />} />
+              <Route path="/fleet" element={<FleetManagementPage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/descubrimiento" element={<ProvisioningPanel showDiscoveryOnly={true} />} />
               <Route path="/aprovisionamiento" element={<ProvisioningPanel showDiscoveryOnly={false} />} />
               <Route path="/administracion" element={<AdministracionUsuarios />} />
