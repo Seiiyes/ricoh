@@ -1,16 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
 from db.database import get_db
-from db.models import CierreMensual, CierreMensualUsuario, Printer, ContadorImpresora, ContadorUsuario
+from db.models import CierreMensual, CierreMensualUsuario, Printer, ContadorImpresora, ContadorUsuario, ComparacionGuardada
 from .counter_schemas import (
     ContadorImpresoraResponse, ContadorUsuarioResponse, 
     CierreMensualResponse, CierreMensualDetalleResponse,
     CierreMensualUsuarioResponse, CierreRequest, CierreMensualRequest,
     CierreMasivoRequest, ReadCounterResponse, ComparacionCierresResponse, 
-    CloseAllPrintersResponse
+    CloseAllPrintersResponse,
+    CierreUsuarioUpdateRequest, CierreUsuarioGlobalResponse,
+    PaginatedCierreUsuarioGlobalResponse,
+    ComparacionGuardadaCreate, ComparacionGuardadaResponse
 )
 from services.counter_service import CounterService
 from services.close_service import CloseService
@@ -902,3 +905,359 @@ async def obtener_suma_usuarios(cierre_id: int, db: Session = Depends(get_db), c
         "total_usuarios": len(cierre.usuarios),
         "coherente": cierre.total_paginas == suma_usuarios
     }
+
+
+@router.get("/monthly/users/all", response_model=PaginatedCierreUsuarioGlobalResponse, status_code=status.HTTP_200_OK)
+async def get_all_users_closes(
+    page: int = Query(1, ge=1, description="Número de página"),
+    page_size: int = Query(50, ge=1, le=500, description="Tamaño de página"),
+    search: Optional[str] = Query(None, description="Búsqueda por usuario o impresora"),
+    printer_id: Optional[int] = Query(None, description="Filtrar por impresora"),
+    user_id: Optional[int] = Query(None, description="Filtrar por usuario"),
+    fecha_inicio: Optional[date] = Query(None, description="Fecha inicio de período"),
+    fecha_fin: Optional[date] = Query(None, description="Fecha fin de período"),
+    centro_costos: Optional[str] = Query(None, description="Filtrar por centro de costos"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Obtiene un listado paginado y filtrado de consumos de usuario en cierres mensuales.
+    Enfuerza multi-tenancy filtrando por la empresa asignada al usuario no-superadmin.
+    """
+    from db.models import User, Printer, CierreMensual
+    from sqlalchemy import or_, date as sql_date
+    from datetime import date as dt_date
+
+    # Query base con joins para obtener datos de impresora y del cierre
+    query = db.query(CierreMensualUsuario).join(
+        CierreMensual, CierreMensual.id == CierreMensualUsuario.cierre_mensual_id
+    ).join(
+        Printer, Printer.id == CierreMensual.printer_id
+    )
+
+    # Filtrar por empresa si no es superadmin
+    if not current_user.is_superadmin():
+        query = query.filter(Printer.empresa_id == current_user.empresa_id)
+
+    # Filtros adicionales directos
+    if printer_id:
+        query = query.filter(CierreMensual.printer_id == printer_id)
+    if user_id:
+        query = query.filter(CierreMensualUsuario.user_id == user_id)
+        
+    # Filtros por rango de fechas
+    if fecha_inicio:
+        query = query.filter(CierreMensual.fecha_inicio >= fecha_inicio)
+    if fecha_fin:
+        query = query.filter(CierreMensual.fecha_fin <= fecha_fin)
+
+    # Filtro por centro de costos
+    if centro_costos:
+        # Hacemos join explícito con User si no se busca por texto
+        query = query.join(User, User.id == CierreMensualUsuario.user_id).filter(
+            User.centro_costos.ilike(f"%{centro_costos}%")
+        )
+
+    # Búsqueda de texto (nombre de usuario, código, IP, ubicación, hostname)
+    if search:
+        search_term = f"%{search}%"
+        # Obtener IDs de usuarios que coincidan con el nombre/código/centro de costo
+        matching_users = db.query(User.id).filter(
+            or_(
+                User.name.ilike(search_term),
+                User.codigo_de_usuario.ilike(search_term),
+                User.centro_costos.ilike(search_term)
+            )
+        ).subquery()
+        
+        query = query.filter(
+            or_(
+                CierreMensualUsuario.user_id.in_(matching_users),
+                Printer.hostname.ilike(search_term),
+                Printer.ip_address.ilike(search_term),
+                Printer.location.ilike(search_term)
+            )
+        )
+
+    # Conteo total
+    total = query.count()
+
+    # Ordenar por fecha de cierre desc, luego consumo desc
+    query = query.order_by(
+        CierreMensual.fecha_fin.desc(),
+        CierreMensualUsuario.consumo_total.desc()
+    )
+
+    # Paginación
+    offset = (page - 1) * page_size
+    items = query.offset(offset).limit(page_size).all()
+
+    # Serializar resultados
+    serialized_items = []
+    for snapshot in items:
+        # Cierre e Impresora asociados
+        cierre = snapshot.cierre
+        printer = cierre.printer
+        # Usuario asociado
+        user = db.query(User).filter(User.id == snapshot.user_id).first()
+        
+        serialized_items.append(
+            CierreUsuarioGlobalResponse(
+                id=snapshot.id,
+                cierre_mensual_id=snapshot.cierre_mensual_id,
+                user_id=snapshot.user_id,
+                codigo_usuario=user.codigo_de_usuario if user else str(snapshot.user_id),
+                nombre_usuario=user.name if user else f"Usuario {snapshot.user_id}",
+                
+                # Contadores al cierre
+                total_paginas=snapshot.total_paginas,
+                total_bn=snapshot.total_bn,
+                total_color=snapshot.total_color,
+                copiadora_bn=snapshot.copiadora_bn,
+                copiadora_color=snapshot.copiadora_color,
+                impresora_bn=snapshot.impresora_bn,
+                impresora_color=snapshot.impresora_color,
+                escaner_bn=snapshot.escaner_bn,
+                escaner_color=snapshot.escaner_color,
+                fax_bn=snapshot.fax_bn,
+                
+                # Consumo del mes
+                consumo_total=snapshot.consumo_total,
+                consumo_copiadora=snapshot.consumo_copiadora,
+                consumo_impresora=snapshot.consumo_impresora,
+                consumo_escaner=snapshot.consumo_escaner,
+                consumo_fax=snapshot.consumo_fax,
+                
+                created_at=snapshot.created_at,
+                printer_id=cierre.printer_id,
+                printer_hostname=printer.hostname,
+                printer_ip=printer.ip_address,
+                printer_location=printer.location,
+                fecha_inicio=cierre.fecha_inicio,
+                fecha_fin=cierre.fecha_fin,
+                fecha_cierre=cierre.fecha_cierre,
+                cerrado_por=cierre.cerrado_por
+            )
+        )
+
+    pages = (total + page_size - 1) // page_size if total > 0 else 1
+
+    return {
+        "items": serialized_items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages
+    }
+
+
+@router.put("/monthly/users/{cierre_usuario_id}", response_model=CierreMensualUsuarioResponse, status_code=status.HTTP_200_OK)
+async def update_cierre_usuario(
+    cierre_usuario_id: int,
+    payload: CierreUsuarioUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Modifica un registro de CierreMensualUsuario (el total acumulado y consumo mensual).
+    Audita el cambio en auditoria_sistema.
+    """
+    from db.models import User, Printer, CierreMensual
+    from sqlalchemy import text
+
+    # Obtener el registro a actualizar
+    snapshot = db.query(CierreMensualUsuario).filter(CierreMensualUsuario.id == cierre_usuario_id).first()
+    if not snapshot:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Registro de consumo no encontrado")
+
+    # Validar acceso a la impresora correspondiente
+    cierre = snapshot.cierre
+    printer = cierre.printer
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso para modificar este registro")
+
+    # Guardar valores antiguos para auditoría
+    old_total = snapshot.total_paginas
+    old_consumo = snapshot.consumo_total
+
+    # Actualizar valores
+    snapshot.total_paginas = payload.total_paginas
+    snapshot.consumo_total = payload.consumo_total
+
+    # Obtener datos de usuario para el log
+    user = db.query(User).filter(User.id == snapshot.user_id).first()
+    user_name = user.name if user else f"Usuario ID {snapshot.user_id}"
+
+    # Guardar en base de datos
+    try:
+        db.commit()
+        db.refresh(snapshot)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al actualizar: {e}")
+
+    # Registrar en auditoría de sistema
+    descripcion_log = (
+        f"Consumo mensual de usuario '{user_name}' en impresora '{printer.hostname}' modificado: "
+        f"Consumo ({old_consumo} -> {payload.consumo_total}), "
+        f"Total ({old_total} -> {payload.total_paginas})"
+    )
+    
+    db.execute(
+        text("""
+            INSERT INTO auditoria_sistema (tipo, descripcion, usuario, printer_id, user_id, status)
+            VALUES (:tipo, :descripcion, :usuario, :printer_id, :user_id, :status)
+        """),
+        {
+            "tipo": "Modificación Cierre",
+            "descripcion": descripcion_log,
+            "usuario": current_user.nombre_completo,
+            "printer_id": printer.id,
+            "user_id": snapshot.user_id,
+            "status": "warning"
+        }
+    )
+    db.commit()
+
+    # Formatear respuesta compatible con CierreMensualUsuarioResponse
+    usuario_dict = {
+        **{k: getattr(snapshot, k) for k in snapshot.__dict__ if not k.startswith('_')},
+        'codigo_usuario': user.codigo_de_usuario if user else str(snapshot.user_id),
+        'nombre_usuario': user.name if user else f"Usuario {snapshot.user_id}"
+    }
+    
+    return CierreMensualUsuarioResponse(**usuario_dict)
+
+
+@router.post("/comparaciones", response_model=ComparacionGuardadaResponse, status_code=status.HTTP_201_CREATED)
+async def save_comparacion(
+    payload: ComparacionGuardadaCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Guarda una comparación mensual de cierres.
+    Valida que ambos cierres pertenezcan a la misma empresa y que el usuario tenga acceso a ella.
+    """
+    # 1. Obtener cierres y validar existencia
+    cierre1 = db.query(CierreMensual).filter(CierreMensual.id == payload.cierre1_id).first()
+    cierre2 = db.query(CierreMensual).filter(CierreMensual.id == payload.cierre2_id).first()
+    
+    if not cierre1 or not cierre2:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Uno o ambos cierres mensuales no fueron encontrados"
+        )
+    
+    # 2. Obtener impresoras asociadas para validar empresa
+    printer1 = cierre1.printer
+    printer2 = cierre2.printer
+    
+    if not printer1 or not printer2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Las impresoras asociadas a los cierres no son válidas"
+        )
+        
+    if printer1.empresa_id != printer2.empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Los cierres comparados deben pertenecer a la misma empresa"
+        )
+        
+    # 3. Validar permisos de multi-tenancy
+    if not CompanyFilterService.validate_company_access(current_user, printer1.empresa_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes acceso a los cierres de esta empresa"
+        )
+    
+    # 4. Resolver empresa_id: puede ser None si la impresora no tiene empresa asignada
+    # En ese caso usamos la empresa del usuario logueado. Si tampoco tiene, error explícito.
+    empresa_id_final = printer1.empresa_id or getattr(current_user, 'empresa_id', None)
+    if empresa_id_final is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede determinar la empresa: asigne una empresa a la impresora o al usuario antes de guardar comparaciones."
+        )
+        
+    # 5. Crear registro
+    nueva_comparacion = ComparacionGuardada(
+        titulo=payload.titulo,
+        descripcion=payload.descripcion,
+        cierre1_id=payload.cierre1_id,
+        cierre2_id=payload.cierre2_id,
+        snapshot_json=payload.snapshot_json,
+        creado_por=current_user.nombre_completo,
+        admin_user_id=current_user.id,
+        empresa_id=empresa_id_final
+    )
+    
+    db.add(nueva_comparacion)
+    db.commit()
+    db.refresh(nueva_comparacion)
+    
+    return nueva_comparacion
+
+
+@router.get("/comparaciones", response_model=List[ComparacionGuardadaResponse], status_code=status.HTTP_200_OK)
+async def list_comparaciones(
+    cierre1_id: Optional[int] = Query(None),
+    cierre2_id: Optional[int] = Query(None),
+    empresa_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Lista las comparaciones guardadas para la empresa asignada del usuario (o todas si es superadmin).
+    """
+    query = db.query(ComparacionGuardada)
+    
+    # Enforce multi-tenancy
+    if not current_user.is_superadmin():
+        query = query.filter(ComparacionGuardada.empresa_id == current_user.empresa_id)
+    elif empresa_id is not None:
+        query = query.filter(ComparacionGuardada.empresa_id == empresa_id)
+        
+    # Filtros adicionales
+    if cierre1_id is not None:
+        query = query.filter(ComparacionGuardada.cierre1_id == cierre1_id)
+    if cierre2_id is not None:
+        query = query.filter(ComparacionGuardada.cierre2_id == cierre2_id)
+        
+    # Ordenar por fecha de creación descendente
+    query = query.order_by(ComparacionGuardada.created_at.desc())
+    
+    return query.all()
+
+
+@router.delete("/comparaciones/{comparacion_id}", status_code=status.HTTP_200_OK)
+async def delete_comparacion(
+    comparacion_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Elimina una comparación guardada.
+    Valida el acceso a la empresa asociada a la comparación.
+    """
+    comparacion = db.query(ComparacionGuardada).filter(ComparacionGuardada.id == comparacion_id).first()
+    if not comparacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La comparación guardada no fue encontrada"
+        )
+        
+    # Validar permisos de multi-tenancy
+    if not CompanyFilterService.validate_company_access(current_user, comparacion.empresa_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes acceso para eliminar esta comparación"
+        )
+        
+    db.delete(comparacion)
+    db.commit()
+    
+    return {"message": "Comparación eliminada correctamente"}
+
+
