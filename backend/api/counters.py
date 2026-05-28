@@ -45,8 +45,6 @@ async def get_latest_counter(printer_id: int, db: Session = Depends(get_db), cur
 async def get_user_counters_latest(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener los últimos contadores por usuario de una impresora"""
     from db.models import User
-    from sqlalchemy.orm import joinedload
-    
     # Validar acceso a la impresora
     printer = db.query(Printer).filter(Printer.id == printer_id).first()
     if not printer:
@@ -80,9 +78,8 @@ async def get_latest_counters_with_printer(printer_id: int, db: Session = Depend
     Incluye las capacidades de la impresora para que el frontend pueda adaptar
     la visualización de columnas.
     """
-    from .schemas import PrinterResponse, CapabilitiesResponse
     from models.capabilities import Capabilities
-    
+
     # Get printer
     printer = db.query(Printer).filter(Printer.id == printer_id).first()
     if not printer:
