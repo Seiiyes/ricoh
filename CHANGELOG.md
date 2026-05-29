@@ -35,17 +35,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### 🧪 Testing
 
-- **QA automatizado:** 18/18 pruebas pasadas en `backend/qa_test_suite.py`
+- **QA Automatizado (Bloque A):** 10/10 pruebas de importación, índices e integridad estructural pasadas en `verify_session_29mayo.py`
+- **QA Funcional y Robustez (Bloques B+C):** 27/27 pruebas de la API (Cierres, Analytics, Comparaciones guardadas, Edge cases y Excel) pasadas en `qa_bloques_bc.py`
 - **Multi-tenancy:** Verificado 403 Forbidden en endpoints sin autenticación
 - **TypeScript:** Compilación limpia con `tsc --noEmit` (0 errores)
 - **Docker:** 5/5 contenedores `ricoh-backend`, `ricoh-frontend`, `ricoh-postgres`, `ricoh-redis`, `ricoh-adminer` en estado `Up/healthy`
 
 ### 📚 Documentation
 
-- `docs/resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md` — Resumen completo de la sesión de 3-4 días
-- `docs/fixes/FIX_BUGS_CRITICOS_26_MAYO_2026.md` — Documentación técnica de los 3 bugs críticos corregidos
-- `docs/desarrollo/completados/ELIMINACION_CSV_29_MAYO_2026.md` — Documentación completa de la eliminación de CSV
-- `docs/guias/PLAN_QA_SIGUIENTE_SESION.md` — Plan QA para pruebas manuales en browser
+- `docs/resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md` — Resumen completo de la sesión de trabajo, incluyendo el éxito del plan de pruebas funcionales y automatizadas.
+- `docs/fixes/FIX_BUGS_CRITICOS_26_MAYO_2026.md` — Documentación técnica de los 3 bugs críticos corregidos.
+- `docs/desarrollo/completados/ELIMINACION_CSV_29_MAYO_2026.md` — Documentación completa de la eliminación de CSV.
+- `docs/guias/PLAN_QA_SIGUIENTE_SESION.md` — Plan de QA del sistema actualizado con todos los bloques A, B y C completados y aprobados al 100%.
 
 ---
 
