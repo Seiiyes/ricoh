@@ -196,12 +196,24 @@ El cliente solicitó eliminar **todos** los formatos CSV del sistema y usar excl
 - ❌ Eliminado import `Download` (ya no usado en ese contexto)
 - ❌ Eliminado botón "Exportar CSV" del footer del modal
 
-##### Validación TypeScript
-
-```bash
+##### Validación TypeScript```bash
 node node_modules/typescript/bin/tsc --noEmit
 # Resultado: Compilación exitosa, 0 errores ✅
 ```
+
+#### Normalización Completa de Centros de Costo por Empresa
+
+Se resolvió la inconsistencia de los centros de costo como strings de texto libre (`VARCHAR(100)`) en `users`, normalizándolo como una entidad de base de datos asociada a la empresa cliente, cumpliendo estrictamente con la regla de negocio de multi-tenancy.
+
+**Cambios técnicos ejecutados:**
+1. **Base de Datos / Migración SQL (014):** Se creó la tabla `centro_costos` vinculada a `empresas(id)` con restricción `UNIQUE (empresa_id, nombre)`. Se migró todo el historial y se eliminó la columna vieja `users.centro_costos`. Se reconstruyeron las vistas de compatibilidad dependientes (`v_users_completo`, `v_contadores_usuario_completo`, `v_cierres_usuarios_completo`) con un `LEFT JOIN` a `centro_costos` para preservar la columna de texto.
+2. **Modelos ORM (`models.py` y `models_auth.py`):** Se definió `CentroCosto` y se agregó `centro_costo_id` en `User`. Se implementó la propiedad `@property def centro_costos(self)` en `User` para resolver el string y mantener **compatibilidad hacia atrás al 100% con React**.
+3. **UserRepository (`repository.py`):** Se modificó `create` y `update` para que si se pasa un string en `"centro_costos"`, busquen o creen la entidad `CentroCosto` estructurada por empresa en caliente.
+4. **Endpoints y Queries:** Se ajustaron las queries y agrupaciones analíticas de `api/analytics.py` (ranking de consumo tridimensional) y los filtros en `api/counters.py` (cierres) para hacer joins explícitos con `centro_costos`.
+5. **Bug Fix:** Se corrigió un error en la búsqueda de usuarios de `api/users.py` donde se intentaba acceder al atributo inexistente `User.nombre` en lugar de `User.name`.
+
+**Validación y Test Multitenant:**
+Se creó el script de verificación interactiva `test_multitenant_centro_costos.py` que demostró con éxito rotundo que Empresa A y Empresa B crean independientemente su centro `"Contabilidad"` con IDs diferentes, que los usuarios se vinculan correctamente, y que responden transparentemente a través del property retrocompatible string. Todas las suites de QA pasaron con éxito del 100% (27/27 funcionales y 10/10 de importación).
 
 ---
 
@@ -233,24 +245,25 @@ Usuario
 ```
 QA Automatizado (Bloque A):  10/10 ✅ (verify_session_29mayo.py)
 QA Funcional (Bloques B+C):  27/27 ✅ (qa_bloques_bc.py)
-TypeScript:                  0 errores ✅
-Docker:                      5/5 contenedores healthy ✅
-Multi-tenancy:               403 sin token ✅
 ```
-
----
-
-## 4. Archivos Modificados en Esta Sesión
 
 | Archivo | Tipo de cambio | Descripción |
 |---|---|---|
-| `backend/api/counters.py` | Fix + Limpieza | Fix `nombre_completo`, fix `empresa_id` fallback, limpieza de imports |
+| `backend/api/counters.py` | Refactor | Filtros y búsquedas adaptados para hacer join con la tabla centro_costos |
+| `backend/api/analytics.py` | Refactor | Query de top-users adaptada con LEFT JOIN y GROUP BY normalizado |
+| `backend/api/users.py` | Bug Fix | Corregido bug de atributo User.nombre por User.name en la búsqueda |
+| `backend/db/models.py` | Modificación | Definido modelo CentroCosto y propiedad retrocompatible @property centro_costos en User |
+| `backend/db/models_auth.py` | Modificación | Agregada relación centros_costo en el modelo Empresa |
+| `backend/db/repository.py` | Refactor | Adaptado create/update para resolver centro_costo_id en caliente a partir de strings |
+| `backend/migrations/014_normalizar_centros_costo.sql` | Nuevo SQL | Migración SQL que crea la tabla, migra datos y reconstruye vistas |
+| `backend/test_multitenant_centro_costos.py` | Nuevo Test | Script de validación interactiva multitenant (100% exitosa) |
 | `backend/api/dashboard.py` | Fix | Agregado `from db.models import Printer` |
 | `backend/api/export.py` | Eliminación | Removidos endpoints CSV y `import csv` |
 | `backend/pyrightconfig.json` | Nuevo | Configuración Pyright para suprimir falsos positivos locales |
 | `backend/qa_test_suite.py` | Actualización | Actualizado y ejecutado, 18/18 pruebas |
 | `backend/qa_bloques_bc.py` | Nuevo | Script de pruebas QA automáticas para los Bloques B y C |
 | `docs/guias/PLAN_QA_SIGUIENTE_SESION.md` | Actualización | Estado de pruebas de QA completado al 100% |
+| `docs/desarrollo/completados/MIGRACION_CENTROS_COSTO_29_MAYO_2026.md` | Nueva Doc | Especificación y documentación de cierre del cambio completado |
 | `src/hooks/useDashboardData.ts` | Nuevo hook | `useEvolutionData` + interfaz `EvolutionItem` |
 | `src/services/exportService.ts` | Eliminación | Removidos `exportCierreCSV`, `exportComparacionCSV` |
 | `src/utils/exportUtils.ts` | Eliminación | Removidas `exportChartDataToCSV`, `exportTableToCSV` |
@@ -285,6 +298,10 @@ Las pruebas del **Bloque A, B y C** fueron ejecutadas y aprobadas al 100% de man
 
 | Decisión | Justificación |
 |---|---|
+| Mapear centros de costo por empresa | Resuelve inconsistencias tipográficas y valida la regla multi-tenancy de negocio. |
+| Mantener propiedad `@property centro_costos` en el modelo SQLAlchemy `User` | **Evita cambios disruptivos en React.** El JSON del backend expone el string libre retrocompatible de cara al frontend, eliminando la necesidad de cambiar los componentes visuales de la UI. |
+| Ingesta inteligente de centros de costo en el repositorio | Los métodos `create` y `update` de `UserRepository` buscan o crean en caliente la entidad `CentroCosto` por empresa, haciendo que la transición sea transparente ante SNMP o cargas masivas. |
+| Reconstruir vistas SQL dependientes con un `LEFT JOIN` | Garantiza que queries crudas o de compatibilidad no fallen por la eliminación de la columna física. |
 | Configurar Pylance con `typeCheckingMode: off` en lugar de stubs | Los módulos residen en Docker; crear stubs es overkill y no aporta valor de desarrollo |
 | Usar `current_user.empresa_id` como fallback de `empresa_id` | El usuario siempre tiene empresa asignada; la impresora puede estar en migración sin empresa |
 | Renombrar handlers CSV → Excel (no eliminar) | Mantener la funcionalidad de exportación masiva de usuarios, solo cambiar el formato de salida |

@@ -14,6 +14,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - **`AttributeError: current_user.name`** — El modelo `User` usa `nombre_completo`. Reemplazado en todos los endpoints de `counters.py` que accedían al nombre del usuario autenticado.
 - **`IntegrityError: empresa_id NULL`** en `ComparacionGuardada` — Implementado fallback `empresa_id = printer.empresa_id or current_user.empresa_id` para impresoras sin empresa asignada.
 - **`NameError: Printer`** en `dashboard.py` — Agregado `from db.models import Printer` faltante en el endpoint de tóner-alertas.
+- **`AttributeError: User.nombre`** en `users.py` L230 — Corregido bug latente en la búsqueda global de usuarios sustituyéndolo por el atributo de ORM correcto `User.name`.
 
 ### 🧹 Refactor — Limpieza de imports en `counters.py`
 
@@ -30,6 +31,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### ✨ Added
 
+- **Normalización de Centros de Costo por Empresa** — Diseño e implementación del modelo `CentroCosto` vinculado a `empresas(id)` con restricción `UNIQUE (empresa_id, nombre)`. Vinculación de usuarios mediante `centro_costo_id`.
+- **Propiedad Retrocompatible `@property centro_costos`** en la clase `User` — Permite que la API serialice y devuelva el centro de costos en string de forma dinámica de cara al frontend, **garantizando 100% de compatibilidad sin reescribir React**.
+- **Ingesta inteligente en `UserRepository`** — Adaptados `create` y `update` para buscar o crear en caliente el centro de costos estructurado por empresa a partir de payloads de texto plano.
+- **Refactorización de Analytics y Cierres** — Queries de top ranking y filtrado de counters adaptadas para realizar joins estructurados con la tabla `centro_costos`.
 - **`useEvolutionData` hook** en `src/hooks/useDashboardData.ts` con interfaz `EvolutionItem` tipada, consume `/api/v1/analytics/evolution`
 - **Configuración Pylance/VS Code** — `.vscode/settings.json` + `backend/pyrightconfig.json` para eliminar falsos positivos de imports Docker en el editor local
 
@@ -37,15 +42,17 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - **QA Automatizado (Bloque A):** 10/10 pruebas de importación, índices e integridad estructural pasadas en `verify_session_29mayo.py`
 - **QA Funcional y Robustez (Bloques B+C):** 27/27 pruebas de la API (Cierres, Analytics, Comparaciones guardadas, Edge cases y Excel) pasadas en `qa_bloques_bc.py`
+- **Test de Centros de Costo Multitenant:** Creado y ejecutado con éxito rotundo el script `test_multitenant_centro_costos.py`, demostrando el correcto aislamiento de centros del mismo nombre en distintas empresas y su property string compatible.
 - **Multi-tenancy:** Verificado 403 Forbidden en endpoints sin autenticación
 - **TypeScript:** Compilación limpia con `tsc --noEmit` (0 errores)
 - **Docker:** 5/5 contenedores `ricoh-backend`, `ricoh-frontend`, `ricoh-postgres`, `ricoh-redis`, `ricoh-adminer` en estado `Up/healthy`
 
 ### 📚 Documentation
 
-- `docs/resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md` — Resumen completo de la sesión de trabajo, incluyendo el éxito del plan de pruebas funcionales y automatizadas.
+- `docs/resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md` — Resumen completo de la sesión de trabajo, incluyendo el éxito del plan de pruebas funcionales y la normalización de centros de costo.
 - `docs/fixes/FIX_BUGS_CRITICOS_26_MAYO_2026.md` — Documentación técnica de los 3 bugs críticos corregidos.
 - `docs/desarrollo/completados/ELIMINACION_CSV_29_MAYO_2026.md` — Documentación completa de la eliminación de CSV.
+- `docs/desarrollo/completados/MIGRACION_CENTROS_COSTO_29_MAYO_2026.md` — Documentación completa y cierre de la migración de centros de costo normalizada.
 - `docs/guias/PLAN_QA_SIGUIENTE_SESION.md` — Plan de QA del sistema actualizado con todos los bloques A, B y C completados y aprobados al 100%.
 
 ---
