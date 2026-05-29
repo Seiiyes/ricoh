@@ -56,6 +56,25 @@ class NetworkCredential(Base):
     users = relationship("User", back_populates="network_credential_rel")
 
 
+class CentroCosto(Base):
+    """
+    CentroCosto model associated with Empresa
+    Stores the normalized cost center names
+    """
+    __tablename__ = "centro_costos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False, index=True)
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="RESTRICT"), nullable=False, index=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    empresa = relationship("Empresa", back_populates="centros_costo")
+    users = relationship("User", back_populates="centro_costo_rel")
+
+
 class User(Base):
     """
     User model for printer provisioning
@@ -91,7 +110,7 @@ class User(Base):
     
     # Optional Fields
     empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="RESTRICT"), nullable=True, index=True)
-    centro_costos = Column(String(100), nullable=True, index=True)  # Centro de costos (antes department)
+    centro_costo_id = Column(Integer, ForeignKey("centro_costos.id", ondelete="SET NULL"), nullable=True, index=True)
     
     # Normalized Foreign Keys (new schema)
     smb_server_id = Column(Integer, ForeignKey("smb_servers.id", ondelete="RESTRICT"), nullable=False)
@@ -104,6 +123,7 @@ class User(Base):
 
     # Relationships
     empresa = relationship("Empresa", back_populates="users")
+    centro_costo_rel = relationship("CentroCosto", back_populates="users")
     smb_server_rel = relationship("SMBServer", back_populates="users")
     network_credential_rel = relationship("NetworkCredential", back_populates="users")
     printer_assignments = relationship(
@@ -111,6 +131,11 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    
+    @property
+    def centro_costos(self) -> Optional[str]:
+        """Propiedad híbrida para mantener compatibilidad string hacia atrás"""
+        return self.centro_costo_rel.nombre if self.centro_costo_rel else None
     
     def set_network_password(self, password: str):
         """

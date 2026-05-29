@@ -948,20 +948,26 @@ async def get_all_users_closes(
 
     # Filtro por centro de costos
     if centro_costos:
-        # Hacemos join explícito con User si no se busca por texto
-        query = query.join(User, User.id == CierreMensualUsuario.user_id).filter(
-            User.centro_costos.ilike(f"%{centro_costos}%")
+        from db.models import CentroCosto
+        # Hacemos join explícito con User y con CentroCosto
+        query = query.join(User, User.id == CierreMensualUsuario.user_id).join(
+            CentroCosto, User.centro_costo_id == CentroCosto.id
+        ).filter(
+            CentroCosto.nombre.ilike(f"%{centro_costos}%")
         )
 
     # Búsqueda de texto (nombre de usuario, código, IP, ubicación, hostname)
     if search:
         search_term = f"%{search}%"
-        # Obtener IDs de usuarios que coincidan con el nombre/código/centro de costo
-        matching_users = db.query(User.id).filter(
+        from db.models import CentroCosto
+        # Obtener IDs de usuarios que coincidan con el nombre/código/centro de costo normalizado
+        matching_users = db.query(User.id).outerjoin(
+            CentroCosto, User.centro_costo_id == CentroCosto.id
+        ).filter(
             or_(
                 User.name.ilike(search_term),
                 User.codigo_de_usuario.ilike(search_term),
-                User.centro_costos.ilike(search_term)
+                CentroCosto.nombre.ilike(search_term)
             )
         ).subquery()
         

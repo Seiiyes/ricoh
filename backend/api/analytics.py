@@ -93,7 +93,7 @@ async def get_top_users(
             u.id as user_id,
             u.name as nombre,
             u.codigo_de_usuario as codigo_usuario,
-            u.centro_costos as centro_costos,
+            cc.nombre as centro_costos,
             SUM(cmu.consumo_total)::BIGINT AS total_consumo_paginas,
             SUM(cmu.consumo_copiadora)::BIGINT AS total_copiadora,
             SUM(cmu.consumo_impresora)::BIGINT AS total_impresora,
@@ -104,6 +104,7 @@ async def get_top_users(
         INNER JOIN cierres_mensuales cm ON cm.id = cmu.cierre_mensual_id
         INNER JOIN printers p ON p.id = cm.printer_id
         INNER JOIN users u ON u.id = cmu.user_id
+        LEFT JOIN centro_costos cc ON u.centro_costo_id = cc.id
         WHERE cm.fecha_inicio >= :inicio
           AND cm.fecha_fin <= :fin
     """
@@ -115,7 +116,7 @@ async def get_top_users(
         params["empresa_id"] = target_empresa_id
         
     query += """
-        GROUP BY u.id, u.name, u.codigo_de_usuario, u.centro_costos
+        GROUP BY u.id, u.name, u.codigo_de_usuario, cc.nombre
         ORDER BY total_consumo_paginas DESC NULLS LAST
         LIMIT :limit
     """

@@ -227,7 +227,7 @@ async def get_users(
         search_pattern = f"%{search}%"
         query = query.filter(
             or_(
-                User.nombre.ilike(search_pattern),
+                User.name.ilike(search_pattern),
                 User.codigo_de_usuario.ilike(search_pattern)
             )
         )

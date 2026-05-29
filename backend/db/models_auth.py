@@ -46,6 +46,7 @@ class Empresa(Base):
     admin_users = relationship("AdminUser", back_populates="empresa")
     printers = relationship("Printer", back_populates="empresa")
     users = relationship("User", back_populates="empresa")
+    centros_costo = relationship("CentroCosto", back_populates="empresa", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Empresa(id={self.id}, razon_social='{self.razon_social}', nombre_comercial='{self.nombre_comercial}')>"

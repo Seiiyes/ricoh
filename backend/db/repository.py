@@ -55,7 +55,32 @@ class UserRepository:
             db.add(network_cred_obj)
             db.flush()  # Get the ID without committing
         
-        # 3. Create user with normalized references
+        # 3. Resolve empresa_id and centro_costo_id
+        empresa_id = None
+        if empresa:
+            from db.models_auth import Empresa
+            empresa_obj = db.query(Empresa).filter(
+                or_(Empresa.razon_social == empresa, Empresa.nombre_comercial == empresa)
+            ).first()
+            if empresa_obj:
+                empresa_id = empresa_obj.id
+                
+        centro_costo_id = None
+        if centro_costos and empresa_id:
+            from db.models import CentroCosto
+            cc_obj = db.query(CentroCosto).filter(
+                CentroCosto.nombre == centro_costos,
+                CentroCosto.empresa_id == empresa_id
+            ).first()
+            
+            if not cc_obj:
+                cc_obj = CentroCosto(nombre=centro_costos, empresa_id=empresa_id)
+                db.add(cc_obj)
+                db.flush()
+                
+            centro_costo_id = cc_obj.id
+        
+        # 4. Create user with normalized references
         user = User(
             name=name,
             codigo_de_usuario=codigo_de_usuario,
@@ -68,6 +93,8 @@ class UserRepository:
             # New normalized foreign keys
             smb_server_id=smb_server_obj.id,
             network_credential_id=network_cred_obj.id,
+            empresa_id=empresa_id,
+            centro_costo_id=centro_costo_id,
             # Functions
             func_copier=func_copier,
             func_copier_color=func_copier_color,
@@ -76,11 +103,8 @@ class UserRepository:
             func_document_server=func_document_server,
             func_fax=func_fax,
             func_scanner=func_scanner,
-            func_browser=func_browser,
-            centro_costos=centro_costos
+            func_browser=func_browser
         )
-        # Note: empresa parameter is ignored for now as it should be empresa_id
-        # TODO: Update API to accept empresa_id instead of empresa string
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -116,6 +140,27 @@ class UserRepository:
         
         user = db.query(User).filter(User.id == user_id).first()
         if user:
+            # Resolve centro_costos string to centro_costo_id dynamically
+            if "centro_costos" in kwargs:
+                centro_costos_value = kwargs.pop("centro_costos")
+                empresa_id = kwargs.get("empresa_id", user.empresa_id)
+                
+                if centro_costos_value and empresa_id:
+                    from db.models import CentroCosto
+                    cc_obj = db.query(CentroCosto).filter(
+                        CentroCosto.nombre == centro_costos_value,
+                        CentroCosto.empresa_id == empresa_id
+                    ).first()
+                    
+                    if not cc_obj:
+                        cc_obj = CentroCosto(nombre=centro_costos_value, empresa_id=empresa_id)
+                        db.add(cc_obj)
+                        db.flush()
+                        
+                    kwargs["centro_costo_id"] = cc_obj.id
+                else:
+                    kwargs["centro_costo_id"] = None
+
             # Get valid column names (exclude relationships)
             mapper = inspect(User)
             valid_columns = {col.key for col in mapper.columns}
