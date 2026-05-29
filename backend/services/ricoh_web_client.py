@@ -241,7 +241,7 @@ class RicohWebClient:
         try:
             print(f"\n{'='*70}")
             print(f"🔄 ricoh_web_client.provision_user() INICIADO")
-            print(f"   Versión: SIN entryIndexIn (autoincremental)")
+            print(f"   Versión: CON FLUJO DE CONTRASEÑA CORRECTO")
             print(f"   Impresora: {printer_ip}")
             print(f"   Usuario: {user_config.get('nombre')}")
             print(f"{'='*70}\n")
@@ -317,19 +317,23 @@ class RicohWebClient:
                 logger.warning(f"⚠️  No se encontró entryIndexIn en el formulario, usando vacío")
                 entry_index = ''
             
-            logger.info(f"⚡ Paso 3: Enviando POST INMEDIATAMENTE")
+            logger.info(f"⚡ Paso 3: Creando usuario SIN contraseña primero")
             
-            # Step 4: Build form data IMMEDIATELY (no delays)
-            # Match EXACTLY the working browser request with ALL fields
+            # Step 4: Build form data WITHOUT password (will be set in separate flow)
             funciones = user_config.get('funciones_disponibles', {})
             available_funcs = []
             
             if funciones.get('copiadora'):
-                available_funcs.append('COPY')
+                available_funcs.append('COPY_BW')
+            if funciones.get('copiadora_color'):
+                available_funcs.append('COPY_TC')
+                available_funcs.append('COPY_MC')
             if funciones.get('escaner'):
                 available_funcs.append('SCAN')
             if funciones.get('impresora'):
-                available_funcs.append('PRT')
+                available_funcs.append('PRT_BW')
+            if funciones.get('impresora_color'):
+                available_funcs.append('PRT_FC')
             if funciones.get('document_server'):
                 available_funcs.append('DOC_SERVER')
             if funciones.get('fax'):
@@ -338,18 +342,9 @@ class RicohWebClient:
                 available_funcs.append('BROWSER')
             
             carpeta_smb = user_config.get('carpeta_smb', {})
-            network_password = user_config.get('contrasena_inicio_sesion', '')
-            
-            # Si no hay contraseña, usar "Temporal2021" por defecto
-            if not network_password:
-                network_password = 'Temporal2021'
-                logger.info(f"⚠️  No se proporcionó contraseña, usando 'Temporal2021' por defecto")
-            
-            # Determinar si se debe marcar como actualizada la contraseña
-            is_password_updated = 'true' if network_password else 'false'
             
             # Build form data matching EXACTLY the working browser request
-            # Use the entryIndexIn that the printer assigned in the form
+            # IMPORTANTE: NO incluir contraseña aquí
             form_data = [
                 ('inputSpecifyModeIn', 'WRITE'),
                 ('listUpdateIn', 'UPDATE'),
@@ -363,8 +358,8 @@ class RicohWebClient:
                 ('wayTo', 'adrsList.cgi'),
                 ('isSelfPasswordEditMode', 'false'),
                 ('isLocalAuthPasswordUpdated', 'false'),
-                ('isFolderAuthPasswordUpdated', is_password_updated),  # true si hay contraseña
-                ('entryIndexIn', entry_index),  # Use the index assigned by the printer
+                ('isFolderAuthPasswordUpdated', 'false'),  # false porque aún no configuramos contraseña
+                ('entryIndexIn', entry_index),
                 ('entryNameIn', user_config.get('nombre', '')),
                 ('entryDisplayNameIn', user_config.get('nombre', '')),
                 ('priorityIn', '5'),
@@ -383,27 +378,22 @@ class RicohWebClient:
             for func in available_funcs:
                 form_data.append(('availableFuncIn', func))
             
-            # Continue with remaining fields (NO empty fields!)
+            # Continue with remaining fields (NO password fields!)
             form_data.extend([
                 ('entryUseIn', 'ENTRYUSE_TO_O'),
                 ('entryUseIn', 'ENTRYUSE_FROM_O'),
+                ('mailAddressIn', ''),
                 ('isCertificateExist', 'false'),
                 ('isEncryptAlways', 'false'),
                 ('folderProtocolIn', 'SMB_O'),
                 ('folderPathNameIn', carpeta_smb.get('ruta', '')),
             ])
             
-            # Always add password fields (using Temporal2021 if not provided)
-            form_data.append(('folderAuthPasswordIn', network_password))
-            form_data.append(('folderAuthPasswordConfirmIn', network_password))
-            
-            logger.info(f"🔐 Contraseña de carpeta configurada: {'***' if network_password else '(vacía)'}")
-            
-            # Step 5: Send POST IMMEDIATELY (no delays!)
+            # Step 5: Send POST to create user WITHOUT password
             url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
-            logger.info(f"📤 Enviando datos de usuario a {url}")
+            logger.info(f"📤 Creando usuario en {url}")
             
-            # Add required headers (XMLHttpRequest is important!)
+            # Add required headers
             headers = {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -419,42 +409,56 @@ class RicohWebClient:
             )
             
             logger.debug(f"Response status: {response.status_code}")
-            logger.debug(f"Response headers: {dict(response.headers)}")
-            logger.debug(f"Response size: {len(response.text)} characters")
             
-            # Save response for debugging
-            with open('provision_response.html', 'w', encoding='utf-8') as f:
-                f.write(response.text)
-            logger.debug(f"Response saved to: provision_response.html")
-            
-            # Check for timeout error in response
+            # Check for errors
             if 'Tiempo de sesión agotado' in response.text or 'TIMEOUT' in response.text:
                 logger.error(f"✗ Session timeout error")
                 return False
             
-            # Check for BADFLOW error (anti-scraping protection)
             if 'BADFLOW' in response.text:
-                logger.error(f"✗ BADFLOW detected - Printer rejected the request flow")
-                logger.error(f"   Usually happens when cookies or wimToken are invalid or session expired")
+                logger.error(f"✗ BADFLOW detected")
                 return "BADFLOW"
             
-            # Check for BUSY error
             if 'BUSY' in response.text or 'está siendo utilizado' in response.text:
-                logger.error(f"✗ Printer is BUSY - device is being used by other functions")
-                logger.error(f"   Please wait and try again later")
+                logger.error(f"✗ Printer is BUSY")
                 return "BUSY"
             
-            # Check for other errors
-            if 'Error' in response.text or 'error' in response.text:
-                logger.warning(f"⚠️  Response contains 'Error' - check provision_response.html")
+            if response.status_code not in [200, 302]:
+                logger.error(f"✗ User creation failed, status: {response.status_code}")
+                return False
             
-            if response.status_code in [200, 302]:
-                logger.info(f"✅ User provisioned successfully to {printer_ip}")
-                logger.info(f"   Response status: {response.status_code}")
+            logger.info(f"✅ Usuario creado exitosamente (sin contraseña)")
+            
+            # Step 6: Configure folder password using the correct flow
+            logger.info(f"🔐 Paso 4: Configurando contraseña de carpeta...")
+            
+            # Import and use the password flow
+            from services.ricoh_password_flow import RicohPasswordFlow
+            
+            password_flow = RicohPasswordFlow(self.session, self.timeout)
+            password_result = password_flow.set_folder_password(
+                printer_ip=printer_ip,
+                entry_index=entry_index,
+                password=user_config.get('contrasena_inicio_sesion', 'Temporal2021')
+            )
+            
+            if password_result is True:
+                logger.info(f"✅ Usuario aprovisionado completamente en {printer_ip}")
+                logger.info(f"   Usuario: {user_config.get('nombre')}")
+                logger.info(f"   Código: {user_config.get('codigo_de_usuario')}")
+                logger.info(f"   Índice: {entry_index}")
+                logger.info(f"   Contraseña: Configurada ✓")
                 return True
+            elif password_result == "BUSY":
+                logger.error(f"✗ Impresora ocupada al configurar contraseña")
+                return "BUSY"
+            elif password_result == "TIMEOUT":
+                logger.error(f"✗ Timeout al configurar contraseña")
+                return "TIMEOUT"
             else:
-                logger.error(f"✗ Provisioning failed, status: {response.status_code}")
-                logger.error(f"   Response: {response.text[:500]}")
+                logger.error(f"✗ No se pudo configurar la contraseña")
+                logger.warning(f"⚠️  Usuario creado pero SIN contraseña de carpeta")
+                logger.warning(f"   Deberá configurarse manualmente")
                 return False
                 
         except requests.exceptions.Timeout:
@@ -465,6 +469,8 @@ class RicohWebClient:
             return "CONNECTION"
         except Exception as e:
             logger.error(f"✗ Error provisioning user to {printer_ip}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return False
     
     def reset_session(self):
@@ -982,12 +988,13 @@ class RicohWebClient:
             """
             Actualiza las funciones de un usuario en la impresora.
             Usa el flujo correcto descubierto mediante reverse engineering.
+            ACTUALIZADO: Ahora usa el flujo correcto de contraseña (RicohPasswordFlow)
             """
             try:
-                logger.info(f"Actualizando funciones: Usuario {entry_index} en {printer_ip}")
+                logger.info(f"🔄 Actualizando funciones: Usuario {entry_index} en {printer_ip}")
 
                 if not self._authenticate(printer_ip):
-                    logger.error(f"Fallo autenticacion con {printer_ip}")
+                    logger.error(f"❌ Fallo autenticacion con {printer_ip}")
                     return False
 
                 # 1. Obtener wimToken fresco
@@ -1039,11 +1046,11 @@ class RicohWebClient:
                 response = self.session.post(edit_url, data=form_data, headers=headers, timeout=self.timeout)
 
                 if response.status_code != 200:
-                    logger.error(f"Error al leer formulario: Status {response.status_code}")
+                    logger.error(f"❌ Error al leer formulario: Status {response.status_code}")
                     return False
 
                 if "BADFLOW" in response.text:
-                    logger.warning("BADFLOW detectado, usando Selenium...")
+                    logger.warning("⚠️  BADFLOW detectado, usando Selenium...")
                     try:
                         from services.ricoh_selenium_client import get_selenium_client
                         selenium_client = get_selenium_client()
@@ -1057,7 +1064,7 @@ class RicohWebClient:
                             http_session=self.session
                         )
                     except Exception as sel_err:
-                        logger.error(f"Fallo Selenium: {sel_err}")
+                        logger.error(f"❌ Fallo Selenium: {sel_err}")
                         return False
 
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -1071,7 +1078,7 @@ class RicohWebClient:
                 html_checkboxes = soup.find_all('input', {'name': 'availableFuncIn', 'type': 'checkbox'})
 
                 if not html_checkboxes:
-                    logger.error("No se encontraron checkboxes de funciones")
+                    logger.error("❌ No se encontraron checkboxes de funciones")
                     return False
 
                 logger.info(f"   {len(html_checkboxes)} checkboxes encontrados")
@@ -1136,11 +1143,15 @@ class RicohWebClient:
                 # 6. Obtener información del usuario para campos obligatorios
                 user_name_input = soup.find('input', {'name': 'entryNameIn'})
                 user_code_input = soup.find('input', {'name': 'userCodeIn'})
+                folder_path_input = soup.find('input', {'name': 'folderPathNameIn'})
+                folder_username_input = soup.find('input', {'name': 'folderAuthUserNameIn'})
 
                 user_name = user_name_input.get('value', '') if user_name_input else ''
                 user_code = user_code_input.get('value', '') if user_code_input else ''
+                folder_path = folder_path_input.get('value', '') if folder_path_input else ''
+                folder_username = folder_username_input.get('value', '') if folder_username_input else ''
 
-                # 7. Construir payload con TODOS los campos obligatorios
+                # 7. Construir payload SIN contraseña (se configurará después con el flujo correcto)
                 # Estos son los campos mínimos que Ricoh requiere para actualizar
                 payload = [
                     ('wimToken', wim_token),
@@ -1159,24 +1170,21 @@ class RicohWebClient:
                     ('wayTo', 'adrsList.cgi'),
                     ('isSelfPasswordEditMode', 'false'),
                     ('isLocalAuthPasswordUpdated', 'false'),
-                    ('isFolderAuthPasswordUpdated', 'true'),  # CAMBIADO: Siempre actualizar contraseña
+                    ('isFolderAuthPasswordUpdated', 'false'),  # false porque usaremos el flujo correcto después
                     ('entryTagInfoIn', '1'),
                     ('entryTagInfoIn', '1'),
                     ('entryTagInfoIn', '1'),
                     ('entryTagInfoIn', '1'),
                     ('smtpAuthAccountIn', 'AUTH_SYSTEM_O'),
                     ('folderAuthAccountIn', 'AUTH_ASSIGNMENT_O'),
-                    ('folderAuthUserNameIn', ''),
+                    ('folderAuthUserNameIn', folder_username),
                     ('ldapAuthAccountIn', 'AUTH_SYSTEM_O'),
                     ('entryUseIn', 'ENTRYUSE_TO_O'),
                     ('entryUseIn', 'ENTRYUSE_FROM_O'),
                     ('isCertificateExist', 'false'),
                     ('isEncryptAlways', 'false'),
                     ('folderProtocolIn', 'SMB_O'),
-                    ('folderPathNameIn', '\\\\TIC-0122\\Escaner'),
-                    # AGREGADO: Contraseña de carpeta (Temporal2021)
-                    ('folderAuthPasswordIn', 'Temporal2021'),
-                    ('folderAuthPasswordConfirmIn', 'Temporal2021'),
+                    ('folderPathNameIn', folder_path),
                 ]
 
                 # Agregar funciones seleccionadas
@@ -1184,9 +1192,8 @@ class RicohWebClient:
                     payload.append(('availableFuncIn', func))
 
                 logger.info(f"   Enviando: {len(payload)} campos + {len(active_funcs)} funciones")
-                logger.info(f"   🔐 Contraseña de carpeta: Temporal2021")
 
-                # 8. Enviar actualización
+                # 8. Enviar actualización de funciones (SIN contraseña)
                 update_url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
                 update_headers = { 
                     'Referer': edit_url,
@@ -1198,20 +1205,52 @@ class RicohWebClient:
 
                 logger.info(f"   Respuesta: Status {resp.status_code}")
 
-                if resp.status_code == 200:
-                    # Verificar que no haya errores en la respuesta
-                    if "BADFLOW" not in resp.text and "Error" not in resp.text:
-                        logger.info(f"✅ Actualización exitosa en {printer_ip}")
-                        return True
-                    else:
-                        logger.error(f"❌ La impresora rechazó la actualización: {resp.text[:200]}")
-                        return False
+                if resp.status_code != 200:
+                    logger.error(f"❌ La impresora rechazó la actualización (Status {resp.status_code})")
+                    return False
 
-                logger.error(f"❌ La impresora rechazó la actualización (Status {resp.status_code})")
-                return False
+                # Verificar que no haya errores en la respuesta
+                if "BADFLOW" in resp.text:
+                    logger.error(f"❌ BADFLOW en la respuesta")
+                    return False
+                
+                if "BUSY" in resp.text or 'está siendo utilizado' in resp.text:
+                    logger.error(f"❌ Impresora ocupada")
+                    return "BUSY"
+
+                logger.info(f"✅ Funciones actualizadas exitosamente")
+
+                # 9. Configurar contraseña usando el flujo correcto
+                logger.info(f"🔐 Configurando contraseña de carpeta con flujo correcto...")
+                
+                from services.ricoh_password_flow import RicohPasswordFlow
+                
+                password_flow = RicohPasswordFlow(self.session, self.timeout)
+                password_result = password_flow.set_folder_password(
+                    printer_ip=printer_ip,
+                    entry_index=entry_index,
+                    password="Temporal2021"
+                )
+                
+                if password_result is True:
+                    logger.info(f"✅ Actualización completa (funciones + contraseña) en {printer_ip}")
+                    return True
+                elif password_result == "BUSY":
+                    logger.error(f"❌ Impresora ocupada al configurar contraseña")
+                    return "BUSY"
+                elif password_result == "TIMEOUT":
+                    logger.error(f"❌ Timeout al configurar contraseña")
+                    return "TIMEOUT"
+                else:
+                    logger.warning(f"⚠️  Funciones actualizadas pero contraseña NO configurada")
+                    logger.warning(f"   Deberá configurarse manualmente")
+                    return False
 
             except Exception as e:
-                logger.error(f"Error en set_user_functions: {e}")
+                logger.error(f"❌ Error en set_user_functions: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+                return False
                 import traceback
                 logger.debug(traceback.format_exc())
                 return False

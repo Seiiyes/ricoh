@@ -7,23 +7,23 @@ import { sileo } from 'sileo';
 export const useNotification = () => {
   return {
     success: (message: string, description?: string) => {
-      sileo.success(message, { description });
+      sileo.success({ title: message, description });
     },
     
     error: (message: string, description?: string) => {
-      sileo.error(message, { description });
+      sileo.error({ title: message, description });
     },
     
     info: (message: string, description?: string) => {
-      sileo.info(message, { description });
+      sileo.info({ title: message, description });
     },
     
     warning: (message: string, description?: string) => {
-      sileo.warning(message, { description });
+      sileo.warning({ title: message, description });
     },
     
     loading: (message: string, description?: string) => {
-      return sileo.loading(message, { description });
+      return sileo.show({ type: 'loading', title: message, description });
     },
     
     promise: <T,>(
@@ -34,7 +34,15 @@ export const useNotification = () => {
         error: string | ((error: any) => string);
       }
     ) => {
-      return sileo.promise(promise, messages);
+      return sileo.promise(promise, {
+        loading: { title: messages.loading, type: 'loading' },
+        success: typeof messages.success === 'function'
+          ? (data: T) => ({ title: (messages.success as Function)(data), type: 'success' })
+          : { title: messages.success, type: 'success' },
+        error: typeof messages.error === 'function'
+          ? (err: any) => ({ title: (messages.error as Function)(err), type: 'error' })
+          : { title: messages.error, type: 'error' }
+      });
     },
   };
 };

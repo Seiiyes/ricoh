@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, Printer, ShieldCheck, Settings, Globe, Trash2, Plus } from 'lucide-react';
+import { X, Save, Printer, ShieldCheck, Settings, Globe, Trash2, Plus } from 'lucide-react';
 import { actualizarUsuario, obtenerUsuarioConEquipos, actualizarPermisosAsignacion, crearUsuario, obtenerDetallesUsuarioImpresora, sincronizarUsuarioTodasImpresoras } from '@/services/servicioUsuarios';
 import { EditorPermisos } from './EditorPermisos';
 import { GestorEquipos } from './GestorEquipos';
@@ -339,16 +339,18 @@ export const ModificarUsuario = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[85vh] flex overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl modal-content w-full h-[90vh] sm:h-[85vh] flex overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
 
         {/* Sidebar de Navegación */}
-        <div className="w-64 bg-slate-900 flex flex-col border-r border-slate-800">
-          <div className="p-6">
-            <h2 className="text-white font-black text-xl tracking-tighter flex items-center gap-2">
-              <span className="bg-ricoh-red p-1 rounded">R</span> RICOH EQUIPMENT
+        <div className="w-48 sm:w-56 lg:w-64 bg-slate-900 flex flex-col border-r border-slate-800">
+          <div className="p-4 sm:p-5 lg:p-6">
+            <h2 className="text-white font-black text-responsive-base tracking-tighter flex items-center gap-2">
+              <span className="bg-ricoh-red p-1 rounded text-xs sm:text-sm">R</span> 
+              <span className="hidden sm:inline">RICOH EQUIPMENT</span>
+              <span className="sm:hidden">RICOH</span>
             </h2>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Gestión de Perfil</p>
+            <p className="text-slate-500 text-responsive-xs font-bold uppercase tracking-widest mt-1">Gestión de Perfil</p>
           </div>
 
           <nav className="flex-1 px-4 space-y-1">
@@ -406,14 +408,14 @@ export const ModificarUsuario = ({
         <div className="flex-1 flex flex-col bg-slate-50 relative">
 
           {/* Header del contenido */}
-          <div className="px-8 py-5 border-b border-slate-200 flex items-center justify-between bg-white">
+          <div className="container-padding py-4 sm:py-5 border-b border-slate-200 flex items-center justify-between bg-white">
             <div>
-              <h3 className="text-slate-900 font-black text-lg tracking-tight">
+              <h3 className="text-slate-900 font-black text-responsive-base tracking-tight">
                 {tabActiva === 'info' ? 'Datos del Usuario' :
                   tabActiva === 'permisos' ? `Ajustes en ${impresoraSeleccionada?.printer_location || impresoraSeleccionada?.printer_name}` :
                     'Equipos Disponibles'}
               </h3>
-              <p className="text-slate-500 text-xs font-medium">
+              <p className="text-slate-500 text-responsive-xs font-medium">
                 {tabActiva === 'info' ? 'Ajustes maestros del usuario' :
                   tabActiva === 'permisos' ? `Definiendo qué puede hacer en: ${impresoraSeleccionada?.printer_ip}` :
                     'Elige dónde puede imprimir este usuario'}

@@ -1,4 +1,4 @@
-import { Printer, Hash, Calendar, Zap, MapPin } from 'lucide-react';
+import { Printer, Hash, Calendar, Zap, MapPin, Activity } from 'lucide-react';
 import type { PrinterDevice } from '@/types';
 import type { TotalCounter } from '@/types/counter';
 import { cn } from '@/lib/utils';

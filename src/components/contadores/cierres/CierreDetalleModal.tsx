@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { CierreMensual, CierreMensualDetalle } from './types';
 import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 import { Modal, Button, Input, Spinner } from '@/components/ui';
-import { Download, FileSpreadsheet } from 'lucide-react';
+import { FileSpreadsheet } from 'lucide-react';
 import closeService from '@/services/closeService';
 import exportService from '@/services/exportService';
 import { parseApiError } from '@/utils/errorHandler';
@@ -408,22 +408,6 @@ export const CierreDetalleModal: React.FC<CierreDetalleModalProps> = ({
             }}
           >
             Exportar Excel
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<Download size={16} />}
-            onClick={async () => {
-              try {
-                await exportService.exportCierreCSV(cierre.id);
-                notify.success('Archivo descargado', 'El archivo CSV se descargó correctamente');
-              } catch (error: any) {
-                console.error('Error al exportar:', error);
-                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo CSV');
-              }
-            }}
-          >
-            Exportar CSV
           </Button>
           <Button
             variant="ghost"

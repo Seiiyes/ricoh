@@ -99,6 +99,7 @@ export interface UsuarioComparacion {
 export interface ComparacionCierres {
   cierre1: CierreMensual;
   cierre2: CierreMensual;
+  printer?: any;
   diferencia_total: number;
   diferencia_copiadora: number;
   diferencia_impresora: number;
@@ -131,3 +132,16 @@ export interface Printer {
 export type TipoPeriodo = 'diario' | 'semanal' | 'mensual' | 'personalizado';
 
 export type EstadoCierre = 'cerrado' | 'pendiente' | 'futuro' | 'falta';
+
+export interface ComparacionGuardada {
+  id: number;
+  titulo: string;
+  descripcion?: string | null;
+  cierre1_id: number;
+  cierre2_id: number;
+  snapshot_json: any;
+  creado_por?: string | null;
+  admin_user_id?: number | null;
+  empresa_id: number;
+  created_at: string;
+}

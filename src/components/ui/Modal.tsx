@@ -14,6 +14,8 @@ export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   children: React.ReactNode;
   showCloseButton?: boolean;
@@ -26,6 +28,8 @@ export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
+  subtitle,
+  icon,
   size = 'md',
   children,
   showCloseButton = true,
@@ -88,8 +92,15 @@ export const Modal: React.FC<ModalProps> = ({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm flex-shrink-0">
             {title && (
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
+              <div className="flex items-center gap-3">
+                {icon && <div className="flex-shrink-0">{icon}</div>}
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
+                  {subtitle && <p className="text-xs text-slate-500 font-medium mt-0.5">{subtitle}</p>}
+                </div>
+              </div>
             )}
+            {!title && <div />}
             {showCloseButton && (
               <button
                 onClick={onClose}

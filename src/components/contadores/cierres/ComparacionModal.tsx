@@ -454,21 +454,6 @@ export const ComparacionModal: React.FC<ComparacionModalProps> = ({
           >
             Excel Simple
           </Button>
-          <Button
-            variant="primary"
-            icon={<Download size={16} />}
-            onClick={async () => {
-              try {
-                await exportService.exportComparacionCSV(cierre1Id!, cierre2Id!);
-                notify.success('Archivo descargado', 'El archivo CSV se descargó correctamente');
-              } catch (error: any) {
-                console.error('Error al exportar:', error);
-                notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
-              }
-            }}
-          >
-            CSV
-          </Button>
         </div>
       )}
     </Modal>

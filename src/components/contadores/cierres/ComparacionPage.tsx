@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CierreMensual, ComparacionCierres } from './types';
 import { TablaComparacionSimplificada } from './TablaComparacionSimplificada';
-import { Button, Input, Spinner, Alert } from '@/components/ui';
-import { ArrowLeft, RefreshCw, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Button, Input, Alert } from '@/components/ui';
+import { ArrowLeft, RefreshCw, Download, FileSpreadsheet, Save } from 'lucide-react';
 import closeService from '@/services/closeService';
 import exportService from '@/services/exportService';
 import { parseApiError } from '@/utils/errorHandler';
@@ -16,16 +16,11 @@ type SortDir = 'asc' | 'desc';
 interface ComparacionPageProps {
   cierres: CierreMensual[];
   onVolver: () => void;
+  initialCierre1Id?: number | null;
+  initialCierre2Id?: number | null;
 }
 
-const SortIcon = ({ active, dir }: { active: boolean; dir: SortDir }) => (
-  <span className={`ml-1 inline-flex flex-col leading-none ${active ? 'text-indigo-600' : 'text-gray-300'}`}>
-    <span style={{ fontSize: 8, lineHeight: '9px' }}>{!active || dir === 'asc' ? '▲' : ''}</span>
-    <span style={{ fontSize: 8, lineHeight: '9px' }}>{!active || dir === 'desc' ? '▼' : ''}</span>
-  </span>
-);
-
-export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVolver }) => {
+export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVolver, initialCierre1Id, initialCierre2Id }) => {
   const notify = useNotification();
   const [cierre1Id, setCierre1Id] = useState<number | null>(null);
   const [cierre2Id, setCierre2Id] = useState<number | null>(null);
@@ -36,18 +31,28 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
   const [sortKey, setSortKey] = useState<SortKey>('diferencia');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(1);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveTitle, setSaveTitle] = useState('');
+  const [saveDesc, setSaveDesc] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Ordenar cierres por fecha (más antiguo primero)
-    const cierresOrdenados = [...cierres].sort((a, b) => 
-      new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
-    );
-    // Cierre1 = más antiguo (base), Cierre2 = más reciente (comparado)
-    if (cierresOrdenados.length >= 2) { 
-      setCierre1Id(cierresOrdenados[0].id); 
-      setCierre2Id(cierresOrdenados[1].id); 
+    if (initialCierre1Id && initialCierre2Id) {
+      setCierre1Id(initialCierre1Id);
+      setCierre2Id(initialCierre2Id);
+    } else {
+      // Ordenar cierres por fecha (más antiguo primero)
+      const cierresOrdenados = [...cierres].sort((a, b) => 
+        new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
+      );
+      // Cierre1 = más antiguo (base), Cierre2 = más reciente (comparado)
+      if (cierresOrdenados.length >= 2) { 
+        setCierre1Id(cierresOrdenados[0].id); 
+        setCierre2Id(cierresOrdenados[1].id); 
+      }
     }
-  }, [cierres]);
+  }, [cierres, initialCierre1Id, initialCierre2Id]);
+
 
   useEffect(() => { if (cierre1Id && cierre2Id) loadComparacion(); }, [cierre1Id, cierre2Id]);
   useEffect(() => { setPage(1); }, [searchTerm, sortKey, sortDir]);
@@ -63,6 +68,34 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
       setError(parseApiError(err, 'Error al comparar cierres'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveComparacion = async () => {
+    if (!saveTitle.trim()) {
+      notify.error('Campo requerido', 'Por favor ingresa un título para la comparación');
+      return;
+    }
+    if (!cierre1Id || !cierre2Id || !comparacion) return;
+    
+    setSaving(true);
+    try {
+      await closeService.saveComparacion({
+        titulo: saveTitle,
+        descripcion: saveDesc,
+        cierre1_id: cierre1Id,
+        cierre2_id: cierre2Id,
+        snapshot_json: comparacion
+      });
+      notify.success('Comparación guardada', 'La comparación se ha guardado en el historial correctamente');
+      setIsSaveModalOpen(false);
+      setSaveTitle('');
+      setSaveDesc('');
+    } catch (err: any) {
+      console.error('Error al guardar comparación:', err);
+      notify.error('Error al guardar', parseApiError(err, 'No se pudo guardar la comparación'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -172,17 +205,6 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
 
   const totalPages = Math.max(1, Math.ceil(allUsers.length / ROWS_PER_PAGE));
   const pageUsers = allUsers.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
-
-  const SortTh = ({ label, sKey, align = 'right', className = '', rowSpan = 1 }: { label: string; sKey: SortKey; align?: string; className?: string; rowSpan?: number }) => (
-    <th
-      rowSpan={rowSpan}
-      className={`px-3 py-2 text-${align} text-gray-600 font-medium cursor-pointer select-none hover:bg-gray-200/50 whitespace-nowrap transition-colors ${className}`}
-      onClick={() => handleSort(sKey)}
-    >
-      {label}<SortIcon active={sortKey === sKey} dir={sortDir} />
-    </th>
-  );
-
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC]">
 
@@ -460,6 +482,16 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                       <div className="flex items-center gap-2 ml-2">
                         <div className="h-4 w-px bg-gray-300"></div>
                         <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => setIsSaveModalOpen(true)}
+                          icon={<Save size={14} />}
+                          className="bg-indigo-600 hover:bg-indigo-700 shadow-sm text-white font-medium"
+                        >
+                          Guardar Comparación
+                        </Button>
+                        <div className="h-4 w-px bg-gray-300"></div>
+                        <Button
                           variant="secondary"
                           size="sm"
                           onClick={async () => {
@@ -493,23 +525,6 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                           className="bg-green-600 hover:bg-green-700"
                         >
                           Excel Simple
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={async () => {
-                            try {
-                              await exportService.exportComparacionCSV(cierre1Id!, cierre2Id!);
-                              notify.success('Archivo descargado', 'El archivo CSV se descargó correctamente');
-                            } catch (error: any) {
-                              console.error('Error al exportar:', error);
-                              notify.error('Error al exportar', error.message || 'No se pudo generar el archivo');
-                            }
-                          }}
-                          icon={<FileText size={14} />}
-                          className="bg-indigo-600 hover:bg-indigo-700"
-                        >
-                          CSV
                         </Button>
                       </div>
                     )}
@@ -549,6 +564,95 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
           </>
         )}
       </div>
+
+      {/* Modal Premium para guardar comparación */}
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md overflow-hidden transform scale-100 transition-all duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 px-6 py-4 text-white">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                  <Save size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Guardar Comparación</h3>
+                  <p className="text-xs text-indigo-100">Guarda este reporte en el historial de cierres</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Título de la Comparación *</label>
+                <input
+                  type="text"
+                  value={saveTitle}
+                  onChange={e => setSaveTitle(e.target.value)}
+                  placeholder="Ej: Comparativa Primer Trimestre 2026"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  maxLength={200}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Descripción (Opcional)</label>
+                <textarea
+                  value={saveDesc}
+                  onChange={e => setSaveDesc(e.target.value)}
+                  placeholder="Ingresa notas o comentarios para esta comparación..."
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                />
+              </div>
+
+              {/* Resumen Informativo */}
+              <div className="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 text-xs text-indigo-800 space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="font-medium">Período A:</span>
+                  <span>{cierre1Id ? fmtDate(cierres.find(c => c.id === cierre1Id)?.fecha_inicio || '') : ''}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Período B:</span>
+                  <span>{cierre2Id ? fmtDate(cierres.find(c => c.id === cierre2Id)?.fecha_inicio || '') : ''}</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-indigo-100/50 font-bold">
+                  <span>Variación Total:</span>
+                  <span className={diffColor(comparacion?.diferencia_total || 0)}>{fmtDiff(comparacion?.diferencia_total || 0)}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Modal Actions */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsSaveModalOpen(false);
+                  setSaveTitle('');
+                  setSaveDesc('');
+                }}
+                disabled={saving}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSaveComparacion}
+                loading={saving}
+                icon={<Save size={14} />}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-md shadow-indigo-100"
+              >
+                Guardar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

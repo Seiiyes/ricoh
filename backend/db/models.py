@@ -510,3 +510,31 @@ class CierreMensualUsuario(Base):
 
     def __repr__(self):
         return f"<CierreMensualUsuario(cierre_id={self.cierre_mensual_id}, user_id={self.user_id}, consumo={self.consumo_total})>"
+
+
+class ComparacionGuardada(Base):
+    """
+    Model for saving close comparisons
+    """
+    __tablename__ = "comparaciones_guardadas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(200), nullable=False)
+    descripcion = Column(Text, nullable=True)
+    cierre1_id = Column(Integer, ForeignKey("cierres_mensuales.id", ondelete="CASCADE"), nullable=False, index=True)
+    cierre2_id = Column(Integer, ForeignKey("cierres_mensuales.id", ondelete="CASCADE"), nullable=False, index=True)
+    snapshot_json = Column(JSONB, nullable=False)
+    creado_por = Column(String(100), nullable=True)
+    admin_user_id = Column(Integer, ForeignKey("admin_users.id", ondelete="SET NULL"), nullable=True, index=True)
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    # Relationships
+    cierre1 = relationship("CierreMensual", foreign_keys=[cierre1_id])
+    cierre2 = relationship("CierreMensual", foreign_keys=[cierre2_id])
+    admin_user = relationship("AdminUser")
+    empresa = relationship("Empresa")
+
+    def __repr__(self):
+        return f"<ComparacionGuardada(id={self.id}, titulo='{self.titulo}')>"
+

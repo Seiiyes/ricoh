@@ -31,7 +31,7 @@ export const CierreMasivoModal: React.FC<CierreMasivoModalProps> = ({ onClose, o
 
   // Fecha actual
   const fechaActual = new Date().toISOString().split('T')[0];
-  const nombreUsuario = user?.name || user?.username || 'Usuario';
+  const nombreUsuario = user?.nombre_completo || user?.username || 'Usuario';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

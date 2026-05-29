@@ -3,6 +3,7 @@
  * Servicio para operaciones de cierres mensuales de contadores
  */
 import apiClient from './apiClient';
+import type { CierreMensual, ComparacionCierres, CierreMensualDetalle as CierreDetalle } from '../components/contadores/cierres/types';
 
 export interface CreateCloseRequest {
   printer_id: number;
@@ -17,42 +18,6 @@ export interface CreateCierreMasivoRequest {
   fecha_fin: string; // YYYY-MM-DD
   cerrado_por?: string;
   notas?: string;
-}
-
-export interface CierreMensual {
-  id: number;
-  printer_id: number;
-  periodo: string;
-  fecha_cierre: string;
-  contador_total: number;
-  contador_color: number;
-  contador_bn: number;
-  notas?: string;
-  created_at: string;
-}
-
-export interface CierreDetalle {
-  cierre: CierreMensual;
-  usuarios: Array<{
-    user_id: number;
-    nombre: string;
-    codigo_de_usuario: string;
-    contador_total: number;
-    contador_color: number;
-    contador_bn: number;
-  }>;
-  total_pages: number;
-  current_page: number;
-}
-
-export interface ComparacionCierres {
-  cierre1: CierreMensual;
-  cierre2: CierreMensual;
-  diferencia_total: number;
-  diferencia_color: number;
-  diferencia_bn: number;
-  usuarios_cierre1: any[];
-  usuarios_cierre2: any[];
 }
 
 export interface CierreResult {
@@ -141,6 +106,40 @@ export const closeService = {
    */
   getCloseSummary: async (closeId: number) => {
     const response = await apiClient.get(`/api/counters/monthly/${closeId}/suma-usuarios`);
+    return response.data;
+  },
+
+  /**
+   * Guardar una comparación mensual
+   */
+  saveComparacion: async (data: {
+    titulo: string;
+    descripcion?: string;
+    cierre1_id: number;
+    cierre2_id: number;
+    snapshot_json: any;
+  }): Promise<any> => {
+    const response = await apiClient.post<any>('/api/counters/comparaciones', data);
+    return response.data;
+  },
+
+  /**
+   * Obtener comparaciones guardadas
+   */
+  getComparacionesGuardadas: async (params?: {
+    cierre1_id?: number;
+    cierre2_id?: number;
+    empresa_id?: number;
+  }): Promise<any[]> => {
+    const response = await apiClient.get<any[]>('/api/counters/comparaciones', { params });
+    return response.data;
+  },
+
+  /**
+   * Eliminar una comparación guardada
+   */
+  deleteComparacion: async (comparacionId: number): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(`/api/counters/comparaciones/${comparacionId}`);
     return response.data;
   }
 };

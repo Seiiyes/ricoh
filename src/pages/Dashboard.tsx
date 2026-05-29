@@ -1,6 +1,6 @@
 /**
- * Dashboard principal
- * Contiene el layout con sidebar y las rutas internas de la aplicación
+ * Layout principal (barra lateral + área de trabajo)
+ * Rutas internas de la aplicación autenticada
  */
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
@@ -8,12 +8,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { ProvisioningPanel } from '../components/governance/ProvisioningPanel';
 import { AdministracionUsuarios } from '../components/usuarios/AdministracionUsuarios';
 import { ContadoresModule } from '../components/contadores/ContadoresModule';
-import { UserCog, UserPlus, Search, BarChart3, Building2, Users, LogOut, ChevronDown, LayoutDashboard, Printer, TrendingUp } from 'lucide-react';
+import { UserCog, UserPlus, Search, BarChart3, Building2, Users, LogOut, ChevronDown, LayoutDashboard, TrendingUp } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import EmpresasPage from './EmpresasPage';
 import AdminUsersPage from './AdminUsersPage';
 import OverviewDashboard from './OverviewDashboard';
-import FleetManagementPage from './FleetManagementPage';
 import AnalyticsPage from './AnalyticsPage';
 import { cn } from '../lib/utils';
 
@@ -27,98 +26,84 @@ const Dashboard = () => {
     navigate('/login');
   };
   
-  const getRoleBadgeColor = (rol: string) => {
-    switch (rol) {
-      case 'superadmin':
-        return 'bg-red-100 text-red-800';
-      case 'admin':
-        return 'bg-blue-100 text-blue-800';
-      case 'viewer':
-        return 'bg-green-100 text-green-800';
-      case 'operator':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+
   
   return (
     <div className="flex h-screen bg-[#FDFDFD] font-sans overflow-hidden">
-      {/* Menú lateral Premium */}
-      <nav className="w-80 bg-slate-900 border-r border-slate-800 text-white shadow-[10px_0_40px_rgba(0,0,0,0.08)] flex flex-col z-20 relative overflow-hidden">
+      {/* Menú lateral Premium - Responsive */}
+      <nav className="w-64 lg:w-72 bg-slate-900 border-r border-slate-800 text-white shadow-[10px_0_40px_rgba(0,0,0,0.08)] flex flex-col z-20 relative overflow-hidden">
         {/* Background Decor for Sidebar */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-ricoh-red/20 rounded-full blur-[80px]"></div>
           <div className="absolute bottom-[-5%] left-[-5%] w-48 h-48 bg-slate-700/30 rounded-full blur-[60px]"></div>
         </div>
 
-        <div className="relative z-10 px-8 py-10">
+        <div className="relative z-10 px-6 lg:px-8 py-8 lg:py-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-ricoh-red rounded-lg flex items-center justify-center shadow-lg shadow-red-900/20">
-               <div className="w-4 h-4 border-2 border-white rounded-sm rotate-45"></div>
+            <div className="w-7 h-7 lg:w-8 lg:h-8 bg-ricoh-red rounded-lg flex items-center justify-center shadow-lg shadow-red-900/20">
+               <div className="w-3.5 h-3.5 lg:w-4 lg:h-4 border-2 border-white rounded-sm rotate-45"></div>
             </div>
-            <h1 className="text-lg font-black tracking-tighter uppercase">
+            <h1 className="text-base lg:text-lg font-black tracking-tighter uppercase">
               Ricoh<span className="text-ricoh-red shadow-sm ml-0.5">.</span>
             </h1>
           </div>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Equipment Manager</p>
+          <p className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Equipment Manager</p>
         </div>
         
-        <div className="relative z-10 flex-1 py-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-          <div className="px-4 pb-4">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Visión General</p>
+        <div className="relative z-10 flex-1 py-4 lg:py-6 px-3 lg:px-4 space-y-1.5 lg:space-y-2 overflow-y-auto custom-scrollbar">
+          <div className="px-3 lg:px-4 pb-3 lg:pb-4">
+            <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">Inicio</p>
           </div>
 
-          <NavButton to="/overview" icon={<LayoutDashboard size={20} />} label="Dashboard" />
-          <NavButton to="/fleet" icon={<Printer size={20} />} label="Gestión de Equipos" />
-          <NavButton to="/analytics" icon={<TrendingUp size={20} />} label="Reportes & Analytics" />
+          <NavButton to="/overview" icon={<LayoutDashboard size={18} />} label="Resumen" />
+          <NavButton to="/analytics" icon={<TrendingUp size={18} />} label="Reportes & Analytics" />
 
-          <div className="px-4 pb-4 pt-6">
-             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Operaciones</p>
+          <div className="px-3 lg:px-4 pb-3 lg:pb-4 pt-4 lg:pt-6">
+             <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">Operaciones</p>
           </div>
           
           <NavButton
             to="/descubrimiento"
-            icon={<Search size={20} />}
+            icon={<Search size={18} />}
             label="Buscar Equipos"
           />
           
           <NavButton
             to="/aprovisionamiento"
-            icon={<UserPlus size={20} />}
+            icon={<UserPlus size={18} />}
             label="Asignar Usuarios"
           />
           
           <NavButton
             to="/administracion"
-            icon={<UserCog size={20} />}
+            icon={<UserCog size={18} />}
             label="Gestión de Usuarios"
           />
           
           <NavButton
             to="/contadores"
-            icon={<BarChart3 size={20} />}
+            icon={<BarChart3 size={18} />}
             label="Lectura de Contadores"
           />
           
           {/* Opciones solo para superadmin */}
           {user?.rol === 'superadmin' && (
-            <div className="pt-6 space-y-2">
-              <div className="px-4 pb-4">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <div className="pt-4 lg:pt-6 space-y-1.5 lg:space-y-2">
+              <div className="px-3 lg:px-4 pb-3 lg:pb-4">
+                <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                   Sistema & Control
                 </p>
               </div>
               
               <NavButton
                 to="/empresas"
-                icon={<Building2 size={20} />}
+                icon={<Building2 size={18} />}
                 label="Mis Empresas"
               />
               
               <NavButton
                 to="/admin-users"
-                icon={<Users size={20} />}
+                icon={<Users size={18} />}
                 label="Administradores"
               />
             </div>
@@ -126,21 +111,21 @@ const Dashboard = () => {
         </div>
         
         {/* Usuario info Premium */}
-        <div className="relative z-10 p-6">
-          <div className="bg-slate-800/40 backdrop-blur-md rounded-3xl border border-slate-700/50 p-2">
+        <div className="relative z-10 p-4 lg:p-6">
+          <div className="bg-slate-800/40 backdrop-blur-md rounded-2xl lg:rounded-3xl border border-slate-700/50 p-1.5 lg:p-2">
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-700/50 transition-all group"
+                className="w-full flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 rounded-xl lg:rounded-2xl hover:bg-slate-700/50 transition-all group"
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-ricoh-red to-red-600 rounded-full flex items-center justify-center text-xs font-black shadow-[0_0_15px_rgba(227,6,19,0.3)] group-hover:scale-105 transition-all outline outline-2 outline-transparent group-hover:outline-white/10">
+                <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-ricoh-red to-red-600 rounded-full flex items-center justify-center text-[10px] lg:text-xs font-black shadow-[0_0_15px_rgba(227,6,19,0.3)] group-hover:scale-105 transition-all outline outline-2 outline-transparent group-hover:outline-white/10">
                   {user?.nombre_completo.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 text-left overflow-hidden">
-                  <p className="text-xs font-black truncate text-white uppercase tracking-tight">{user?.nombre_completo}</p>
-                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{user?.rol}</p>
+                  <p className="text-[10px] lg:text-xs font-black truncate text-white uppercase tracking-tight">{user?.nombre_completo}</p>
+                  <p className="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-widest">{user?.rol}</p>
                 </div>
-                <ChevronDown size={14} className={`text-slate-500 transition-transform duration-500 ${showUserMenu ? 'rotate-180 text-white' : ''}`} />
+                <ChevronDown size={12} className={`text-slate-500 transition-transform duration-500 ${showUserMenu ? 'rotate-180 text-white' : ''}`} />
               </button>
               
               {showUserMenu && (
@@ -170,7 +155,7 @@ const Dashboard = () => {
       {/* Contenido principal Premium */}
       <div className="flex-1 overflow-hidden relative flex flex-col h-full bg-[#FDFDFD]">
         {/* Top Header Placeholder (can be added later) */}
-        <div className="flex-1 overflow-y-auto px-10 py-10 relative">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 relative">
           {/* Subtle Page Background Pattern */}
           <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
           
@@ -178,7 +163,7 @@ const Dashboard = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/overview" replace />} />
               <Route path="/overview" element={<OverviewDashboard />} />
-              <Route path="/fleet" element={<FleetManagementPage />} />
+              <Route path="/fleet" element={<Navigate to="/descubrimiento" replace />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/descubrimiento" element={<ProvisioningPanel showDiscoveryOnly={true} />} />
               <Route path="/aprovisionamiento" element={<ProvisioningPanel showDiscoveryOnly={false} />} />
@@ -219,7 +204,7 @@ const NavButton = ({ to, icon, label }: { to: string; icon: React.ReactNode; lab
   return (
     <button
       onClick={() => navigate(to)}
-      className={`w-full flex items-center gap-4 px-5 py-4 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all duration-500 group relative overflow-hidden ${
+      className={`w-full flex items-center gap-3 lg:gap-4 px-4 lg:px-5 py-3 lg:py-4 text-[10px] lg:text-[11px] font-black uppercase tracking-widest rounded-xl lg:rounded-2xl transition-all duration-500 group relative overflow-hidden ${
         isActive
           ? 'bg-gradient-to-r from-ricoh-red/20 to-transparent text-white'
           : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
@@ -227,7 +212,7 @@ const NavButton = ({ to, icon, label }: { to: string; icon: React.ReactNode; lab
     >
       {/* Active side indicator */}
       {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-ricoh-red rounded-r-full shadow-[0_0_15px_rgba(227,6,19,0.8)] animate-pulse" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 lg:w-1.5 h-5 lg:h-6 bg-ricoh-red rounded-r-full shadow-[0_0_15px_rgba(227,6,19,0.8)] animate-pulse" />
       )}
       
       <span className={cn(

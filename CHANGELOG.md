@@ -7,6 +7,48 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.5.0] - 2026-05-29
+
+### 🔧 Fixed — Bugs Críticos Backend
+
+- **`AttributeError: current_user.name`** — El modelo `User` usa `nombre_completo`. Reemplazado en todos los endpoints de `counters.py` que accedían al nombre del usuario autenticado.
+- **`IntegrityError: empresa_id NULL`** en `ComparacionGuardada` — Implementado fallback `empresa_id = printer.empresa_id or current_user.empresa_id` para impresoras sin empresa asignada.
+- **`NameError: Printer`** en `dashboard.py` — Agregado `from db.models import Printer` faltante en el endpoint de tóner-alertas.
+
+### 🧹 Refactor — Limpieza de imports en `counters.py`
+
+- Eliminados imports no usados: `joinedload`, `PrinterResponse`, `CapabilitiesResponse`
+- Imports locales dentro de funciones centralizados al top-level del archivo
+- Eliminado `import csv` de `export.py` (sin uso tras eliminación de CSV)
+
+### 🗑️ Removed — Soporte CSV eliminado completamente
+
+- **Backend:** Eliminados endpoints `GET /api/export/cierre/{id}` (CSV) y `GET /api/export/comparacion/{id1}/{id2}` (CSV)
+- **Frontend:** Eliminados métodos `exportCierreCSV()`, `exportComparacionCSV()`, funciones `exportChartDataToCSV()`, `exportTableToCSV()`
+- **UI:** Eliminados todos los botones "Exportar CSV" / "CSV" en `AnalyticsPage`, `ComparacionPage`, `ComparacionModal`, `CierreDetalleModal`
+- Todas las exportaciones usan exclusivamente Excel (`.xlsx`)
+
+### ✨ Added
+
+- **`useEvolutionData` hook** en `src/hooks/useDashboardData.ts` con interfaz `EvolutionItem` tipada, consume `/api/v1/analytics/evolution`
+- **Configuración Pylance/VS Code** — `.vscode/settings.json` + `backend/pyrightconfig.json` para eliminar falsos positivos de imports Docker en el editor local
+
+### 🧪 Testing
+
+- **QA automatizado:** 18/18 pruebas pasadas en `backend/qa_test_suite.py`
+- **Multi-tenancy:** Verificado 403 Forbidden en endpoints sin autenticación
+- **TypeScript:** Compilación limpia con `tsc --noEmit` (0 errores)
+- **Docker:** 5/5 contenedores `ricoh-backend`, `ricoh-frontend`, `ricoh-postgres`, `ricoh-redis`, `ricoh-adminer` en estado `Up/healthy`
+
+### 📚 Documentation
+
+- `docs/resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md` — Resumen completo de la sesión de 3-4 días
+- `docs/fixes/FIX_BUGS_CRITICOS_26_MAYO_2026.md` — Documentación técnica de los 3 bugs críticos corregidos
+- `docs/desarrollo/completados/ELIMINACION_CSV_29_MAYO_2026.md` — Documentación completa de la eliminación de CSV
+- `docs/guias/PLAN_QA_SIGUIENTE_SESION.md` — Plan QA para pruebas manuales en browser
+
+---
+
 ## [2.2.0] - 2026-04-06
 
 ### ✨ Modernización UI/UX Premium

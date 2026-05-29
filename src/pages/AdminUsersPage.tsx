@@ -134,28 +134,29 @@ const AdminUsersPage = () => {
   
   return (
     <div className="h-full overflow-auto bg-slate-50 animate-fade-in relative">
-      <div className="p-8 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <div className="container-padding container-padding-y max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-responsive">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
               <Users size={24} className="text-ricoh-red" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Gestión de Usuarios</h1>
-              <p className="text-slate-500 text-sm mt-0.5">Administrar roles y accesos</p>
+              <h1 className="text-responsive-xl font-bold text-slate-900 tracking-tight">Gestión de Usuarios</h1>
+              <p className="text-slate-500 text-responsive-sm mt-0.5">Administrar roles y accesos</p>
             </div>
           </div>
           <button
             onClick={handleCreate}
-            className="relative overflow-hidden group flex items-center gap-2 px-5 py-2.5 bg-ricoh-red text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-[0_4px_14px_0_rgba(227,6,19,0.39)] hover:shadow-[0_6px_20px_rgba(227,6,19,0.23)] hover:-translate-y-0.5 active:translate-y-0"
+            className="relative overflow-hidden group flex items-center gap-2 btn-padding-sm bg-ricoh-red text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-[0_4px_14px_0_rgba(227,6,19,0.39)] hover:shadow-[0_6px_20px_rgba(227,6,19,0.23)] hover:-translate-y-0.5 active:translate-y-0"
           >
             <Plus size={18} className="transform group-hover:rotate-90 transition-transform" />
-            Nuevo Usuario Admin
+            <span className="hidden sm:inline">Nuevo Usuario Admin</span>
+            <span className="sm:hidden">Nuevo</span>
           </button>
         </div>
         
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 bg-slate-50/50 space-y-5">
+          <div className="card-padding-sm border-b border-slate-100 bg-slate-50/50 space-y-4 sm:space-y-5">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
@@ -167,9 +168,9 @@ const AdminUsersPage = () => {
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-responsive-sm">
               <div className="flex-1">
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
+                <label className="block text-responsive-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
                   <Filter size={14} className="inline mr-1 text-slate-400" />
                   Rol
                 </label>
@@ -187,7 +188,7 @@ const AdminUsersPage = () => {
               </div>
               
               <div className="flex-1">
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
+                <label className="block text-responsive-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
                   <Filter size={14} className="inline mr-1 text-slate-400" />
                   Empresa
                 </label>

@@ -85,7 +85,7 @@ Documentación técnica de desarrollo
 ## 📋 Índice Completo
 
 Para ver el índice completo de todos los documentos, consulta:
-- [INDICE_DOCUMENTACION_ACTUALIZADO.md](INDICE_DOCUMENTACION_ACTUALIZADO.md)
+- [INDICE_DOCUMENTACION.md](INDICE_DOCUMENTACION.md)
 
 ---
 

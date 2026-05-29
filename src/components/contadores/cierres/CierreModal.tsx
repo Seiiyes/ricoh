@@ -96,7 +96,7 @@ export const CierreModal: React.FC<CierreModalProps> = ({ printerId, printerName
     <Modal
       isOpen={true}
       onClose={onClose}
-      title="Crear Cierre"
+      title={printerName ? `Crear Cierre - ${printerName}` : "Crear Cierre"}
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Edit2, ChevronDown, ChevronRight } from 'lucide-react';
 import { obtenerIconosPermisos, contarPermisosActivos } from '@/services/servicioUsuarios';
 import { obtenerUsuarioConEquipos } from '@/services/servicioUsuarios';
-import { Button, Badge, Spinner } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import type { Usuario } from '@/types/usuario';
 import type { EquipoAsignado } from '@/types/usuario';
 

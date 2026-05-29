@@ -21,3 +21,6 @@ bcrypt==4.1.2
 PyJWT==2.8.0
 python-dotenv==1.0.0
 
+# Cache and Rate Limiting
+redis==5.0.1
+hiredis==2.3.2

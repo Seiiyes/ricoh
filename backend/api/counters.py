@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
 from datetime import datetime, date
 
 from db.database import get_db
-from db.models import CierreMensual, CierreMensualUsuario, Printer, ContadorImpresora, ContadorUsuario, ComparacionGuardada
+from db.models import User, CierreMensual, CierreMensualUsuario, Printer, ContadorImpresora, ContadorUsuario, ComparacionGuardada
 from .counter_schemas import (
     ContadorImpresoraResponse, ContadorUsuarioResponse, 
     CierreMensualResponse, CierreMensualDetalleResponse,
@@ -921,9 +922,6 @@ async def get_all_users_closes(
     Obtiene un listado paginado y filtrado de consumos de usuario en cierres mensuales.
     Enfuerza multi-tenancy filtrando por la empresa asignada al usuario no-superadmin.
     """
-    from db.models import User, Printer, CierreMensual
-    from sqlalchemy import or_, date as sql_date
-    from datetime import date as dt_date
 
     # Query base con joins para obtener datos de impresora y del cierre
     query = db.query(CierreMensualUsuario).join(

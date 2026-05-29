@@ -1,26 +1,33 @@
 import { useState, useEffect } from 'react';
-import { CierreMensual } from './types';
+import { CierreMensual, Printer, ComparacionGuardada } from './types';
 import { ListaCierres } from './ListaCierres';
 import { CierreModal } from './CierreModal';
 import { CierreDetalleModal } from './CierreDetalleModal';
 import { ComparacionPage } from './ComparacionPage';
 import { Button, Spinner, Alert } from '@/components/ui';
-import { RefreshCw, Plus, BarChart3, Filter, SlidersHorizontal, Calculator, Printer as PrinterIcon } from 'lucide-react';
+import { RefreshCw, BarChart3, Filter, SlidersHorizontal, Calculator, Printer as PrinterIcon, ChevronDown, ChevronUp, Trash2, FileText, ChevronRight } from 'lucide-react';
 import closeService from '@/services/closeService';
 import apiClient from '@/services/apiClient';
 import { parseApiError } from '@/utils/errorHandler';
 import { cn } from '@/lib/utils';
-import type { Printer } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotification } from '@/hooks/useNotification';
 
 export const CierresView: React.FC = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
+  const notify = useNotification();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedPrinter, setSelectedPrinter] = useState<number | null>(null);
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [cierres, setCierres] = useState<CierreMensual[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Historial de comparaciones
+  const [savedComparaciones, setSavedComparaciones] = useState<ComparacionGuardada[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [comparacionInicial, setComparacionInicial] = useState<{ c1: number; c2: number } | null>(null);
 
   // Sub-vista
   const [vistaActual, setVistaActual] = useState<'lista' | 'comparacion'>('lista');
@@ -74,22 +81,65 @@ export const CierresView: React.FC = () => {
     setCierreModalOpen(true);
   };
 
+  const loadSavedComparaciones = async () => {
+    setLoadingHistory(true);
+    try {
+      const data = await closeService.getComparacionesGuardadas();
+      setSavedComparaciones(data);
+    } catch (err) {
+      console.error('Error al cargar comparaciones guardadas:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDeleteSavedComparacion = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta comparación guardada?')) return;
+    try {
+      await closeService.deleteComparacion(id);
+      notify.success('Comparación eliminada', 'La comparación ha sido eliminada correctamente');
+      loadSavedComparaciones();
+    } catch (err: any) {
+      console.error('Error al eliminar comparación:', err);
+      notify.error('Error al eliminar', parseApiError(err, 'No se pudo eliminar la comparación'));
+    }
+  };
+
+  const handleCargarComparacion = (c1: number, c2: number) => {
+    setComparacionInicial({ c1, c2 });
+    setVistaActual('comparacion');
+  };
+
+  const handleVolverLista = () => {
+    setComparacionInicial(null);
+    setVistaActual('lista');
+  };
+
+  useEffect(() => {
+    if (vistaActual === 'lista') {
+      loadSavedComparaciones();
+    }
+  }, [vistaActual]);
+
   // Si estamos en modo comparación, mostrar la sub-vista completa
   if (vistaActual === 'comparacion') {
     return (
       <ComparacionPage
         cierres={cierres}
-        onVolver={() => setVistaActual('lista')}
+        onVolver={handleVolverLista}
+        initialCierre1Id={comparacionInicial?.c1}
+        initialCierre2Id={comparacionInicial?.c2}
       />
     );
   }
 
   return (
-    <div className="space-y-10 animate-fade-in">
+    <div className="space-y-6 lg:space-y-10 animate-fade-in">
       {/* Barra de filtros Premium */}
-      <div className="bg-white/70 backdrop-blur-md rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="flex flex-wrap items-end gap-6 flex-1">
+      <div className="bg-white/70 backdrop-blur-md rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] card-padding">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-responsive">
+          <div className="flex flex-wrap items-end gap-responsive-sm flex-1">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dispositivo Escaneado</label>
               <div className="relative group">
@@ -143,7 +193,7 @@ export const CierresView: React.FC = () => {
             </Button>
           </div>
  
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-responsive-sm">
             {cierres.length >= 2 && (
               <Button
                 variant="outline"
@@ -175,7 +225,77 @@ export const CierresView: React.FC = () => {
           {error}
         </Alert>
       )}
- 
+
+      {/* Historial de Comparaciones Guardadas Accordion */}
+      <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.02)] overflow-hidden transition-all duration-300">
+        <button
+          onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+          className="w-full px-8 py-5 flex items-center justify-between text-left hover:bg-slate-50/50 transition-colors focus:outline-none"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm shadow-indigo-100">
+              <BarChart3 size={18} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Comparaciones Guardadas</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Historial de reportes y análisis guardados ({savedComparaciones.length})</p>
+            </div>
+          </div>
+          <div className="text-slate-400">
+            {isHistoryOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </div>
+        </button>
+        
+        {isHistoryOpen && (
+          <div className="px-8 pb-6 border-t border-slate-50/50 pt-4 divide-y divide-slate-100 max-h-80 overflow-y-auto animate-slide-down">
+            {loadingHistory ? (
+              <div className="py-8 flex justify-center items-center">
+                <Spinner size="sm" text="Cargando comparaciones..." />
+              </div>
+            ) : savedComparaciones.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                No hay comparaciones guardadas en este momento.
+              </div>
+            ) : (
+              savedComparaciones.map((comp) => (
+                <div
+                  key={comp.id}
+                  onClick={() => handleCargarComparacion(comp.cierre1_id, comp.cierre2_id)}
+                  className="py-4 flex items-center justify-between hover:bg-slate-50/30 -mx-4 px-4 rounded-2xl cursor-pointer transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+                      <FileText size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{comp.titulo}</h4>
+                      {comp.descripcion && <p className="text-[10px] text-slate-400 mt-0.5 max-w-md truncate">{comp.descripcion}</p>}
+                      <div className="flex items-center gap-2 mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span>Creado por: {comp.creado_por || 'Sistema'}</span>
+                        <span>•</span>
+                        <span>{new Date(comp.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteSavedComparacion(comp.id, e)}
+                      icon={<Trash2 size={14} />}
+                      className="h-8 w-8 p-0 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      title="Eliminar comparación"
+                    />
+                    <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Contenido Principal */}
       <div className="min-h-[400px]">
         {!selectedPrinter ? (

@@ -6,26 +6,25 @@ interface Usuario {
   consumo_cierre1: number;
   consumo_cierre2: number;
   diferencia: number;
-  diferencia_bn: number;
-  diferencia_color: number;
+
   
   // Período 1 - Desglose completo
-  total_paginas_cierre1: number;
-  copiadora_bn_cierre1: number;
-  copiadora_color_cierre1: number;
-  impresora_bn_cierre1: number;
-  impresora_color_cierre1: number;
-  escaner_bn_cierre1: number;
-  escaner_color_cierre1: number;
+  total_paginas_cierre1?: number | null;
+  copiadora_bn_cierre1?: number;
+  copiadora_color_cierre1?: number;
+  impresora_bn_cierre1?: number;
+  impresora_color_cierre1?: number;
+  escaner_bn_cierre1?: number;
+  escaner_color_cierre1?: number;
   
   // Período 2 - Desglose completo
-  total_paginas_cierre2: number;
-  copiadora_bn_cierre2: number;
-  copiadora_color_cierre2: number;
-  impresora_bn_cierre2: number;
-  impresora_color_cierre2: number;
-  escaner_bn_cierre2: number;
-  escaner_color_cierre2: number;
+  total_paginas_cierre2?: number | null;
+  copiadora_bn_cierre2?: number;
+  copiadora_color_cierre2?: number;
+  impresora_bn_cierre2?: number;
+  impresora_color_cierre2?: number;
+  escaner_bn_cierre2?: number;
+  escaner_color_cierre2?: number;
   
   // Diferencias calculadas
   difCopia: number;
@@ -41,7 +40,7 @@ interface Usuario {
 
 interface Props {
   usuarios: Usuario[];
-  onSort: (key: string) => void;
+  onSort: (key: any) => void;
   sortKey: string;
   sortDir: 'asc' | 'desc';
   hasColor: boolean;

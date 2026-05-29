@@ -1,12 +1,10 @@
 import type { TotalCounter } from '@/types/counter';
-import type { PrinterCapabilities } from '@/types/printer';
 
 interface CounterBreakdownProps {
   counter: TotalCounter;
-  capabilities?: PrinterCapabilities;
 }
 
-export const CounterBreakdown: React.FC<CounterBreakdownProps> = ({ counter, capabilities }) => {
+export const CounterBreakdown: React.FC<CounterBreakdownProps> = ({ counter }) => {
   // Calcular totales por función
   const totalCopiadora = counter.copiadora_bn + counter.copiadora_color + 
                          counter.copiadora_color_personalizado + counter.copiadora_dos_colores;

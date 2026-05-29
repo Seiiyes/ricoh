@@ -52,7 +52,7 @@ class AuthService {
       password,
     });
     
-    const { access_token, refresh_token, user } = response.data;
+    const { access_token, refresh_token } = response.data;
     
     // Guardar tokens en localStorage (persiste al cerrar pestaña)
     localStorage.setItem('access_token', access_token);

@@ -73,32 +73,12 @@ async function downloadFile(url: string, fallbackFilename: string): Promise<void
 
 export const exportService = {
   /**
-   * Exportar cierre a CSV
-   */
-  exportCierreCSV: async (cierreId: number): Promise<void> => {
-    await downloadFile(
-      `/api/export/cierre/${cierreId}`,
-      `cierre_${cierreId}.csv`
-    );
-  },
-
-  /**
    * Exportar cierre a Excel
    */
   exportCierreExcel: async (cierreId: number): Promise<void> => {
     await downloadFile(
       `/api/export/cierre/${cierreId}/excel`,
       `cierre_${cierreId}.xlsx`
-    );
-  },
-
-  /**
-   * Exportar comparación a CSV
-   */
-  exportComparacionCSV: async (cierre1Id: number, cierre2Id: number): Promise<void> => {
-    await downloadFile(
-      `/api/export/comparacion/${cierre1Id}/${cierre2Id}`,
-      `comparacion_${cierre1Id}_${cierre2Id}.csv`
     );
   },
 

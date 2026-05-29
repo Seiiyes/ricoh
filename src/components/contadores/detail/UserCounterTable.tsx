@@ -55,7 +55,7 @@ export const UserCounterTable: React.FC<UserCounterTableProps> = ({ userCounters
   const itemsPerPage = 50;
 
   // Get column visibility based on printer capabilities
-  const { isColumnVisible, isGroupHeaderVisible } = useColumnVisibility(printer?.capabilities);
+  const { isColumnVisible } = useColumnVisibility(printer?.capabilities);
   
   // Determine if printer uses ecological format
   const isEcologicalFormat = printer?.capabilities?.formato_contadores === 'ecologico';

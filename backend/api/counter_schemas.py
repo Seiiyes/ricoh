@@ -457,3 +457,96 @@ class ReadCounterWithCapabilitiesResponse(BaseModel):
     
     # Printer info with capabilities
     printer: Optional[PrinterResponse]
+
+
+# ============================================================================
+# Global User Close and Update Schemas
+# ============================================================================
+
+class CierreUsuarioUpdateRequest(BaseModel):
+    """Request schema for updating a monthly close user snapshot"""
+    total_paginas: int = Field(..., ge=0, description="Total acumulado de páginas")
+    consumo_total: int = Field(..., ge=0, description="Consumo del mes/periodo")
+
+
+class CierreUsuarioGlobalResponse(BaseModel):
+    """Response schema for global user consumption with printer details"""
+    id: int
+    cierre_mensual_id: int
+    user_id: int
+    codigo_usuario: str
+    nombre_usuario: str
+    
+    # Contadores al cierre
+    total_paginas: int
+    total_bn: int
+    total_color: int
+    copiadora_bn: int
+    copiadora_color: int
+    impresora_bn: int
+    impresora_color: int
+    escaner_bn: int
+    escaner_color: int
+    fax_bn: int
+    
+    # Consumo del mes
+    consumo_total: int
+    consumo_copiadora: int
+    consumo_impresora: int
+    consumo_escaner: int
+    consumo_fax: int
+    
+    created_at: datetime
+    
+    # Datos de la impresora
+    printer_id: int
+    printer_hostname: Optional[str] = None
+    printer_ip: Optional[str] = None
+    printer_location: Optional[str] = None
+    
+    # Datos del cierre principal
+    fecha_inicio: date
+    fecha_fin: date
+    fecha_cierre: datetime
+    cerrado_por: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PaginatedCierreUsuarioGlobalResponse(BaseModel):
+    """Paginated response for global user consumption list"""
+    items: List[CierreUsuarioGlobalResponse]
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+
+# ============================================================================
+# Saved Closures Comparisons Schemas
+# ============================================================================
+
+class ComparacionGuardadaCreate(BaseModel):
+    titulo: str = Field(..., max_length=200)
+    descripcion: Optional[str] = None
+    cierre1_id: int = Field(..., gt=0)
+    cierre2_id: int = Field(..., gt=0)
+    snapshot_json: Dict[str, Any] = Field(..., description="Snapshot con KPIs de la comparación")
+
+class ComparacionGuardadaResponse(BaseModel):
+    id: int
+    titulo: str
+    descripcion: Optional[str]
+    cierre1_id: int
+    cierre2_id: int
+    snapshot_json: Dict[str, Any]
+    creado_por: Optional[str]
+    admin_user_id: Optional[int]
+    empresa_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+

@@ -13,6 +13,7 @@ import logging
 from datetime import datetime
 from typing import List
 import asyncio
+from sqlalchemy.exc import OperationalError
 
 # Configure logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -112,8 +113,24 @@ async def lifespan(app: FastAPI):
     print("🚀 Starting Ricoh Equipment Management API...")
     print("📊 Initializing database...")
     
-    # Create tables
-    Base.metadata.create_all(bind=engine)
+    # Create tables (con reintentos) - evita fallos cuando Postgres aún está iniciando
+    max_attempts = int(os.getenv("DB_STARTUP_MAX_ATTEMPTS", "15"))
+    delay_seconds = float(os.getenv("DB_STARTUP_RETRY_DELAY", "2"))
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            Base.metadata.create_all(bind=engine)
+            last_error = None
+            break
+        except OperationalError as e:
+            last_error = e
+            print(f"⏳ DB aún no disponible (intento {attempt}/{max_attempts}). Reintentando en {delay_seconds}s...")
+            await asyncio.sleep(delay_seconds)
+    
+    if last_error is not None:
+        # Dejar el traceback en logs para diagnóstico
+        logger.exception("❌ No se pudo inicializar la base de datos tras múltiples intentos", exc_info=last_error)
+        raise last_error
     
     print("✅ Database initialized")
     print(f"🔧 Demo Mode: {os.getenv('DEMO_MODE', 'true')}")
@@ -168,7 +185,25 @@ app = FastAPI(
 )
 
 # CORS Configuration
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174").split(",")
+_default_cors = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", _default_cors).split(",") if o.strip()]
+
+# En desarrollo, permite Vite en red local (192.168.x.x, 10.x, 172.16–31.x) sin listar cada IP.
+_environment = os.getenv("ENVIRONMENT", "development")
+_default_private_cors = "true" if _environment == "development" else "false"
+_cors_allow_private = os.getenv("CORS_ALLOW_PRIVATE_NETWORK", _default_private_cors).lower() == "true"
+# Solo HTTP en orígenes privados habituales (puerto típico de Vite u otro dev server)
+CORS_ORIGIN_REGEX = (
+    r"^http://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$"
+    if _cors_allow_private
+    else None
+)
+
+if _cors_allow_private:
+    logger.info(
+        "CORS: orígenes explícitos + regex para red privada (desarrollo). "
+        "Desactive con CORS_ALLOW_PRIVATE_NETWORK=false en producción."
+    )
 
 # Define explicit allowed methods and headers for CORS
 ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
@@ -179,8 +214,7 @@ ALLOWED_HEADERS = [
     "X-Request-ID"
 ]
 
-app.add_middleware(
-    CORSMiddleware,
+_cors_mw_kwargs = dict(
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=ALLOWED_METHODS,
@@ -188,6 +222,10 @@ app.add_middleware(
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "Content-Disposition"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
+if CORS_ORIGIN_REGEX:
+    _cors_mw_kwargs["allow_origin_regex"] = CORS_ORIGIN_REGEX
+
+app.add_middleware(CORSMiddleware, **_cors_mw_kwargs)
 
 # Add DDoS Protection Middleware
 app.add_middleware(DDoSProtectionMiddleware)
@@ -280,6 +318,10 @@ app.include_router(discovery_router)
 app.include_router(counters_router)
 app.include_router(export_router)
 app.include_router(sync_router)  # ← NUEVO
+from api.dashboard import router as dashboard_router
+from api.analytics import router as analytics_router
+app.include_router(dashboard_router)
+app.include_router(analytics_router)
 
 
 # Root endpoint

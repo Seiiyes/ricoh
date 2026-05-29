@@ -5,7 +5,7 @@ import { CierresView } from './cierres/CierresView';
 import { CierreMasivoModal } from './cierres/CierreMasivoModal';
 import { Tabs, Button } from '@/components/ui';
 import { BarChart3, Calendar, Activity, Layers } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { useAuth } from '@/contexts/AuthContext';
 
 type CounterView = 'resumen' | 'printer-detail' | 'cierres';

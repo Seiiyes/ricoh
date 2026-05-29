@@ -2,7 +2,49 @@
 
 Sistema integral de gestión de impresoras Ricoh con autenticación JWT, multi-tenancy y tres módulos principales: Governance (Aprovisionamiento), Contadores y Cierres Mensuales.
 
-**Versión**: 2.2.0 | **Estado**: ✅ Producción | **Última actualización**: 06 de Abril de 2026
+**Versión**: 2.2.0 | **Estado**: ✅ Producción | **Última actualización**: 06 de Mayo de 2026
+
+---
+
+## 📊 Estado Actual del Sistema (6 Mayo 2026)
+
+### ✅ Sistema Operativo y Funcionando
+
+**Ambiente**: Desarrollo Local  
+**IP Local**: 192.168.91.34  
+**Acceso**: 
+- Local: http://localhost:5173
+- Red: http://192.168.91.34:5173
+
+### Servicios Activos
+
+| Servicio | Estado | Puerto | Salud |
+|----------|--------|--------|-------|
+| Frontend | ✅ Running | 5173 | Healthy |
+| Backend | ✅ Running | 8000 | Healthy |
+| PostgreSQL | ✅ Running | 5432 | Healthy |
+| Redis | ✅ Running | 6379 | Healthy |
+| Adminer | ✅ Running | 8080 | Running |
+
+### 🔒 Seguridad
+
+**Estado**: ✅ Correcto para DESARROLLO, ❌ NO listo para PRODUCCIÓN
+
+- ⚠️ ENVIRONMENT=development (cambiar a `production`)
+- ⚠️ DEBUG=true (cambiar a `false`)
+- ⚠️ CORS_ORIGINS=* (restringir dominios)
+- ⚠️ Claves de ejemplo (generar nuevas únicas)
+- ⚠️ Redis sin contraseña (configurar contraseña)
+
+**Ver auditoría completa**: `docs/resumen/AUDITORIA_SEGURIDAD_6_MAYO_2026.md`
+
+### 💡 Importante
+
+⚠️ **Si apagas tu PC, TODO el sistema se cae**
+
+Para entender opciones y soluciones, ver: `docs/resumen/QUE_PASA_SI_APAGO_PC.md`
+
+---
 
 ## 🚀 Inicio Rápido
 
@@ -93,6 +135,14 @@ restore-db.bat
 ## 📚 Documentación
 
 Toda la documentación está organizada en la carpeta `docs/`:
+
+### 🆕 Documentación de Configuración y Despliegue (Mayo 2026)
+- **`docs/INDICE_DOCUMENTACION.md`** - 📚 **Índice completo de documentación** (EMPEZAR AQUÍ)
+- **`docs/DEPLOYMENT_PRODUCTION.md`** - 🚀 Guía completa de despliegue a producción (50+ páginas)
+- **`docs/DIFERENCIAS_LOCAL_VS_PRODUCCION.md`** - 🔄 Comparativa Local vs Producción
+- **`docs/resumen/AUDITORIA_SEGURIDAD_6_MAYO_2026.md`** - 🔒 Auditoría de seguridad completa
+- **`docs/resumen/QUE_PASA_SI_APAGO_PC.md`** - 💻 Explicación sobre disponibilidad
+- **`docs/resumen/RESUMEN_COMPLETO_CONFIGURACION_6_MAYO_2026.md`** - 📋 Estado actual completo
 
 ### Estado del Proyecto
 - `docs/desarrollo/mejoras/MODERNIZACION_UI_UX_PREMIUM_2026.md` - 💎 **Modernización UI/UX Premium**

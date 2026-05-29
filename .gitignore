@@ -34,6 +34,10 @@ backend/env/
 backend/.env
 backend/.env.local
 
+# Credenciales de seguridad (NO subir a Git)
+CREDENCIALES_SEGURAS_*.txt
+*_CREDENCIALES_*.txt
+
 # Database
 *.db
 *.sqlite

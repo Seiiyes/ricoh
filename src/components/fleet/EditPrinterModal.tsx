@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { Modal, Button, Input, EmpresaAutocomplete } from '@/components/ui';
 import type { PrinterDevice } from '@/types';
 import { useNotification } from '@/hooks/useNotification';

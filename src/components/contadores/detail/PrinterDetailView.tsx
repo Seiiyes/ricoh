@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { fetchPrinters } from '@/services/printerService';
 import { 
   fetchLatestCounter, 
@@ -123,7 +123,7 @@ export const PrinterDetailView: React.FC<PrinterDetailViewProps> = ({
             <PrinterIdentification printer={printer} counter={counter} />
             
             {/* Counter Breakdown */}
-            <CounterBreakdown counter={counter} capabilities={printer.capabilities} />
+            <CounterBreakdown counter={counter} />
             
             {/* User Counter Table */}
             <UserCounterTable userCounters={userCounters} printer={printer} />

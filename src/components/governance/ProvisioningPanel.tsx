@@ -58,7 +58,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
     loadPrinters();
 
     // Connect to WebSocket for real-time logs
-    const ws = connectWebSocket((event) => {
+    const ws = connectWebSocket(() => {
       // WebSocket events - no longer logging to UI
     });
 
@@ -170,7 +170,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
       }
 
       // Provision user to printers
-      const result = await provisionUser(user.id, printerIds);
+      await provisionUser(user.id, printerIds);
 
       // Clear form
       setUserName('');

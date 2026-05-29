@@ -5,6 +5,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
   helperText?: string;
   variant?: 'default' | 'underline';
+  icon?: React.ReactNode;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -12,6 +13,7 @@ export const Input: React.FC<InputProps> = ({
   error,
   helperText,
   variant = 'default',
+  icon,
   className = '',
   ...props
 }) => {
@@ -31,17 +33,24 @@ export const Input: React.FC<InputProps> = ({
   };
   
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 w-full">
       {label && (
         <label className="block text-sm font-semibold text-slate-700">
           {label}
         </label>
       )}
       
-      <input
-        className={`${baseStyles} ${variantStyles[variant]} ${className}`}
-        {...props}
-      />
+      <div className="relative flex items-center w-full">
+        {icon && (
+          <div className="absolute left-4 text-slate-400 pointer-events-none flex items-center justify-center">
+            {icon}
+          </div>
+        )}
+        <input
+          className={`${baseStyles} ${variantStyles[variant]} ${icon ? 'pl-11' : ''} ${className}`}
+          {...props}
+        />
+      </div>
       
       {error && (
         <p className="text-xs text-red-600">{error}</p>

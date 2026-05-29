@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sileo';
 import 'sileo/styles.css';
 import { AuthProvider } from './contexts/AuthContext';

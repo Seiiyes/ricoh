@@ -9,14 +9,6 @@ interface jsPDFWithAutoTable extends jsPDF {
   };
 }
 
-export const exportChartDataToCSV = (data: any[], filename: string) => {
-  if (!data || data.length === 0) return;
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data");
-  XLSX.writeFile(wb, `${filename}.csv`);
-};
-
 export const exportTableToExcel = (data: any[], filename: string) => {
   if (!data || data.length === 0) return;
   const ws = XLSX.utils.json_to_sheet(data);
@@ -24,6 +16,7 @@ export const exportTableToExcel = (data: any[], filename: string) => {
   XLSX.utils.book_append_sheet(wb, ws, "Reporte");
   XLSX.writeFile(wb, `${filename}.xlsx`);
 };
+
 
 export const exportReportToPDF = (
   title: string, 

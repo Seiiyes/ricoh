@@ -13,8 +13,7 @@ import type {
 import { 
   calculateColumnVisibility, 
   shouldShowColumn,
-  shouldShowGroupHeader,
-  DEFAULT_CAPABILITIES 
+  shouldShowGroupHeader
 } from '../types/printer';
 
 /**

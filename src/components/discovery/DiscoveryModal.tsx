@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Wifi, AlertCircle, Loader2, Plus, Minus, Search, Trash2, MapPin, Printer } from 'lucide-react';
+import { Wifi, AlertCircle, Loader2, Plus, Minus, Search, MapPin, Printer } from 'lucide-react';
 import { scanPrinters, registerDiscoveredPrinters } from '@/services/printerService';
 import { Modal, Button, Input, Spinner } from '@/components/ui';
 import discoveryService from '@/services/discoveryService';
@@ -143,6 +143,8 @@ export const DiscoveryModal = ({ isOpen, onClose, onComplete }: DiscoveryModalPr
       // Agregar a la lista de dispositivos descubiertos
       const editableDevice: EditableDevice = {
         ...device,
+        ip_address: device.ip,
+        detected_model: device.model || 'Genérico',
         status: 'online',
         toner_cyan: 0,
         toner_magenta: 0,
