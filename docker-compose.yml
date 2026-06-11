@@ -94,6 +94,8 @@ services:
       - DEBUG=true
       - API_HOST=0.0.0.0
       - API_PORT=8000
+      - DOCS_USERNAME=admin
+      - DOCS_PASSWORD=ricoh_docs_2026
       
       # =============================================================================
       # SECURITY CONFIGURATION - ENCRYPTION & JWT

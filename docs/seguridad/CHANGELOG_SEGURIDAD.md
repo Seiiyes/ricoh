@@ -1,5 +1,20 @@
 # Changelog - Mejoras de Seguridad
 
+## [1.1.0] - 2026-06-11
+
+### 🔐 Mejoras de Seguridad
+- **Autenticación en Documentación API (Swagger/ReDoc/OpenAPI)**:
+  - Se desactivaron las rutas públicas `/docs`, `/redoc` y `/openapi.json` por defecto en la inicialización de FastAPI.
+  - Se crearon endpoints personalizados bajo la misma ruta protegidos por HTTP Basic Authentication (`Depends(authenticate_docs)`).
+  - Validación segura de credenciales contra ataques de tiempo (timing attacks) usando `secrets.compare_digest`.
+  - Parametrización mediante variables de entorno `DOCS_USERNAME` y `DOCS_PASSWORD` en compose.
+
+### ⚙️ Configuración y Despliegue
+- Añadida configuración local (`docker-compose.yml`) y producción (`deployment/docker-compose.server131.yml`) con las nuevas variables.
+- Documentación y ejemplo en `backend/.env.example`.
+
+---
+
 ## [1.0.0] - 2026-03-20
 
 ### ✨ Nuevas Funcionalidades
@@ -81,6 +96,6 @@
 
 ---
 
-**Versión Actual:** 1.0.0  
+**Versión Actual:** 1.1.0  
 **Estado:** ✅ Producción Ready  
 **Tests:** 38/38 pasando (100%)

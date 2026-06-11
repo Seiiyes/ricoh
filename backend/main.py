@@ -2,12 +2,16 @@
 Ricoh Equipment Management Suite - Backend API
 FastAPI server with PostgreSQL, WebSockets, and network discovery
 """
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status, Query, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from contextlib import asynccontextmanager
 import os
+import secrets
 import json
 import logging
 from datetime import datetime, timedelta, timezone
@@ -295,12 +299,15 @@ async def run_cleanup_job_periodically():
             # Continue running even if there's an error
 
 
-# Create FastAPI app
+# Create FastAPI app (disabling default unauthenticated docs endpoints to secure them)
 app = FastAPI(
     title="Ricoh Equipment Management API",
     description="Backend API for Ricoh printer equipment discovery and management with PostgreSQL",
     version="2.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
 )
 
 # CORS Configuration
@@ -443,6 +450,37 @@ from api.dashboard import router as dashboard_router
 from api.analytics import router as analytics_router
 app.include_router(dashboard_router)
 app.include_router(analytics_router)
+
+
+# Authenticated Documentation Endpoints (Docs & OpenAPI protection)
+security = HTTPBasic()
+
+def authenticate_docs(credentials: HTTPBasicCredentials = Depends(security)):
+    docs_user = os.getenv("DOCS_USERNAME", "admin")
+    docs_pass = os.getenv("DOCS_PASSWORD", "ricoh_docs_2026")
+    
+    is_user_ok = secrets.compare_digest(credentials.username, docs_user)
+    is_pass_ok = secrets.compare_digest(credentials.password, docs_pass)
+    
+    if not (is_user_ok and is_pass_ok):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
+@app.get("/docs", include_in_schema=False)
+async def get_swagger_documentation(username: str = Depends(authenticate_docs)):
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="Ricoh Equipment Management API - Swagger UI")
+
+@app.get("/redoc", include_in_schema=False)
+async def get_redoc_documentation(username: str = Depends(authenticate_docs)):
+    return get_redoc_html(openapi_url="/openapi.json", title="Ricoh Equipment Management API - ReDoc")
+
+@app.get("/openapi.json", include_in_schema=False)
+async def get_openapi_endpoint(username: str = Depends(authenticate_docs)):
+    return get_openapi(title=app.title, version=app.version, routes=app.routes)
 
 
 # Root endpoint

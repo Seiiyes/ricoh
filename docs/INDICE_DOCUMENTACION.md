@@ -1,7 +1,7 @@
 # 📚 Índice General de Documentación - Ricoh Fleet Management
 
 **Última actualización**: 11 de Junio de 2026  
-**Versión**: 4.1.1 (Actualizado)
+**Versión**: 4.1.2 (Actualizado)
 
 ---
 
@@ -43,6 +43,8 @@ docs/
 ## 🆕 Documentación de la Sesión Reciente (Junio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[RESUMEN_TRABAJO_11_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_11_JUNIO_2026.md)**
+    *   *Descripción:* Protección de endpoints de documentación API (/docs, /redoc, /openapi.json) con Basic Auth e informe de auditoría/sincronización de base de datos local vs. servidor.
 *   **[RESUMEN_TRABAJO_01_03_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_01_03_JUNIO_2026.md)**
     *   *Descripción:* Resumen completo de la modernización de suministros por HTTP, simetría UI de Dashboard y corrección de totales en comparación de cierres.
 *   **[ACTUALIZACION_SISTEMA_SUMINISTROS_Y_SIMETRIA_DASHBOARD.md](desarrollo/actualizaciones/ACTUALIZACION_SISTEMA_SUMINISTROS_Y_SIMETRIA_DASHBOARD.md)**
