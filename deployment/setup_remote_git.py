@@ -64,6 +64,7 @@ code, out = run("git clone https://github.com/Seiiyes/ricoh /home/odootic/ricoh-
 print(out)
 if code != 0:
     err("Error al clonar el repositorio de GitHub")
+run("chown -R odootic:odootic /home/odootic/ricoh-app")
 log("Repositorio clonado exitosamente en el servidor")
 
 # 4. Configurar docker-compose.yml para producción (Servidor 131)
