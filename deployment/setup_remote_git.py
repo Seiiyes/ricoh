@@ -24,7 +24,8 @@ log("Conexión SSH establecida")
 def run(cmd, timeout=300):
     ch = client.get_transport().open_session()
     ch.set_combine_stderr(True)
-    ch.exec_command(f"echo '{PASS}' | sudo -S {cmd} 2>&1")
+    escaped_cmd = cmd.replace("'", "'\\''")
+    ch.exec_command(f"echo '{PASS}' | sudo -S bash -c '{escaped_cmd}' 2>&1")
     out = b''
     deadline = time.time() + timeout
     while True:
