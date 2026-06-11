@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.6.0] - 2026-06-01
+
+### ✨ Added
+
+- **Vista Consolidada de Consumo de Usuarios** — Implementado un sistema de agregación dinámica en el frontend (`AnalyticsPage.tsx`) que consolida los consumos mensuales de usuarios que utilizan múltiples equipos (por ejemplo, hasta 5 impresoras asignadas).
+- **Conmutador de Vista (Segmented UI)** — Añadido un control segmentado glassmorphic para alternar entre "Vista por Impresora" (auditoría clásica por cierres) y "Consolidado por Usuario" (agrupación y ordenación por volumen total).
+- **Sub-paneles y KPI cards** — Renderizado dinámico de tarjetas de resumen con la distribución consolidada por función (Copiadora, Impresora, Escáner, Color vs B/N) al expandir la fila de un usuario consolidado.
+- **Sub-tabla interna de equipos utilizados** — Listado interactivo detallando IP, ubicación, volumen y acciones para cada impresora que haya registrado consumos del usuario.
+- **Selector de tamaño de página** — Control flexible para elegir el paginado (15, 25, 50, 100 registros) facilitando auditorías masivas de consumos.
+
+### 🧪 Testing
+
+- **TypeScript compilation check** — Validado compilación limpia de frontend React sin errores de tipado o de interfaces.
+- **Backend QA Regression** — 10/10 en verify_session y 27/27 en qa_bloques_bc pasados exitosamente sin incidencias.
+
 ---
 
 ## [2.5.0] - 2026-05-29

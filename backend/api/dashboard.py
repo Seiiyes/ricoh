@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from db.database import get_db
 from db.models import Printer
+from db.models_auth import AdminUser
+from middleware.auth_middleware import get_current_user
 from services.redis_service import cache_result
 import os
 
@@ -10,7 +12,10 @@ router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
 @router.get("/kpis")
 @cache_result("dashboard:kpis", ttl=int(os.getenv("CACHE_TTL_DASHBOARD", 300)))
-async def get_dashboard_kpis(db: Session = Depends(get_db)):
+async def get_dashboard_kpis(
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
+):
     """
     Get dashboard KPIs
     Uses PostgreSQL function for optimal performance
@@ -30,10 +35,11 @@ async def get_dashboard_kpis(db: Session = Depends(get_db)):
 @cache_result("dashboard:top_impresoras", ttl=600)
 async def get_top_impresoras(
     limit: int = 5,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
 ):
     """
-    Get top printers for current month
+    Get top printers for current month. Fallbacks to historical volume if current month has no closures.
     Cached for 10 minutes
     """
     from datetime import date
@@ -46,10 +52,44 @@ async def get_top_impresoras(
     else:
         fecha_fin = date(today.year, today.month + 1, 1)
     
+    query_monthly = """
+        SELECT 
+            p.id as printer_id,
+            p.hostname,
+            p.detected_model as modelo,
+            p.location as ubicacion,
+            p.ip_address,
+            SUM(cm.total_paginas)::BIGINT as total_paginas
+        FROM printers p
+        INNER JOIN cierres_mensuales cm ON p.id = cm.printer_id
+        WHERE cm.fecha_inicio >= :inicio
+          AND cm.fecha_fin <= :fin
+        GROUP BY p.id, p.hostname, p.detected_model, p.location, p.ip_address
+        ORDER BY total_paginas DESC
+        LIMIT :limit
+    """
     result = db.execute(
-        text("SELECT * FROM get_top_impresoras(:inicio, :fin, :limit)"),
+        text(query_monthly),
         {"inicio": fecha_inicio, "fin": fecha_fin, "limit": limit}
     ).fetchall()
+    
+    # Fallback ilustrativo a histórico si no hay cierres este mes
+    if not result:
+        query_fallback = """
+            SELECT 
+                p.id as printer_id,
+                p.hostname,
+                p.detected_model as modelo,
+                p.location as ubicacion,
+                p.ip_address,
+                COALESCE(SUM(cm.diferencia_total), 0)::BIGINT as total_paginas
+            FROM printers p
+            INNER JOIN cierres_mensuales cm ON p.id = cm.printer_id
+            GROUP BY p.id, p.hostname, p.detected_model, p.location, p.ip_address
+            ORDER BY total_paginas DESC
+            LIMIT :limit
+        """
+        result = db.execute(text(query_fallback), {"limit": limit}).fetchall()
     
     return [
         {
@@ -57,6 +97,7 @@ async def get_top_impresoras(
             "hostname": row.hostname,
             "modelo": row.modelo,
             "ubicacion": row.ubicacion,
+            "ip_address": row.ip_address,
             "total_paginas": row.total_paginas
         }
         for row in result
@@ -67,10 +108,12 @@ async def get_top_impresoras(
 @cache_result("dashboard:top_usuarios_consumo", ttl=600)
 async def get_top_usuarios_consumo(
     limit: int = 5,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
 ):
     """
     Suma consumo_total (cierres_mensuales_usuarios) por usuario Ricoh en el mes en curso.
+    Fallbacks to historical volume if current month has no closures.
     """
     from datetime import date
 
@@ -85,6 +128,24 @@ async def get_top_usuarios_consumo(
         text("SELECT * FROM get_top_consumo_usuarios(:inicio, :fin, :limit)"),
         {"inicio": fecha_inicio, "fin": fecha_fin, "limit": limit},
     ).fetchall()
+
+    # Fallback ilustrativo a histórico si no hay cierres este mes
+    if not result:
+        query_fallback = """
+            SELECT
+                u.id as user_id,
+                u.name::VARCHAR as nombre,
+                u.codigo_de_usuario::VARCHAR as codigo_usuario,
+                COALESCE(SUM(cmu.consumo_total), 0)::BIGINT AS total_consumo_paginas,
+                COUNT(*)::INTEGER AS cierres_count
+            FROM cierres_mensuales_usuarios cmu
+            INNER JOIN cierres_mensuales cm ON cm.id = cmu.cierre_mensual_id
+            INNER JOIN users u ON u.id = cmu.user_id
+            GROUP BY u.id, u.name, u.codigo_de_usuario
+            ORDER BY total_consumo_paginas DESC NULLS LAST
+            LIMIT :limit
+        """
+        result = db.execute(text(query_fallback), {"limit": limit}).fetchall()
 
     return [
         {
@@ -102,7 +163,8 @@ async def get_top_usuarios_consumo(
 @cache_result("dashboard:actividad", ttl=60)
 async def get_actividad_reciente(
     limit: int = 4,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
 ):
     """
     Get recent activity from audit log
@@ -133,7 +195,10 @@ async def get_actividad_reciente(
 
 @router.get("/consumo-resumen")
 @cache_result("dashboard:consumo_resumen", ttl=300)
-async def get_consumo_resumen(db: Session = Depends(get_db)):
+async def get_consumo_resumen(
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
+):
     """
     Obtiene el total de páginas consumidas por tipo en el mes actual.
     Suma de las diferencias de contadores de los cierres.
@@ -186,7 +251,10 @@ async def get_consumo_resumen(db: Session = Depends(get_db)):
 
 @router.get("/toner-alertas")
 @cache_result("dashboard:toner_alertas", ttl=60)
-async def get_toner_alertas(db: Session = Depends(get_db)):
+async def get_toner_alertas(
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
+):
     """
     Obtiene los niveles de consumibles (tóner) de todas las impresoras activas.
     Genera valores realistas si el hardware reporta 0 para evitar cards vacías en UI.
@@ -232,6 +300,7 @@ async def get_toner_alertas(db: Session = Depends(get_db)):
         response.append({
             "printer_id": p.id,
             "hostname": p.hostname,
+            "ip_address": p.ip_address,
             "modelo": p.detected_model or "Ricoh Multifuncional",
             "ubicacion": p.location or "Piso Central",
             "is_color": is_color,

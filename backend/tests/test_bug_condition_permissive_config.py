@@ -179,6 +179,11 @@ class TestBugCondition_PermissiveConfig:
                 os.environ["ENABLE_CSRF"] = original_csrf
             elif "ENABLE_CSRF" in os.environ:
                 del os.environ["ENABLE_CSRF"]
+                
+            # Reimportar main para restaurar la configuración original (sin CSRF)
+            import importlib
+            import main
+            importlib.reload(main)
     
     def test_csrf_usa_almacenamiento_en_memoria(self):
         """
@@ -304,6 +309,11 @@ class TestBugCondition_PermissiveConfig_PropertyBased:
                 os.environ["ENABLE_CSRF"] = original_csrf
             elif "ENABLE_CSRF" in os.environ:
                 del os.environ["ENABLE_CSRF"]
+                
+            # Reimportar main para restaurar la configuración original (sin CSRF)
+            import importlib
+            import main
+            importlib.reload(main)
     
     @given(
         method=st.sampled_from(["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
@@ -330,7 +340,9 @@ class TestBugCondition_PermissiveConfig_PropertyBased:
         main_content = main_file.read_text(encoding="utf-8")
         
         # Buscar la configuración de allow_methods
-        allow_methods_match = re.search(r'allow_methods\s*=\s*\[(.*?)\]', main_content, re.DOTALL)
+        allow_methods_match = re.search(r'ALLOWED_METHODS\s*=\s*\[(.*?)\]', main_content, re.DOTALL)
+        if not allow_methods_match:
+            allow_methods_match = re.search(r'allow_methods\s*=\s*\[(.*?)\]', main_content, re.DOTALL)
         assert allow_methods_match is not None
         
         allow_methods_str = allow_methods_match.group(1).strip()

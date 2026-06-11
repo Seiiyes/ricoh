@@ -14,7 +14,8 @@ router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 @cache_result("analytics:evolution", ttl=3600)
 async def get_evolution(
     meses: int = Query(12, ge=1, le=24),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Get consumption evolution
@@ -42,7 +43,8 @@ async def get_comparison(
     fecha_fin_a: date = Query(...),
     fecha_inicio_b: date = Query(...),
     fecha_fin_b: date = Query(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     """
     Compare two periods

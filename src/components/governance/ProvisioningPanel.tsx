@@ -57,13 +57,19 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
 
     loadPrinters();
 
-    // Connect to WebSocket for real-time logs
-    const ws = connectWebSocket(() => {
-      // WebSocket events - no longer logging to UI
-    });
+    // Connect to authenticated WebSocket for real-time logs (informational only).
+    // connectWebSocket() throws if no JWT is in localStorage — handle gracefully.
+    let ws: WebSocket | null = null;
+    try {
+      ws = connectWebSocket(() => {
+        // WebSocket events - no longer logging to UI
+      });
+    } catch (err) {
+      console.warn('[WS] Could not connect to log stream:', err);
+    }
 
     return () => {
-      ws.close();
+      ws?.close();
     };
   }, [setPrinters, setLoading]);
 

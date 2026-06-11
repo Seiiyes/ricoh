@@ -9,9 +9,11 @@ from typing import Optional
 import math
 
 from db.database import get_db
+from db.models import CentroCosto
 from db.models_auth import AdminUser, Empresa
 from api.empresa_schemas import (
-    EmpresaCreate, EmpresaUpdate, EmpresaResponse, EmpresaListResponse
+    EmpresaCreate, EmpresaUpdate, EmpresaResponse, EmpresaListResponse,
+    CentroCostoResponse, CentroCostosSugerenciasResponse
 )
 from api.auth_schemas import SuccessResponse, ErrorResponse
 from middleware.auth_middleware import get_current_superadmin, get_client_ip, get_user_agent
@@ -19,6 +21,82 @@ from services.audit_service import AuditService
 
 
 router = APIRouter(prefix="/empresas", tags=["Empresas"])
+
+
+@router.get(
+    "/{empresa_id}/centro-costos",
+    response_model=CentroCostosSugerenciasResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "List of centro costos", "model": CentroCostosSugerenciasResponse},
+        404: {"description": "Empresa not found", "model": ErrorResponse}
+    },
+    summary="Get Centro Costos",
+    description="Get cost centers for a specific empresa, plus global suggestions from other companies."
+)
+async def get_centro_costos(
+    empresa_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get centro costos for an empresa.
+    """
+    # Verify empresa exists
+    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+    if not empresa:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "NOT_FOUND", "message": "Empresa no encontrada"}
+        )
+    
+    # Get propios
+    propios = db.query(CentroCosto).filter(CentroCosto.empresa_id == empresa_id).order_by(CentroCosto.nombre).all()
+    
+    # Get sugerencias globales (distinct names from other companies)
+    # Using func.distinct to get unique names
+    sugerencias_query = db.query(CentroCosto.nombre).filter(
+        CentroCosto.empresa_id != empresa_id,
+        CentroCosto.nombre.isnot(None)
+    ).distinct().order_by(CentroCosto.nombre).all()
+    
+    sugerencias = [row[0] for row in sugerencias_query]
+    
+    # Filter out suggestions that already exist in propios
+    propios_nombres = {p.nombre.lower() for p in propios}
+    sugerencias = [s for s in sugerencias if s.lower() not in propios_nombres]
+    
+    return CentroCostosSugerenciasResponse(
+        propios=[CentroCostoResponse.model_validate(c) for c in propios],
+        sugerencias_globales=sugerencias
+    )
+
+
+@router.get(
+    "/by-name/{empresa_name}/centro-costos",
+    response_model=CentroCostosSugerenciasResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Centro Costos by Empresa Name",
+    description="Get cost centers for a specific empresa by its name, plus global suggestions."
+)
+async def get_centro_costos_by_name(
+    empresa_name: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get centro costos for an empresa using its name.
+    """
+    empresa = db.query(Empresa).filter(Empresa.razon_social == empresa_name).first()
+    if not empresa:
+        # Si no existe la empresa, solo devolvemos sugerencias globales
+        sugerencias_query = db.query(CentroCosto.nombre).filter(
+            CentroCosto.nombre.isnot(None)
+        ).distinct().order_by(CentroCosto.nombre).all()
+        return CentroCostosSugerenciasResponse(
+            propios=[],
+            sugerencias_globales=[row[0] for row in sugerencias_query]
+        )
+    
+    return await get_centro_costos(empresa.id, db)
 
 
 @router.get(

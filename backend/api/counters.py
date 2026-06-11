@@ -530,19 +530,30 @@ async def create_close(request: CierreRequest, db: Session = Depends(get_db), cu
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al crear cierre: {str(e)}")
 
 @router.get("/monthly", response_model=List[CierreMensualResponse], status_code=status.HTTP_200_OK)
-async def list_closes(printer_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    """Obtiene todos los cierres de una impresora"""
-    # Validar acceso a la impresora
-    printer = db.query(Printer).filter(Printer.id == printer_id).first()
-    if not printer:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+async def list_closes(
+    printer_id: Optional[int] = Query(None, description="Filtrar por impresora"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Obtiene todos los cierres mensuales (opcionalmente filtrados por impresora)"""
+    query = db.query(CierreMensual).join(Printer)
     
-    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
-    
-    cierres = db.query(CierreMensual).filter(
-        CierreMensual.printer_id == printer_id
-    ).order_by(CierreMensual.fecha_inicio.desc()).all()
+    # Validar acceso si se especificó impresora
+    if printer_id is not None:
+        printer = db.query(Printer).filter(Printer.id == printer_id).first()
+        if not printer:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Impresora {printer_id} no encontrada")
+        
+        if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta impresora")
+            
+        query = query.filter(CierreMensual.printer_id == printer_id)
+    else:
+        # Si no se especificó impresora, aplicar multi-tenancy para la empresa del usuario
+        if not current_user.is_superadmin():
+            query = query.filter(Printer.empresa_id == current_user.empresa_id)
+            
+    cierres = query.order_by(CierreMensual.fecha_inicio.desc()).all()
     return cierres
 
 @router.get("/monthly/{printer_id}", response_model=List[CierreMensualResponse], status_code=status.HTTP_200_OK)
@@ -953,7 +964,7 @@ async def get_all_users_closes(
         query = query.join(User, User.id == CierreMensualUsuario.user_id).join(
             CentroCosto, User.centro_costo_id == CentroCosto.id
         ).filter(
-            CentroCosto.nombre.ilike(f"%{centro_costos}%")
+            CentroCosto.nombre.ilike(centro_costos)
         )
 
     # Búsqueda de texto (nombre de usuario, código, IP, ubicación, hostname)
@@ -1002,6 +1013,55 @@ async def get_all_users_closes(
         # Usuario asociado
         user = db.query(User).filter(User.id == snapshot.user_id).first()
         
+        # Empresa asociada
+        empresa_nombre = printer.empresa.nombre_comercial.upper() if (printer.empresa and printer.empresa.nombre_comercial) else "SIN EMPRESA"
+        
+        # Calcular consumo_bn y consumo_color periódicos del mes
+        consumo_bn = 0
+        consumo_color = 0
+        
+        if not printer.has_color:
+            consumo_bn = snapshot.consumo_total
+            consumo_color = 0
+        else:
+            # Buscar el cierre anterior para el mismo usuario y la misma impresora
+            cierre_anterior = db.query(CierreMensual).filter(
+                CierreMensual.printer_id == printer.id,
+                CierreMensual.fecha_fin < cierre.fecha_inicio
+            ).order_by(CierreMensual.fecha_fin.desc()).first()
+            
+            if cierre_anterior:
+                snapshot_anterior = db.query(CierreMensualUsuario).filter(
+                    CierreMensualUsuario.cierre_mensual_id == cierre_anterior.id,
+                    CierreMensualUsuario.user_id == snapshot.user_id
+                ).first()
+                
+                if snapshot_anterior:
+                    consumo_bn = max(0, snapshot.total_bn - snapshot_anterior.total_bn)
+                    consumo_color = max(0, snapshot.total_color - snapshot_anterior.total_color)
+                    
+                    # Fallback si las diferencias de acumulados son 0 pero consumo_total > 0
+                    if consumo_bn == 0 and consumo_color == 0 and snapshot.consumo_total > 0:
+                        cop_bn_diff = max(0, snapshot.copiadora_bn - snapshot_anterior.copiadora_bn)
+                        cop_col_diff = max(0, snapshot.copiadora_color - snapshot_anterior.copiadora_color)
+                        imp_bn_diff = max(0, snapshot.impresora_bn - snapshot_anterior.impresora_bn)
+                        imp_col_diff = max(0, snapshot.impresora_color - snapshot_anterior.impresora_color)
+                        
+                        consumo_bn = cop_bn_diff + imp_bn_diff
+                        consumo_color = cop_col_diff + imp_col_diff
+            
+            # Si no hay cierre anterior o las diferencias dieron 0 y consumo_total > 0
+            if (not cierre_anterior or (consumo_bn == 0 and consumo_color == 0)) and snapshot.consumo_total > 0:
+                total_acum = snapshot.total_paginas
+                if total_acum > 0:
+                    bn_ratio = (snapshot.total_bn or 0) / total_acum
+                    col_ratio = (snapshot.total_color or 0) / total_acum
+                    consumo_bn = int(snapshot.consumo_total * bn_ratio)
+                    consumo_color = int(snapshot.consumo_total * col_ratio)
+                else:
+                    consumo_bn = snapshot.consumo_total
+                    consumo_color = 0
+
         serialized_items.append(
             CierreUsuarioGlobalResponse(
                 id=snapshot.id,
@@ -1034,10 +1094,15 @@ async def get_all_users_closes(
                 printer_hostname=printer.hostname,
                 printer_ip=printer.ip_address,
                 printer_location=printer.location,
+                printer_serial=printer.serial_number,
                 fecha_inicio=cierre.fecha_inicio,
                 fecha_fin=cierre.fecha_fin,
                 fecha_cierre=cierre.fecha_cierre,
-                cerrado_por=cierre.cerrado_por
+                cerrado_por=cierre.cerrado_por,
+                centro_costos=user.centro_costos if user else None,
+                empresa_nombre=empresa_nombre,
+                consumo_bn=consumo_bn,
+                consumo_color=consumo_color
             )
         )
 

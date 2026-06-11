@@ -58,6 +58,17 @@ export interface GetAllParams {
   search?: string;
 }
 
+export interface CentroCosto {
+  id: number;
+  nombre: string;
+  is_active: boolean;
+}
+
+export interface CentroCostosSugerenciasResponse {
+  propios: CentroCosto[];
+  sugerencias_globales: string[];
+}
+
 class EmpresaService {
   /**
    * Obtener todas las empresas con paginación y búsqueda
@@ -96,6 +107,13 @@ class EmpresaService {
    */
   async delete(id: number): Promise<void> {
     await apiClient.delete(`/empresas/${id}`);
+  }
+  /**
+   * Obtener centros de costos de una empresa y sugerencias globales
+   */
+  async getCentroCostos(empresaName: string): Promise<CentroCostosSugerenciasResponse> {
+    const response = await apiClient.get<CentroCostosSugerenciasResponse>(`/empresas/by-name/${encodeURIComponent(empresaName)}/centro-costos`);
+    return response.data;
   }
 }
 

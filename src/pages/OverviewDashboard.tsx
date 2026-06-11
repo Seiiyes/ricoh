@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Loader2,
   RefreshCw,
   UserCircle,
 } from 'lucide-react';
@@ -101,6 +100,7 @@ type ChartRow = {
   ubicacion: string | null;
   hostname: string;
   modelo: string;
+  ipAddress?: string;
 };
 
 function buildTopConsumoChartRows(items: TopImpresoraMes[]): ChartRow[] {
@@ -108,13 +108,18 @@ function buildTopConsumoChartRows(items: TopImpresoraMes[]): ChartRow[] {
     const ubic = trimSafe(p.ubicacion);
     const host = trimSafe(p.hostname);
     const mod = trimSafe(p.modelo);
+    const ip = trimSafe(p.ip_address);
     const generic = !mod || GENERIC_MODEL_PATTERN.test(mod);
 
     let axisLine: string;
-    if (ubic && host) {
+    if (ubic && ip) {
+      axisLine = `${ubic} · ${ip}`;
+    } else if (ubic && host) {
       axisLine = `${ubic} · ${tailChars(host, 16)}`;
     } else if (ubic) {
       axisLine = ubic;
+    } else if (ip) {
+      axisLine = ip;
     } else if (host) {
       axisLine = tailChars(host, 30);
     } else if (!generic) {
@@ -128,7 +133,7 @@ function buildTopConsumoChartRows(items: TopImpresoraMes[]): ChartRow[] {
 
     const fullLabel = !generic
       ? mod
-      : [mod || 'Impresora de red', host ? `(${host})` : `(#${p.printer_id})`].filter(Boolean).join(' ');
+      : (ip || host || 'Impresora de red');
 
     return {
       printerId: p.printer_id,
@@ -139,6 +144,7 @@ function buildTopConsumoChartRows(items: TopImpresoraMes[]): ChartRow[] {
       ubicacion: p.ubicacion,
       hostname: host,
       modelo: mod,
+      ipAddress: ip,
     };
   });
 }
@@ -171,6 +177,103 @@ function TopConsumoTooltip({
     </div>
   );
 }
+
+const ChartCardSkeleton = () => (
+  <div className="flex flex-col gap-3 h-full justify-center px-4 animate-pulse">
+    <div className="h-6 w-2/3 bg-slate-100 rounded" />
+    <div className="h-4 w-1/2 bg-slate-100 rounded animate-pulse" />
+    <div className="space-y-2.5 mt-4">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="h-3 w-16 bg-slate-100 rounded shrink-0" />
+          <div className="h-5 bg-slate-100 rounded" style={{ width: `${80 - i * 15}%` }} />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const ListSkeleton = () => (
+  <div className="space-y-3 animate-pulse">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <div key={i} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
+        <div className="flex items-center gap-2 flex-1">
+          <div className="h-4 w-4 bg-slate-100 rounded shrink-0" />
+          <div className="space-y-1 flex-1">
+            <div className="h-3.5 w-2/3 bg-slate-100 rounded" />
+            <div className="h-2.5 w-1/3 bg-slate-100 rounded" />
+          </div>
+        </div>
+        <div className="h-4 w-12 bg-slate-100 rounded shrink-0" />
+      </div>
+    ))}
+  </div>
+);
+
+const ActivitySkeleton = () => (
+  <div className="space-y-2.5 animate-pulse">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <div key={i} className="rounded-lg border border-slate-100 p-2 flex gap-2 items-start bg-slate-50/50">
+        <div className="h-4 w-4 rounded-full bg-slate-100 shrink-0" />
+        <div className="flex-1 space-y-1.5 min-w-0">
+          <div className="flex justify-between">
+            <div className="h-3 w-1/3 bg-slate-100 rounded" />
+            <div className="h-2.5 w-12 bg-slate-100 rounded" />
+          </div>
+          <div className="h-3 w-3/4 bg-slate-100 rounded" />
+          <div className="h-2.5 w-1/4 bg-slate-100 rounded" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const ConsumptionSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-100 flex items-center justify-between">
+      <div className="space-y-1">
+        <div className="h-2.5 w-20 bg-slate-100 rounded" />
+        <div className="h-6 w-24 bg-slate-100 rounded" />
+      </div>
+      <div className="h-8 w-8 rounded-full bg-slate-100" />
+    </div>
+    <div className="space-y-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="space-y-1.5">
+          <div className="flex justify-between">
+            <div className="h-3.5 w-1/4 bg-slate-100 rounded" />
+            <div className="h-3.5 w-16 bg-slate-100 rounded" />
+          </div>
+          <div className="w-full bg-slate-100 h-2 rounded-full" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const TonerSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    {Array.from({ length: 2 }).map((_, i) => (
+      <div key={i} className="rounded-xl border border-slate-100 p-3 bg-slate-50/40">
+        <div className="flex justify-between items-start mb-2">
+          <div className="space-y-1 flex-1">
+            <div className="h-3.5 w-1/3 bg-slate-100 rounded" />
+            <div className="h-2.5 w-1/4 bg-slate-100 rounded" />
+          </div>
+          <div className="h-4 w-12 bg-slate-100 rounded-full" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+          {Array.from({ length: 4 }).map((_, j) => (
+            <div key={j} className="space-y-1">
+              <div className="h-2 w-12 bg-slate-100 rounded" />
+              <div className="w-full bg-slate-100 h-1.5 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const OverviewDashboard = () => {
   const navigate = useNavigate();
@@ -228,29 +331,11 @@ const OverviewDashboard = () => {
 
   return (
     <div className="flex flex-col h-full animate-fade-in custom-scrollbar overflow-y-auto pb-10">
-      <div className="mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Resumen</h1>
-          <p className="text-xs lg:text-sm font-bold text-slate-500 mt-1 max-w-xl">
-            Indicadores de impresoras, usuarios asignados y cierres del mes. Los datos se actualizan desde el servidor.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            void kpisQ.refetch();
-            void topQ.refetch();
-            void topUsersQ.refetch();
-            void actQ.refetch();
-            void consumoResumenQ.refetch();
-            void tonerQ.refetch();
-          }}
-          disabled={kpisQ.isFetching || topQ.isFetching || topUsersQ.isFetching || actQ.isFetching || consumoResumenQ.isFetching || tonerQ.isFetching}
-          className="inline-flex items-center gap-2 self-start sm:self-auto rounded-xl border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:border-ricoh-red/40 hover:text-ricoh-red transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={cn((kpisQ.isFetching || topQ.isFetching || topUsersQ.isFetching || actQ.isFetching || consumoResumenQ.isFetching || tonerQ.isFetching) && 'animate-spin')} />
-          Actualizar
-        </button>
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Resumen</h1>
+        <p className="text-xs lg:text-sm font-bold text-slate-500 mt-1 max-w-xl">
+          Indicadores de impresoras, usuarios asignados y cierres del mes. Los datos se actualizan desde el servidor.
+        </p>
       </div>
 
       {kpisQ.isError && (
@@ -323,9 +408,7 @@ const OverviewDashboard = () => {
               description="Según cierres mensuales registrados"
             >
               {topQ.isPending ? (
-                <div className="flex h-full items-center justify-center text-slate-400">
-                  <Loader2 className="h-8 w-8 animate-spin text-ricoh-red" />
-                </div>
+                <ChartCardSkeleton />
               ) : chartData.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center px-4 text-slate-500">
                   <Printer className="h-10 w-10 opacity-20 mb-3" />
@@ -423,8 +506,8 @@ const OverviewDashboard = () => {
                 onRetry={() => void topUsersQ.refetch()}
               />
             ) : topUsersQ.isPending ? (
-              <div className="flex flex-1 items-center justify-center py-12 text-slate-400">
-                <Loader2 className="h-7 w-7 animate-spin text-ricoh-red" />
+              <div className="py-2">
+                <ListSkeleton />
               </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mx-1 px-1">
@@ -483,8 +566,8 @@ const OverviewDashboard = () => {
                 onRetry={() => void actQ.refetch()}
               />
             ) : actQ.isPending ? (
-              <div className="flex flex-1 items-center justify-center py-10 text-slate-400">
-                <Loader2 className="h-7 w-7 animate-spin text-ricoh-red" />
+              <div className="py-2">
+                <ActivitySkeleton />
               </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5 -mr-0.5">
@@ -551,9 +634,7 @@ const OverviewDashboard = () => {
             </div>
 
             {consumoResumenQ.isPending ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-ricoh-red" />
-              </div>
+              <ConsumptionSkeleton />
             ) : consumoResumenQ.isError ? (
               <p className="text-xs text-red-500 text-center py-6">No se pudo cargar el resumen de consumo</p>
             ) : consumoResumenQ.data ? (
@@ -640,26 +721,34 @@ const OverviewDashboard = () => {
                   Porcentaje de consumibles remanentes reportados por el hardware
                 </p>
               </div>
-              <span className="inline-flex rounded-lg bg-blue-50 text-blue-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider">
-                Monitoreo SNMP
-              </span>
+              <button
+                type="button"
+                onClick={() => void tonerQ.refetch()}
+                disabled={tonerQ.isFetching}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-0.7 text-[9px] font-black uppercase tracking-wider text-slate-600 hover:border-ricoh-red/40 hover:text-ricoh-red transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw size={10} className={cn(tonerQ.isFetching && 'animate-spin')} />
+                Actualizar
+              </button>
             </div>
 
             {tonerQ.isPending ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-ricoh-red" />
-              </div>
+              <TonerSkeleton />
             ) : tonerQ.isError ? (
               <p className="text-xs text-red-500 text-center py-6">No se pudieron cargar los niveles de tóner</p>
             ) : tonerQ.data ? (
               <div className="space-y-4">
-                {tonerQ.data.slice(0, 3).map((p) => {
+                {tonerQ.data.map((p) => {
                   return (
                     <div key={p.printer_id} className="rounded-xl border border-slate-100 p-3 bg-slate-50/40 hover:bg-slate-50 transition-colors">
                       <div className="flex justify-between items-start mb-2">
                         <div className="min-w-0">
-                          <p className="text-[11px] font-black text-slate-800 truncate leading-none">{p.modelo}</p>
-                          <p className="text-[9px] text-slate-400 font-mono mt-1 leading-none">{p.hostname} · {p.ubicacion}</p>
+                          <p className="text-xs font-black text-slate-800 leading-none">
+                            {p.ip_address} <span className="text-slate-400 font-bold ml-1 text-[10px] uppercase">· {p.ubicacion}</span>
+                          </p>
+                          <p className="text-[9px] text-slate-500 font-mono mt-1.5 leading-none">
+                            {p.modelo && !/network|port/i.test(p.modelo) ? p.modelo : p.hostname}
+                          </p>
                         </div>
                         {p.alerta ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-800 text-[8px] font-black uppercase px-2 py-0.5 leading-none">
@@ -672,73 +761,67 @@ const OverviewDashboard = () => {
                         )}
                       </div>
 
-                      {/* Gráficos de barras horizontales compactos para CMYK */}
-                      <div className="grid grid-cols-4 gap-2 mt-2">
-                        {/* Negro */}
-                        <div className="flex flex-col">
-                          <div className="flex justify-between text-[8px] font-bold text-slate-600 mb-0.5 leading-none">
-                            <span>K (Negro)</span>
-                            <span className="tabular-nums font-black">{p.toner_black}%</span>
+                      {/* Gráficos de barras horizontales compactos para CMYK o Barra simple para Monocromática */}
+                      {p.is_color ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-2 sm:gap-2 mt-2">
+                          {/* Negro */}
+                          <div className="flex flex-col">
+                            <div className="flex justify-between text-[8px] font-bold text-slate-600 mb-0.5 leading-none">
+                              <span>K (Negro)</span>
+                              <span className="tabular-nums font-black">{p.toner_black}%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-slate-900/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]">
+                              <div className="bg-slate-900 h-full rounded-full" style={{ width: `${p.toner_black}%` }} />
+                            </div>
                           </div>
-                          <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-slate-900 h-full rounded-full" style={{ width: `${p.toner_black}%` }} />
-                          </div>
-                        </div>
 
-                        {/* Cian */}
-                        {p.is_color ? (
+                          {/* Cian */}
                           <div className="flex flex-col">
                             <div className="flex justify-between text-[8px] font-bold text-slate-600 mb-0.5 leading-none">
                               <span>C (Cian)</span>
                               <span className="tabular-nums font-black">{p.toner_cyan}%</span>
                             </div>
-                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-cyan-500/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]">
                               <div className="bg-cyan-400 h-full rounded-full" style={{ width: `${p.toner_cyan}%` }} />
                             </div>
                           </div>
-                        ) : (
-                          <div className="flex flex-col opacity-20">
-                            <span className="text-[8px] font-bold text-slate-300 leading-none">C (N/A)</span>
-                            <div className="w-full bg-slate-100 h-1.5 rounded-full" />
-                          </div>
-                        )}
 
-                        {/* Magenta */}
-                        {p.is_color ? (
+                          {/* Magenta */}
                           <div className="flex flex-col">
                             <div className="flex justify-between text-[8px] font-bold text-slate-600 mb-0.5 leading-none">
                               <span>M (Mag)</span>
                               <span className="tabular-nums font-black">{p.toner_magenta}%</span>
                             </div>
-                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-pink-500/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]">
                               <div className="bg-pink-500 h-full rounded-full" style={{ width: `${p.toner_magenta}%` }} />
                             </div>
                           </div>
-                        ) : (
-                          <div className="flex flex-col opacity-20">
-                            <span className="text-[8px] font-bold text-slate-300 leading-none">M (N/A)</span>
-                            <div className="w-full bg-slate-100 h-1.5 rounded-full" />
-                          </div>
-                        )}
 
-                        {/* Amarillo */}
-                        {p.is_color ? (
+                          {/* Amarillo */}
                           <div className="flex flex-col">
                             <div className="flex justify-between text-[8px] font-bold text-slate-600 mb-0.5 leading-none">
                               <span>Y (Amar)</span>
                               <span className="tabular-nums font-black">{p.toner_yellow}%</span>
                             </div>
-                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-yellow-500/25 shadow-[inset_0_1px_2.5px_rgba(0,0,0,0.2)]">
                               <div className="bg-yellow-400 h-full rounded-full" style={{ width: `${p.toner_yellow}%` }} />
                             </div>
                           </div>
-                        ) : (
-                          <div className="flex flex-col opacity-20">
-                            <span className="text-[8px] font-bold text-slate-300 leading-none">Y (N/A)</span>
-                            <div className="w-full bg-slate-100 h-1.5 rounded-full" />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-2 sm:gap-2 mt-2">
+                          {/* Negro - expandido para cubrir todo el ancho de las columnas */}
+                          <div className="flex flex-col col-span-2 sm:col-span-4">
+                            <div className="flex justify-between text-[8px] font-bold text-slate-600 mb-0.5 leading-none">
+                              <span>K (Negro)</span>
+                              <span className="tabular-nums font-black">{p.toner_black}%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-slate-900/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]">
+                              <div className="bg-slate-900 h-full rounded-full" style={{ width: `${p.toner_black}%` }} />
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -747,7 +830,7 @@ const OverviewDashboard = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] text-slate-400">
             <span>Última lectura: hace unos instantes</span>
-            <span className="text-ricoh-red font-bold uppercase tracking-wider">Flota Activa</span>
+            <span className="text-ricoh-red font-bold uppercase tracking-wider">Equipos Activos</span>
           </div>
         </div>
       </div>

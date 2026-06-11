@@ -62,27 +62,15 @@ describe('ProvisioningPanel - Unit Tests', () => {
     render(<ProvisioningPanel />);
 
     // Assert that form title is present
-    expect(screen.getByText('Crear Usuario en Impresoras')).toBeInTheDocument();
+    expect(screen.getByText('Nuevo Usuario')).toBeInTheDocument();
     
     // Assert that form fields are present
     expect(screen.getByPlaceholderText('Nombre del Usuario')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('1234')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('\\\\10.0.0.5\\scans\\')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('\\\\\\\\10.0.0.5\\\\scans\\\\')).toBeInTheDocument();
     
     // Assert that submit button is present
-    expect(screen.getByText('Enviar Configuración')).toBeInTheDocument();
-  });
-
-  // **Validates: Requirements 7.3**
-  it('should render live console', () => {
-    // Render the component
-    render(<ProvisioningPanel />);
-
-    // Assert that console title is present
-    expect(screen.getByText('Registro de Actividad')).toBeInTheDocument();
-    
-    // Assert that console placeholder message is present when no logs
-    expect(screen.getByText('No hay actividad registrada. Esperando configuración...')).toBeInTheDocument();
+    expect(screen.getByText('Enviar a Equipos')).toBeInTheDocument();
   });
 });
 

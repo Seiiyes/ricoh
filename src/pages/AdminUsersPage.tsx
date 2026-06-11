@@ -289,7 +289,7 @@ const AdminUsersPage = () => {
                           <div className="text-xs text-slate-500 truncate" title={formatDate(user.last_login)}>{formatDate(user.last_login)}</div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => handleEdit(user)}
                               className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

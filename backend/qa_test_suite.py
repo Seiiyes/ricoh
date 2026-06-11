@@ -46,7 +46,12 @@ print("="*60)
 
 # A.0 — Login
 print("\n[A.0] AUTH: Login como superadmin")
-status, body = req("POST", "/auth/login", {"username": "superadmin", "password": "Admin1234!"})
+try:
+    with open(".superadmin_password", "r") as f:
+        superadmin_password = f.read().strip()
+except:
+    superadmin_password = "Admin1234!"
+status, body = req("POST", "/auth/login", {"username": "superadmin", "password": superadmin_password})
 
 token = body.get("access_token", "")
 check("Login superadmin", status == 200 and token, f"status={status}")

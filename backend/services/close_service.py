@@ -453,6 +453,9 @@ class CloseService:
         if cierre_antiguo.printer_id != cierre_reciente.printer_id:
             raise ValueError("Los cierres pertenecen a impresoras diferentes.")
             
+        from db.models import Printer
+        printer = db.query(Printer).filter(Printer.id == cierre_antiguo.printer_id).first()
+            
         if cierre_antiguo.fecha_fin >= cierre_reciente.fecha_inicio:
             # Aunque la validación estricta exigiría cierre_antiguo.fecha_fin < cierre_reciente.fecha_fin
             # Es importante advertir pero quizas no bloquear si son solapados,
@@ -467,6 +470,63 @@ class CloseService:
         diferencia_impresora = cierre_reciente.total_impresora - cierre_antiguo.total_impresora
         diferencia_escaner = cierre_reciente.total_escaner - cierre_antiguo.total_escaner
         diferencia_fax = cierre_reciente.total_fax - cierre_antiguo.total_fax
+
+        # Diferencias B/N y Color globales del período (calculadas a partir de los contadores generales):
+        from db.models import ContadorImpresora
+        from datetime import datetime
+        
+        def _get_general_counters(cierre):
+            fecha_fin_datetime = datetime.combine(cierre.fecha_fin, datetime.max.time())
+            contador = db.query(ContadorImpresora).filter(
+                ContadorImpresora.printer_id == cierre.printer_id,
+                ContadorImpresora.fecha_lectura <= fecha_fin_datetime
+            ).order_by(ContadorImpresora.fecha_lectura.desc()).first()
+            
+            if not contador:
+                return 0, 0
+                
+            bn = (contador.copiadora_bn or 0) + (contador.impresora_bn or 0) + (contador.fax_bn or 0)
+            color = (
+                (contador.copiadora_color or 0) + 
+                (contador.copiadora_color_personalizado or 0) + 
+                (contador.copiadora_dos_colores or 0) + 
+                (contador.impresora_color or 0) + 
+                (contador.impresora_color_personalizado or 0) + 
+                (contador.impresora_dos_colores or 0)
+            )
+            return bn, color
+
+        if printer and not printer.has_color:
+            diferencia_bn = diferencia_total
+            diferencia_color = 0
+        else:
+            bn_ant, col_ant = _get_general_counters(cierre_antiguo)
+            bn_rec, col_rec = _get_general_counters(cierre_reciente)
+            
+            diferencia_bn = max(0, bn_rec - bn_ant)
+            diferencia_color = max(0, col_rec - col_ant)
+            
+            # Fallback secundario por usuarios si no se encuentran lecturas de máquina
+            if diferencia_bn == 0 and diferencia_color == 0:
+                usuarios_antiguos_map = {u.user_id: u for u in cierre_antiguo.usuarios if u.user_id}
+                usuarios_recientes_map = {u.user_id: u for u in cierre_reciente.usuarios if u.user_id}
+                all_ids = set(usuarios_antiguos_map.keys()).union(usuarios_recientes_map.keys())
+                for uid in all_ids:
+                    u_ant = usuarios_antiguos_map.get(uid)
+                    u_rec = usuarios_recientes_map.get(uid)
+                    bn_a = (u_ant.total_bn or 0) if u_ant else 0
+                    bn_r = (u_rec.total_bn or 0) if u_rec else 0
+                    if bn_a == 0 and bn_r == 0:
+                        bn_a = ((u_ant.copiadora_bn or 0) + (u_ant.impresora_bn or 0)) if u_ant else 0
+                        bn_r = ((u_rec.copiadora_bn or 0) + (u_rec.impresora_bn or 0)) if u_rec else 0
+                    diferencia_bn += max(0, bn_r - bn_a)
+                    
+                    col_a = (u_ant.total_color or 0) if u_ant else 0
+                    col_r = (u_rec.total_color or 0) if u_rec else 0
+                    if col_a == 0 and col_r == 0:
+                        col_a = ((u_ant.copiadora_color or 0) + (u_ant.impresora_color or 0)) if u_ant else 0
+                        col_r = ((u_rec.copiadora_color or 0) + (u_rec.impresora_color or 0)) if u_rec else 0
+                    diferencia_color += max(0, col_r - col_a)
         
         # Diferencia de días
         dias_entre_cierres = (cierre_reciente.fecha_cierre.date() - cierre_antiguo.fecha_cierre.date()).days
@@ -499,10 +559,15 @@ class CloseService:
             color_c1 = u_antiguo.total_color if u_antiguo else 0
             color_c2 = u_reciente.total_color if u_reciente else 0
             
+            # Si total_bn es 0 en ambos y la impresora es B/N (ej. contador ecologico), fall back a total_paginas
+            if bn_c1 == 0 and bn_c2 == 0 and printer and not printer.has_color:
+                bn_c1 = total_c1
+                bn_c2 = total_c2
+            
             # Diferencia (puede ser negativa si hay correcciones)
             diferencia = total_c2 - total_c1
-            diferencia_bn = bn_c2 - bn_c1
-            diferencia_color = color_c2 - color_c1
+            user_diferencia_bn = bn_c2 - bn_c1
+            user_diferencia_color = color_c2 - color_c1
             
             porcentaje_cambio = 0.0
             if total_c1 > 0:
@@ -516,8 +581,8 @@ class CloseService:
                 "consumo_cierre1": total_c1,
                 "consumo_cierre2": total_c2,
                 "diferencia": diferencia,
-                "diferencia_bn": diferencia_bn,
-                "diferencia_color": diferencia_color,
+                "diferencia_bn": user_diferencia_bn,
+                "diferencia_color": user_diferencia_color,
                 "porcentaje_cambio": porcentaje_cambio,
                 
                 "total_paginas_cierre1": total_c1,
@@ -559,10 +624,6 @@ class CloseService:
         activos = len([u for u in usuarios_comparacion if u['diferencia'] != 0])
         promedio = diferencia_total / activos if activos > 0 else 0
         
-        # Obtener información de la impresora
-        from db.models import Printer
-        printer = db.query(Printer).filter(Printer.id == cierre_antiguo.printer_id).first()
-        
         return {
             "cierre1": cierre_antiguo,
             "cierre2": cierre_reciente,
@@ -581,6 +642,8 @@ class CloseService:
             "diferencia_impresora": diferencia_impresora,
             "diferencia_escaner": diferencia_escaner,
             "diferencia_fax": diferencia_fax,
+            "diferencia_bn": diferencia_bn,
+            "diferencia_color": diferencia_color,
             "dias_entre_cierres": abs(dias_entre_cierres),
             "top_usuarios_aumento": top_aumento,
             "top_usuarios_disminucion": top_disminucion,

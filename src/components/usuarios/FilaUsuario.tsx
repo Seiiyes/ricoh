@@ -66,16 +66,16 @@ export const FilaUsuario = ({
         {/* Origen */}
         <td className="px-4 py-3 text-center">
           {usuario.en_db === false ? (
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700" title="Solo en impresoras">
-              🖨️
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100" title="Solo en impresoras">
+              Solo Impresora
             </span>
           ) : usuario.impresoras && usuario.impresoras.length > 0 ? (
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-700" title="En DB y en impresoras">
-              💾🖨️
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-100" title="En DB y en impresoras">
+              Sincronizado
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700" title="Solo en Base de Datos">
-              💾
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100" title="Solo en Base de Datos">
+              Base de Datos
             </span>
           )}
         </td>
@@ -163,7 +163,7 @@ export const FilaUsuario = ({
             size="sm"
             icon={<Edit2 size={14} />}
             onClick={onEditar}
-            className="text-ricoh-red hover:bg-red-50/80 opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+            className="text-ricoh-red hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
           >
             Editar
           </Button>

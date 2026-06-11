@@ -70,6 +70,8 @@ export interface UsuarioComparacion {
   porcentaje_cambio: number;
   total_paginas_cierre1: number | null;
   total_paginas_cierre2: number | null;
+  diferencia_bn?: number;
+  diferencia_color?: number;
   // Desglose del consumo en cierre 1
   consumo_copiadora_cierre1?: number;
   consumo_impresora_cierre1?: number;
@@ -105,6 +107,8 @@ export interface ComparacionCierres {
   diferencia_impresora: number;
   diferencia_escaner: number;
   diferencia_fax: number;
+  diferencia_bn?: number;
+  diferencia_color?: number;
   dias_entre_cierres: number;
   top_usuarios_aumento: UsuarioComparacion[];
   top_usuarios_disminucion: UsuarioComparacion[];

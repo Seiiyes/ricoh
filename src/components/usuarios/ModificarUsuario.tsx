@@ -3,7 +3,7 @@ import { X, Save, Printer, ShieldCheck, Settings, Globe, Trash2, Plus } from 'lu
 import { actualizarUsuario, obtenerUsuarioConEquipos, actualizarPermisosAsignacion, crearUsuario, obtenerDetallesUsuarioImpresora, sincronizarUsuarioTodasImpresoras } from '@/services/servicioUsuarios';
 import { EditorPermisos } from './EditorPermisos';
 import { GestorEquipos } from './GestorEquipos';
-import { Button, Alert, Spinner, Input, EmpresaAutocomplete } from '@/components/ui';
+import { Button, Alert, Spinner, Input, EmpresaAutocomplete, CentroCostosAutocomplete } from '@/components/ui';
 import type { Usuario, ImpresoraUsuario } from '@/types/usuario';
 
 interface ModificarUsuarioProps {
@@ -485,10 +485,10 @@ export const ModificarUsuario = ({
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Centro de costos</label>
-                      <Input
+                      <CentroCostosAutocomplete
                         value={centroCostos}
-                        onChange={(e) => setCentroCostos(e.target.value)}
-                        className="font-bold"
+                        onChange={setCentroCostos}
+                        empresaName={empresa}
                       />
                     </div>
                   </div>

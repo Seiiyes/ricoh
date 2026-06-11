@@ -82,11 +82,10 @@ class TestAuthEndpoints:
         assert data["username"] == "test_superadmin"
         assert "password_hash" not in data
     
-    def test_get_me_without_token(self, client):
-        """Test GET /auth/me without token returns 401"""
+    def test_get_me_without_token(self, client, db_session):
+        """Test GET /auth/me without token returns 403"""
         response = client.get("/auth/me")
-        
-        assert response.status_code == 401
+        assert response.status_code == 403
     
     def test_get_me_with_invalid_token(self, client):
         """Test GET /auth/me with invalid token returns 401"""
@@ -99,21 +98,6 @@ class TestAuthEndpoints:
     
     def test_logout_with_valid_token(self, client, db_session, superadmin_user, superadmin_token):
         """Test POST /auth/logout with valid token returns 200"""
-        # First create a session
-        from db.models_auth import AdminSession
-        from datetime import datetime, timedelta
-        
-        session = AdminSession(
-            admin_user_id=superadmin_user.id,
-            token=superadmin_token,
-            refresh_token="refresh_token_here",
-            ip_address="127.0.0.1",
-            user_agent="test",
-            expires_at=datetime.utcnow() + timedelta(minutes=30),
-            refresh_expires_at=datetime.utcnow() + timedelta(days=7)
-        )
-        db_session.add(session)
-        db_session.commit()
         
         response = client.post(
             "/auth/logout",

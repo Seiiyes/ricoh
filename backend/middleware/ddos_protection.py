@@ -11,6 +11,7 @@ from collections import defaultdict
 import threading
 import logging
 import hashlib
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +42,19 @@ class DDoSProtectionConfig:
     # Bloqueo temporal
     BLOCK_DURATION = 900  # 15 minutos
     
-    # Whitelist de IPs (localhost, redes internas)
+    # Whitelist de IPs (solo localhost por defecto)
+    # En desarrollo, se puede ampliar con DDOS_WHITELIST_PRIVATE_NETWORKS=true
+    # o listando IPs específicas en DDOS_WHITELIST_IPS (comma-separated)
     WHITELIST_IPS = [
         "127.0.0.1",
         "::1",
         "localhost"
+    ]
+    _env = os.getenv("ENVIRONMENT", "development")
+    _default_whitelist_private = "true" if _env == "development" else "false"
+    WHITELIST_PRIVATE_NETWORKS: bool = os.getenv("DDOS_WHITELIST_PRIVATE_NETWORKS", _default_whitelist_private).lower() == "true"
+    EXTRA_WHITELIST_IPS: list = [
+        ip.strip() for ip in os.getenv("DDOS_WHITELIST_IPS", "").split(",") if ip.strip()
     ]
     
     # Tamaño máximo de payload (10MB)
@@ -180,6 +189,14 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next):
         """Procesar request con protección DDoS"""
+        import os
+        # Allow disabling DDoS protection via environment variable (for testing)
+        if os.getenv("ENABLE_DDOS_PROTECTION", "true").lower() == "false":
+            return await call_next(request)
+        
+        # Bypass OPTIONS requests (CORS preflight) to let CORSMiddleware handle them
+        if request.method == "OPTIONS":
+            return await call_next(request)
         
         # Obtener IP del cliente
         client_ip = self._get_client_ip(request)
@@ -195,25 +212,31 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
         if IPBlockList.is_blocked(client_ip):
             print(f"[DDOS] IP {client_ip} BLOQUEADA, retornando 403")
             logger.warning(f"🚫 Request bloqueado de IP: {client_ip}")
-            return JSONResponse(
-                status_code=status.HTTP_403_FORBIDDEN,
-                content={
-                    "error": "IP_BLOCKED",
-                    "message": "Your IP has been temporarily blocked due to suspicious activity",
-                    "blocked_ips": IPBlockList.get_blocked_ips()
-                }
+            return self._add_cors_headers(
+                request,
+                JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={
+                        "error": "IP_BLOCKED",
+                        "message": "Your IP has been temporarily blocked due to suspicious activity",
+                        "blocked_ips": IPBlockList.get_blocked_ips()
+                    }
+                )
             )
         
         # 3. Verificar tamaño del payload
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > DDoSProtectionConfig.MAX_PAYLOAD_SIZE:
             logger.warning(f"⚠️ Payload demasiado grande de {client_ip}: {content_length} bytes")
-            return JSONResponse(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                content={
-                    "error": "PAYLOAD_TOO_LARGE",
-                    "message": f"Request payload exceeds maximum size of {DDoSProtectionConfig.MAX_PAYLOAD_SIZE} bytes"
-                }
+            return self._add_cors_headers(
+                request,
+                JSONResponse(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    content={
+                        "error": "PAYLOAD_TOO_LARGE",
+                        "message": f"Request payload exceeds maximum size of {DDoSProtectionConfig.MAX_PAYLOAD_SIZE} bytes"
+                    }
+                )
             )
         
         # 4. Detectar burst attacks
@@ -221,12 +244,15 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
             # Bloquear IP por burst attack
             IPBlockList.block_ip(client_ip)
             logger.error(f"🚨 IP bloqueada por burst attack: {client_ip}")
-            return JSONResponse(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                content={
-                    "error": "BURST_ATTACK_DETECTED",
-                    "message": "Too many requests in short time. IP blocked temporarily."
-                }
+            return self._add_cors_headers(
+                request,
+                JSONResponse(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    content={
+                        "error": "BURST_ATTACK_DETECTED",
+                        "message": "Too many requests in short time. IP blocked temporarily."
+                    }
+                )
             )
         
         # 5. Rate limiting global por IP
@@ -239,7 +265,8 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
         
         if not global_result.allowed:
             logger.warning(f"⚠️ Rate limit global excedido: {client_ip}")
-            return self._rate_limit_response(global_result, DDoSProtectionConfig.GLOBAL_RATE_LIMIT)
+            response = self._rate_limit_response(global_result, DDoSProtectionConfig.GLOBAL_RATE_LIMIT)
+            return self._add_cors_headers(request, response)
         
         # 6. Rate limiting por endpoint específico
         endpoint = request.url.path
@@ -255,7 +282,8 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
             
             if not endpoint_result.allowed:
                 logger.warning(f"⚠️ Rate limit de endpoint excedido: {client_ip} - {endpoint}")
-                return self._rate_limit_response(endpoint_result, limit)
+                response = self._rate_limit_response(endpoint_result, limit)
+                return self._add_cors_headers(request, response)
         
         # 7. Agregar headers de rate limit a la respuesta
         response = await call_next(request)
@@ -263,6 +291,42 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Remaining"] = str(global_result.remaining)
         response.headers["X-RateLimit-Reset"] = str(int(global_result.reset_at.timestamp()))
         
+        return response
+
+    def _is_origin_allowed(self, origin: str) -> bool:
+        """Determinar si un origen CORS está permitido"""
+        if not origin:
+            return False
+            
+        # Leer orígenes explícitos configurados
+        _default_cors = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+        cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", _default_cors).split(",") if o.strip()]
+        
+        if origin in cors_origins:
+            return True
+            
+        # Validar contra regex de red privada (si está habilitado)
+        _environment = os.getenv("ENVIRONMENT", "development")
+        _default_private_cors = "true" if _environment == "development" else "false"
+        cors_allow_private = os.getenv("CORS_ALLOW_PRIVATE_NETWORK", _default_private_cors).lower() == "true"
+        
+        if cors_allow_private:
+            if not hasattr(self, "_cors_regex_compiled"):
+                import re
+                regex_str = r"^http://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$"
+                self._cors_regex_compiled = re.compile(regex_str)
+            return bool(self._cors_regex_compiled.match(origin))
+            
+        return False
+
+    def _add_cors_headers(self, request: Request, response: JSONResponse) -> JSONResponse:
+        """Agregar headers CORS obligatorios para que el navegador no bloquee el error"""
+        origin = request.headers.get("origin")
+        if origin and self._is_origin_allowed(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-CSRF-Token, X-Request-ID"
         return response
     
     def _get_client_ip(self, request: Request) -> str:
@@ -284,15 +348,29 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
         return "unknown"
     
     def _is_whitelisted(self, ip: str) -> bool:
-        """Verificar si IP está en whitelist"""
-        # Verificar whitelist exacta
+        """
+        Verifica si IP está en whitelist.
+
+        Solo hace whitelist de:
+        - 127.0.0.1 / ::1 / localhost  (siempre)
+        - IPs adicionales listadas en DDOS_WHITELIST_IPS env var
+        - Redes privadas completas SOLO si DDOS_WHITELIST_PRIVATE_NETWORKS=true
+          (útil en desarrollo; NUNCA activar en producción)
+        """
+        import os
+        # Siempre permitir localhost
         if ip in DDoSProtectionConfig.WHITELIST_IPS:
             return True
-        
-        # Verificar rangos de red privada
-        if ip.startswith("192.168.") or ip.startswith("10.") or ip.startswith("172."):
+
+        # IPs adicionales configuradas explícitamente
+        if ip in DDoSProtectionConfig.EXTRA_WHITELIST_IPS:
             return True
-        
+
+        # Whitelist de redes privadas — desactivada por defecto
+        if DDoSProtectionConfig.WHITELIST_PRIVATE_NETWORKS:
+            if ip.startswith("192.168.") or ip.startswith("10.") or ip.startswith("172."):
+                return True
+
         return False
     
     def _rate_limit_response(self, result, limit: int) -> JSONResponse:

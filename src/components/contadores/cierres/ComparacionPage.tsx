@@ -183,6 +183,15 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
       difImpreColor: (u.impresora_color_cierre2 || 0) - (u.impresora_color_cierre1 || 0),
       difEscanBN: (u.escaner_bn_cierre2 || 0) - (u.escaner_bn_cierre1 || 0),
       difEscanColor: (u.escaner_color_cierre2 || 0) - (u.escaner_color_cierre1 || 0),
+      // Totales B/N y Color (suma de todas las funciones, o del backend si está disponible)
+      difBNTotal: u.diferencia_bn !== undefined ? u.diferencia_bn : (
+        ((u.copiadora_bn_cierre2 || 0) - (u.copiadora_bn_cierre1 || 0)) +
+        ((u.impresora_bn_cierre2 || 0) - (u.impresora_bn_cierre1 || 0))
+      ),
+      difColorTotal: u.diferencia_color !== undefined ? u.diferencia_color : (
+        ((u.copiadora_color_cierre2 || 0) - (u.copiadora_color_cierre1 || 0)) +
+        ((u.impresora_color_cierre2 || 0) - (u.impresora_color_cierre1 || 0))
+      ),
     }));
 
     const mul = sortDir === 'asc' ? 1 : -1;
@@ -320,22 +329,58 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
           <>
             {/* Tarjetas de resumen */}
             <div className="p-6 pb-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                {[
-                  { label: 'Total páginas', val: comparacion.diferencia_total, icon: '📄', show: true },
-                  { label: 'Copiadora', val: comparacion.diferencia_copiadora, icon: '📋', show: printerCapabilities.has_copier },
-                  { label: 'Impresora', val: comparacion.diferencia_impresora, icon: '🖨️', show: printerCapabilities.has_printer },
-                  { label: 'Escáner', val: comparacion.diferencia_escaner, icon: '📷', show: printerCapabilities.has_scanner_data },
-                ].filter(item => item.show).map(({ label, val, icon }) => (
-                  <div key={label} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-gray-600">{label}</p>
-                      <span className="text-lg">{icon}</span>
-                    </div>
-                    <p className={`text-2xl font-bold ${diffColor(val)}`}>{fmtDiff(val)}</p>
+              {/* Fila 1: Los 3 totales principales juntos */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {/* Total páginas — siempre visible */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-gray-600">Total páginas</p>
+                    <span className="text-lg">📄</span>
                   </div>
-                ))}
+                  <p className={`text-2xl font-bold ${diffColor(comparacion.diferencia_total)}`}>{fmtDiff(comparacion.diferencia_total)}</p>
+                </div>
+
+                {/* Total B/N */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-gray-600">Total B/N</p>
+                    <span className="text-lg">⬛</span>
+                  </div>
+                  <p className={`text-2xl font-bold ${diffColor(comparacion.diferencia_bn ?? 0)}`}>{fmtDiff(comparacion.diferencia_bn ?? 0)}</p>
+                </div>
+
+                {/* Total Color — solo si la impresora tiene color */}
+                {printerCapabilities.has_color && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-medium text-gray-600">Total Color</p>
+                      <span className="text-lg">🎨</span>
+                    </div>
+                    <p className={`text-2xl font-bold ${diffColor(comparacion.diferencia_color ?? 0)}`}>{fmtDiff(comparacion.diferencia_color ?? 0)}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Fila 2: Copiadora / Impresora / Escáner */}
+              {(printerCapabilities.has_copier || printerCapabilities.has_printer || printerCapabilities.has_scanner_data) && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  {[
+                    { label: 'Copiadora', val: comparacion.diferencia_copiadora, icon: '📋', show: printerCapabilities.has_copier },
+                    { label: 'Impresora', val: comparacion.diferencia_impresora, icon: '🖨️', show: printerCapabilities.has_printer },
+                    { label: 'Escáner', val: comparacion.diferencia_escaner, icon: '📷', show: printerCapabilities.has_scanner_data },
+                  ].filter(item => item.show).map(({ label, val, icon }) => (
+                    <div key={label} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-gray-600">{label}</p>
+                        <span className="text-lg">{icon}</span>
+                      </div>
+                      <p className={`text-2xl font-bold ${diffColor(val)}`}>{fmtDiff(val)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Fila 3: Estadísticas generales */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { label: 'Días entre cierres', val: `${comparacion.dias_entre_cierres}`, icon: '📅', color: 'text-gray-900' },
@@ -356,6 +401,7 @@ export const ComparacionPage: React.FC<ComparacionPageProps> = ({ cierres, onVol
                 ))}
               </div>
             </div>
+
 
             {/* Tabla */}
             <div className="px-6 pb-6">

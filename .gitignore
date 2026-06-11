@@ -26,6 +26,7 @@ backend/venv/
 backend/env/
 *.egg-info/
 .pytest_cache/
+.hypothesis/
 .coverage
 
 # Environment
@@ -38,15 +39,25 @@ backend/.env.local
 CREDENCIALES_SEGURAS_*.txt
 *_CREDENCIALES_*.txt
 
+# Backups and DB Dumps (NO subir a Git)
+backups/
+*.sql
+
+# Archivos de datos y Excel con información real (NO subir a Git)
+*.xlsx
+*.xls
+*.csv
+
+# Credenciales y archivos secretos adicionales (NO subir a Git)
+.superadmin_password
+backend/.superadmin_password
+**/.superadmin_password
+
 # Database
 *.db
 *.sqlite
 *.sqlite3
 postgres_data/
-
-# Backups (Descomenta la siguiente linea si NO quieres subir respaldos a GitHub)
-# backups/*.sql
-# Si quieres subir los respaldos, deja esta linea comentada
 
 # Editor directories and files
 .vscode/*

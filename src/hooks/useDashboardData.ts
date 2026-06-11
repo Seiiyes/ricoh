@@ -15,6 +15,7 @@ export interface TopImpresoraMes {
   hostname: string;
   modelo: string;
   ubicacion: string | null;
+  ip_address: string;
   total_paginas: number;
 }
 
@@ -107,6 +108,7 @@ export interface ConsumoResumen {
 export interface TonerAlerta {
   printer_id: number;
   hostname: string;
+  ip_address: string;
   modelo: string;
   ubicacion: string;
   is_color: boolean;

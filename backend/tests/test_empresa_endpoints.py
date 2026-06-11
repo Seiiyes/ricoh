@@ -98,6 +98,7 @@ class TestEmpresaEndpoints:
             headers={"Authorization": f"Bearer {superadmin_token}"},
             json={
                 "razon_social": "Test Empresa Actualizada S.A.S.",
+                "nombre_comercial": test_empresa.nombre_comercial,
                 "email": "nuevo@empresa.com"
             }
         )

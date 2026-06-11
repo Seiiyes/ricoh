@@ -11,7 +11,7 @@ import re
 class EmpresaBase(BaseModel):
     """Base schema for Empresa"""
     razon_social: str = Field(..., min_length=1, max_length=255, description="Razón social (nombre legal)")
-    nombre_comercial: str = Field(..., min_length=1, max_length=50, description="Nombre comercial (formato kebab-case)")
+    nombre_comercial: str = Field(..., min_length=1, max_length=50, description="Nombre comercial")
     nit: Optional[str] = Field(None, max_length=20, description="NIT (Número de Identificación Tributaria)")
     direccion: Optional[str] = Field(None, description="Dirección física")
     telefono: Optional[str] = Field(None, max_length=50, description="Teléfono de contacto")
@@ -20,15 +20,6 @@ class EmpresaBase(BaseModel):
     contacto_cargo: Optional[str] = Field(None, max_length=100, description="Cargo del contacto principal")
     logo_url: Optional[str] = Field(None, max_length=500, description="URL del logo de la empresa")
     
-    @field_validator('nombre_comercial')
-    @classmethod
-    def validate_nombre_comercial(cls, v: str) -> str:
-        """Validate nombre_comercial is in kebab-case format"""
-        if not re.match(r'^[a-z0-9-]+$', v):
-            raise ValueError(
-                "nombre_comercial must be in kebab-case format (lowercase letters, numbers, and hyphens only)"
-            )
-        return v
     
     @field_validator('email')
     @classmethod
@@ -74,15 +65,6 @@ class EmpresaUpdate(BaseModel):
     logo_url: Optional[str] = Field(None, max_length=500)
     is_active: Optional[bool] = None
     
-    @field_validator('nombre_comercial')
-    @classmethod
-    def validate_nombre_comercial(cls, v: str) -> str:
-        """Validate nombre_comercial is in kebab-case format"""
-        if not re.match(r'^[a-z0-9-]+$', v):
-            raise ValueError(
-                "nombre_comercial must be in kebab-case format (lowercase letters, numbers, and hyphens only)"
-            )
-        return v
     
     @field_validator('email')
     @classmethod
@@ -174,3 +156,18 @@ class EmpresaListResponse(BaseModel):
             "total_pages": 1
         }
     })
+
+
+class CentroCostoResponse(BaseModel):
+    """Schema for centro de costo response"""
+    id: int
+    nombre: str
+    is_active: bool
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CentroCostosSugerenciasResponse(BaseModel):
+    """Schema for centro de costos suggestions"""
+    propios: list[CentroCostoResponse]
+    sugerencias_globales: list[str]

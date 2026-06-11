@@ -1,7 +1,7 @@
 # 📚 Índice General de Documentación - Ricoh Fleet Management
 
-**Última actualización**: 22 de Mayo de 2026  
-**Versión**: 4.0.0 (Consolidado)
+**Última actualización**: 11 de Junio de 2026  
+**Versión**: 4.1.1 (Actualizado)
 
 ---
 
@@ -40,9 +40,29 @@ docs/
 
 ---
 
-## 🆕 Documentación de la Sesión Reciente (Mayo 2026)
+## 🆕 Documentación de la Sesión Reciente (Junio 2026)
+
+### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[RESUMEN_TRABAJO_01_03_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_01_03_JUNIO_2026.md)**
+    *   *Descripción:* Resumen completo de la modernización de suministros por HTTP, simetría UI de Dashboard y corrección de totales en comparación de cierres.
+*   **[ACTUALIZACION_SISTEMA_SUMINISTROS_Y_SIMETRIA_DASHBOARD.md](desarrollo/actualizaciones/ACTUALIZACION_SISTEMA_SUMINISTROS_Y_SIMETRIA_DASHBOARD.md)**
+    *   *Descripción:* Detalle de desarrollo de la implementación de raspado de suministros HTTP y simetría de tarjetas de tóner monocromáticas en el dashboard.
+*   **[FIX_CONTADORES_Y_SUMINISTROS_JUNIO_2026.md](fixes/FIX_CONTADORES_Y_SUMINISTROS_JUNIO_2026.md)**
+    *   *Descripción:* Detalle técnico de la solución a scope shadowing, cálculo con contadores generales e inhabilitación de columnas redundantes en monocromáticas.
+*   **[ACTUALIZACION_FACTURACION_Y_CENTRO_COSTOS.md](desarrollo/actualizaciones/ACTUALIZACION_FACTURACION_Y_CENTRO_COSTOS.md)**
+    *   *Descripción:* Resumen de la implementación del módulo de facturación consolidada, jerarquía de centros de costos interactiva (Excel-like) y adaptación de UI jerárquica.
+*   **[FIX_CONTAMINACION_TESTS_SEGURIDAD_JUNIO.md](fixes/FIX_CONTAMINACION_TESTS_SEGURIDAD_JUNIO.md)**
+    *   *Descripción:* Solución técnica al "State Leakage" en la suite de Pytest tras la inyección de middleware de seguridad y configuración de almacenamiento de rate limiter/CSRF.
+*   **[FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md](fixes/FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md)**
+    *   *Descripción:* Validación de credenciales vacías en RicohWebClient y control del DDoS middleware para pruebas.
+*   **[FIX_SUITE_TESTS_COMPLETA_JUNIO_2026.md](fixes/FIX_SUITE_TESTS_COMPLETA_JUNIO_2026.md)**
+    *   *Descripción:* Estabilización y corrección de 19 fallos en la suite de Pytest a nivel de base de datos, Hypothesis y mocks de red.
+*   **[FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md](fixes/FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md)**
+    *   *Descripción:* Corrección de coincidencia parcial en el filtro por Centro de Costos, rediseño de filtros usando dropdown de períodos de cierre y formato dinámico de subtítulos.
 
 ### 🧪 Planificación de Calidad y Continuidad
+*   **[VERIFICACION_SUITE_TESTS_JUNIO_2026.md](desarrollo/verificacion/VERIFICACION_SUITE_TESTS_JUNIO_2026.md)**
+    *   *Descripción:* Informe de verificación y ejecución de la suite completa de pruebas de frontend (Vitest) y backend (Pytest) (Actualizado al 11 de Junio de 2026).
 *   **[PLAN_QA_SIGUIENTE_SESION.md](guias/PLAN_QA_SIGUIENTE_SESION.md)**
     *   *Descripción:* Plan detallado para el control de calidad (QA) del módulo de cierres y la revolución de analytics, con credenciales de prueba, casos de uso límites y scripts automáticos.
 *   **[documentacion_siguiente_sesion.md](resumen/documentacion_siguiente_sesion.md)**
@@ -60,6 +80,7 @@ docs/
 *   **[DIAGRAMA_FLUJO.md](arquitectura/DIAGRAMA_FLUJO.md):** Flujo de sincronización y autenticación.
 *   **[DISENO_UI_CIERRES_MEJORADO.md](arquitectura/DISENO_UI_CIERRES_MEJORADO.md):** Diseño conceptual para el flujo de cierres y contadores.
 *   **[COMPATIBILIDAD_DASHBOARD_VS_ANALYTICS.md](arquitectura/COMPATIBILIDAD_DASHBOARD_VS_ANALYTICS.md):** Análisis de diseño arquitectónico y no-redundancia entre el Dashboard y el módulo de Analytics.
+*   **[APROVECHAMIENTO_STACK_TECNOLOGICO.md](arquitectura/APROVECHAMIENTO_STACK_TECNOLOGICO.md):** Análisis detallado del aprovechamiento del stack tecnológico (FastAPI, Redis, Postgres, React).
 
 ### 🔌 Especificaciones de APIs REST
 *   **[API_CIERRES_MENSUALES.md](api/API_CIERRES_MENSUALES.md):** Endpoints, parámetros y respuestas para la gestión de cierres.
@@ -81,6 +102,7 @@ docs/
 *   **[SISTEMA_AUTENTICACION_COMPLETADO.md](seguridad/SISTEMA_AUTENTICACION_COMPLETADO.md):** Mecanismo de autenticación JWT y roles del sistema.
 *   **[CRITICAL_SECURITY_IMPLEMENTATION.md](seguridad/CRITICAL_SECURITY_IMPLEMENTATION.md):** Detalles del endurecimiento de seguridad en API y base de datos.
 *   **[DDOS_PROTECTION.md](seguridad/DDOS_PROTECTION.md):** Configuración de rate limiting con Redis.
+*   **[WALKTHROUGH_SEGURIDAD.md](seguridad/WALKTHROUGH_SEGURIDAD.md):** Guía de verificación, correcciones de WebSockets y auditoría general de seguridad (Junio 2026).
 
 ---
 
@@ -108,6 +130,10 @@ docs/
 *   **[INSTRUCCIONES_VISUALES.md](guias/INSTRUCCIONES_VISUALES.md):** Manual visual para verificar la adaptación y responsive en laptops y móviles.
 
 ### 🔧 Fixes y Soluciones de Bugs Importantes
+*   **[FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md](fixes/FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md):** Corrección de coincidencia parcial en el filtro por Centro de Costos, evitando que 'TIC' coincida dentro de 'LOGISTICA'.
+*   **[FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md](fixes/FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md):** Validación de credenciales en RicohWebClient y habilitación/deshabilitación del DDoS middleware via variables de entorno.
+*   **[FIX_SUITE_TESTS_COMPLETA_JUNIO_2026.md](fixes/FIX_SUITE_TESTS_COMPLETA_JUNIO_2026.md):** Corrección y estabilización de la suite completa de pytest (19 fallos corregidos a 0).
+*   **[FIX_CONTADORES_Y_SUMINISTROS_JUNIO_2026.md](fixes/FIX_CONTADORES_Y_SUMINISTROS_JUNIO_2026.md):** Corrección de scope shadowing, cálculo de totales usando contadores generales y remoción de columnas B/N en monocromáticas.
 *   **[FIX_EXPORTACION_EXCEL_SOLO_10_USUARIOS.md](fixes/FIX_EXPORTACION_EXCEL_SOLO_10_USUARIOS.md):** Solución al límite de descarga Excel y CSV con mapeo de campos.
 *   **[FIX_BUSY_Y_CONTRASENA_ESCANER.md](fixes/FIX_BUSY_Y_CONTRASENA_ESCANER.md):** Estrategia de dos pasadas para impresoras ocupadas.
 *   **[FIX_SERIALIZACION_EMPRESA_Y_SYNC_USUARIOS.md](fixes/FIX_SERIALIZACION_EMPRESA_Y_SYNC_USUARIOS.md):** Corrección de relaciones foráneas de usuarios y empresas en la API.
@@ -117,6 +143,8 @@ docs/
 
 ## 📊 4. Resúmenes Históricos de Trabajo
 
+*   **[RESUMEN_TRABAJO_01_03_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_01_03_JUNIO_2026.md):** Consolidado del ciclo de trabajo de junio para suministros, dashboard y simetría de contadores.
+*   **[RESUMEN_TRABAJO_26_29_MAYO_2026.md](resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md):** Resumen de fixes de API, normalización de centros de costo y remoción de soporte CSV.
 *   **[RESPONSIVE_COMPLETADO.md](resumen/RESPONSIVE_COMPLETADO.md) / [RESUMEN_FINAL_RESPONSIVE.md](resumen/RESUMEN_FINAL_RESPONSIVE.md):** Reportes del hito de implementación y adaptabilidad responsive completa.
 *   **[VERIFICACION_FINAL_RESPONSIVE.md](resumen/VERIFICACION_FINAL_RESPONSIVE.md) / [VERIFICACION_RESPONSIVE_COMPLETA.md](resumen/VERIFICACION_RESPONSIVE_COMPLETA.md):** Pruebas técnicas y verificación de adaptación en laptops de 1366x768.
 *   **[RESUMEN_TRABAJO_15_MARZO_09_ABRIL_2026.md](resumen/RESUMEN_TRABAJO_15_MARZO_09_ABRIL_2026.md):** Evolución del primer bloque de modernización premium.

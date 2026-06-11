@@ -158,7 +158,7 @@ export const GestorEquipos = ({
                     <p className="text-xs font-bold text-slate-600 truncate">{equipo.hostname}</p>
                     <p className="text-[10px] font-mono text-slate-400">{equipo.ip_address}</p>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 bg-ricoh-red text-white p-1.5 rounded-lg transition-all">
+                  <div className="opacity-40 group-hover:opacity-100 bg-ricoh-red text-white p-1.5 rounded-lg transition-all">
                     <Plus size={14} />
                   </div>
                 </div>

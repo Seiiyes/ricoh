@@ -15,7 +15,7 @@ the fixes when they pass after implementation.
 """
 import pytest
 import os
-from hypothesis import given, strategies as st, settings, assume
+from hypothesis import given, strategies as st, settings, assume, HealthCheck
 from services.encryption_service import EncryptionService
 from services.jwt_service import JWTService
 from services.ricoh_web_client import RicohWebClient
@@ -95,7 +95,7 @@ class TestBugConditionSecretManagement:
         key_length=st.integers(min_value=32, max_value=64),
         char_type=st.sampled_from(['lowercase', 'uppercase', 'digits', 'mixed_two'])
     )
-    @settings(max_examples=20, deadline=None)
+    @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_bug_condition_secret_key_low_entropy(self, monkeypatch, key_length, char_type):
         """
         **Validates: Requirement 2.2**

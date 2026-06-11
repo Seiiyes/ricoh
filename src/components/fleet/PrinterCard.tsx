@@ -17,9 +17,10 @@ interface PrinterCardProps {
   toner: TonerLevels;
   onEdit?: () => void;
   onRefresh?: () => void;
+  isColor?: boolean;
 }
 
-export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onRefresh }: PrinterCardProps) => {
+export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onRefresh, isColor = true }: PrinterCardProps) => {
   const isOnline = status === 'online';
   const { selectedPrinters, togglePrinter } = usePrinterStore();
   const isSelected = selectedPrinters.includes(id);
@@ -97,29 +98,41 @@ export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onR
           <div className="space-y-2">
             <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
               <span>Suministros</span>
-              <span className="text-slate-500">{Math.min(toner.c, toner.m, toner.y, toner.k)}% min</span>
+              <span className="text-slate-500">{isColor ? Math.min(toner.c, toner.m, toner.y, toner.k) : toner.k}% min</span>
             </div>
-            <div className="grid grid-cols-4 gap-1.5 h-1">
-              <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
-                <div className="bg-[#00FFFF] absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.c}%` }} />
+            {isColor ? (
+              <div className="grid grid-cols-4 gap-1.5 h-1">
+                <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
+                  <div className="bg-[#00FFFF] absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.c}%` }} />
+                </div>
+                <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
+                  <div className="bg-[#FF00FF] absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.m}%` }} />
+                </div>
+                <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
+                  <div className="bg-[#FFFF00] absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.y}%` }} />
+                </div>
+                <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
+                  <div className="bg-slate-900 absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.k}%` }} />
+                </div>
               </div>
-              <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
-                <div className="bg-[#FF00FF] absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.m}%` }} />
-              </div>
-              <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
-                <div className="bg-[#FFFF00] absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.y}%` }} />
-              </div>
-              <div className="bg-slate-100 rounded-full overflow-hidden h-full relative">
+            ) : (
+              <div className="bg-slate-100 rounded-full overflow-hidden h-1.5 relative w-full">
                 <div className="bg-slate-900 absolute left-0 top-0 h-full transition-all duration-500" style={{ width: `${toner.k}%` }} />
               </div>
-            </div>
+            )}
           </div>
         )}
 
         {/* Labels CMYK */}
-        <div className="grid grid-cols-4 gap-1.5 text-[8px] font-black text-center text-slate-400 uppercase tracking-tighter">
-          <span>C</span><span>M</span><span>Y</span><span>K</span>
-        </div>
+        {isColor ? (
+          <div className="grid grid-cols-4 gap-1.5 text-[8px] font-black text-center text-slate-400 uppercase tracking-tighter">
+            <span>C</span><span>M</span><span>Y</span><span>K</span>
+          </div>
+        ) : (
+          <div className="text-[8px] font-black text-center text-slate-400 uppercase tracking-tighter">
+            <span>K (Negro)</span>
+          </div>
+        )}
 
         {/* Governance Toggles */}
         <div className="flex justify-between items-center pt-3 border-t border-slate-100">

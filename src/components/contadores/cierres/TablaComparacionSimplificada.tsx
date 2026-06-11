@@ -6,7 +6,9 @@ interface Usuario {
   consumo_cierre1: number;
   consumo_cierre2: number;
   diferencia: number;
-
+  // B/N y Color totales del período (diferencia global)
+  difBNTotal?: number;
+  difColorTotal?: number;
   
   // Período 1 - Desglose completo
   total_paginas_cierre1?: number | null;
@@ -106,7 +108,7 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({
             <th colSpan={colsPerSection + 1} className="px-4 py-3 text-center text-sm font-bold text-purple-900 bg-purple-50 border-x border-gray-300">
               Período Comparado (Contadores Acumulados)
             </th>
-            <th colSpan={colsPerSection + 1} className="px-4 py-3 text-center text-sm font-bold text-emerald-900 bg-emerald-50 border-l-2 border-gray-400">
+            <th colSpan={colsPerSection + 1 + (hasColor ? 2 : 0)} className="px-4 py-3 text-center text-sm font-bold text-emerald-900 bg-emerald-50 border-l-2 border-gray-400">
               Consumo del Período (Diferencias)
             </th>
           </tr>
@@ -168,6 +170,17 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({
             >
               Total <SortIcon active={sortKey === 'diferencia'} dir={sortDir} />
             </th>
+            {/* B/N Total y Color Total — resumen global */}
+            {hasColor && (
+              <th rowSpan={2} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
+                ⬛ B/N
+              </th>
+            )}
+            {hasColor && (
+              <th rowSpan={2} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
+                🎨 Color
+              </th>
+            )}
             {hasCopier && (
               <th colSpan={hasColor ? 2 : 1} className="px-3 py-2 text-center text-xs font-semibold text-emerald-800 bg-emerald-50/50 border-l border-gray-200">
                 📋 Copiadora
@@ -363,6 +376,18 @@ export const TablaComparacionSimplificada: React.FC<Props> = ({
                 <td className={`px-3 py-3 text-center border-l-2 border-gray-400 bg-emerald-50/20 ${diffColor(u.diferencia)}`}>
                   <div className="text-sm font-bold">{fmtDiff(u.diferencia)}</div>
                 </td>
+                {/* B/N Total */}
+                {hasColor && (
+                  <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difBNTotal ?? 0)}`}>
+                    {fmtDiff(u.difBNTotal ?? 0)}
+                  </td>
+                )}
+                {/* Color Total */}
+                {hasColor && (
+                  <td className={`px-2 py-3 text-center text-xs bg-emerald-50/10 border-l border-gray-200 ${diffColor(u.difColorTotal ?? 0)}`}>
+                    {fmtDiff(u.difColorTotal ?? 0)}
+                  </td>
+                )}
                 {/* Copiadora */}
                 {hasCopier && (
                   <>

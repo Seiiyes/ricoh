@@ -28,7 +28,7 @@ class RateLimiterService:
     _initialized: bool = False
     
     # Storage: {key: {window_start: datetime, count: int}}
-    _storage: Dict[str, Dict] = defaultdict(dict)
+    _memory_storage: Dict[str, Dict] = defaultdict(dict)
     _lock = threading.Lock()
     
     @classmethod
@@ -133,13 +133,13 @@ class RateLimiterService:
             now = datetime.now(timezone.utc)
             
             # Get or initialize counter for this key
-            if key not in cls._storage:
-                cls._storage[key] = {
+            if key not in cls._memory_storage:
+                cls._memory_storage[key] = {
                     'window_start': now,
                     'count': 0
                 }
             
-            counter = cls._storage[key]
+            counter = cls._memory_storage[key]
             window_start = counter['window_start']
             count = counter['count']
             
@@ -147,11 +147,11 @@ class RateLimiterService:
             window_end = window_start + timedelta(seconds=window_seconds)
             if now >= window_end:
                 # Reset window
-                cls._storage[key] = {
+                cls._memory_storage[key] = {
                     'window_start': now,
                     'count': 0
                 }
-                counter = cls._storage[key]
+                counter = cls._memory_storage[key]
                 count = 0
                 window_start = now
                 window_end = now + timedelta(seconds=window_seconds)
@@ -165,7 +165,7 @@ class RateLimiterService:
                 )
             
             # Increment counter
-            cls._storage[key]['count'] += 1
+            cls._memory_storage[key]['count'] += 1
             
             return RateLimitResult(
                 allowed=True,
@@ -207,28 +207,28 @@ class RateLimiterService:
         with cls._lock:
             now = datetime.now(timezone.utc)
             
-            if key not in cls._storage:
-                cls._storage[key] = {
+            if key not in cls._memory_storage:
+                cls._memory_storage[key] = {
                     'window_start': now,
                     'count': 1
                 }
                 return 1
             
-            counter = cls._storage[key]
+            counter = cls._memory_storage[key]
             window_start = counter['window_start']
             window_end = window_start + timedelta(seconds=window_seconds)
             
             # Check if window has expired
             if now >= window_end:
-                cls._storage[key] = {
+                cls._memory_storage[key] = {
                     'window_start': now,
                     'count': 1
                 }
                 return 1
             
             # Increment counter
-            cls._storage[key]['count'] += 1
-            return cls._storage[key]['count']
+            cls._memory_storage[key]['count'] += 1
+            return cls._memory_storage[key]['count']
     
     @classmethod
     def reset_counter(cls, key: str) -> None:
@@ -253,8 +253,8 @@ class RateLimiterService:
         
         # Fallback to memory
         with cls._lock:
-            if key in cls._storage:
-                del cls._storage[key]
+            if key in cls._memory_storage:
+                del cls._memory_storage[key]
     
     @classmethod
     def cleanup_expired(cls, window_seconds: int) -> int:
@@ -276,7 +276,7 @@ class RateLimiterService:
             now = datetime.now(timezone.utc)
             expired_keys = []
             
-            for key, counter in cls._storage.items():
+            for key, counter in cls._memory_storage.items():
                 window_start = counter['window_start']
                 window_end = window_start + timedelta(seconds=window_seconds)
                 
@@ -284,7 +284,7 @@ class RateLimiterService:
                     expired_keys.append(key)
             
             for key in expired_keys:
-                del cls._storage[key]
+                del cls._memory_storage[key]
             
             return len(expired_keys)
     
@@ -322,11 +322,11 @@ class RateLimiterService:
         
         # Fallback to memory
         with cls._lock:
-            if key not in cls._storage:
+            if key not in cls._memory_storage:
                 return max_requests
             
             now = datetime.now(timezone.utc)
-            counter = cls._storage[key]
+            counter = cls._memory_storage[key]
             window_start = counter['window_start']
             window_end = window_start + timedelta(seconds=window_seconds)
             

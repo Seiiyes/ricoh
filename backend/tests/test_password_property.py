@@ -12,7 +12,7 @@ class TestPasswordServiceProperties:
     """Property-based test suite for PasswordService"""
     
     @given(st.text(min_size=8, max_size=50, alphabet=st.characters(blacklist_categories=('Cs',))))
-    @settings(max_examples=100, deadline=1000)  # Increase deadline for bcrypt
+    @settings(max_examples=100, deadline=None)  # Disable deadline for bcrypt since it's intentionally slow
     def test_property_hash_uniqueness_and_verification(self, password):
         """
         Property 2: Password Hashing Uniqueness and Verification

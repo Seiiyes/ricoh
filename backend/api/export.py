@@ -14,6 +14,7 @@ from db.database import get_db
 from db.models import CierreMensual, CierreMensualUsuario, Printer, User
 from middleware.auth_middleware import get_current_user
 from services.company_filter_service import CompanyFilterService
+from services.export_facturacion import exportar_facturacion_excel
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -23,6 +24,37 @@ def format_number_es(num: int) -> str:
     return f"{num:,}".replace(",", ".")
 
 
+
+
+@router.get("/facturacion/{empresa_id}", status_code=status.HTTP_200_OK)
+async def export_facturacion(
+    empresa_id: int,
+    fecha_inicio: str,
+    fecha_fin: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Exporta el reporte de facturación consolidado por empresa
+    """
+    if not CompanyFilterService.validate_company_access(current_user, empresa_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta empresa")
+        
+    try:
+        output = exportar_facturacion_excel(db, empresa_id, fecha_inicio, fecha_fin)
+        
+        fecha_actual = datetime.now().strftime('%d.%m.%Y')
+        filename = f"Reporte_Facturacion_E{empresa_id}_{fecha_actual}.xlsx"
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error generando reporte: {str(e)}")
 
 
 @router.get("/cierre/{cierre_id}/excel", status_code=status.HTTP_200_OK)

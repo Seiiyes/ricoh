@@ -2,7 +2,7 @@
 Ricoh Equipment Management Suite - Backend API
 FastAPI server with PostgreSQL, WebSockets, and network discovery
 """
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -10,9 +10,10 @@ from contextlib import asynccontextmanager
 import os
 import json
 import logging
-from datetime import datetime
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Dict, Optional
 import asyncio
+from collections import defaultdict
 from sqlalchemy.exc import OperationalError
 
 # Configure logging
@@ -76,27 +77,145 @@ from middleware.https_redirect import HTTPSRedirectMiddleware
 from middleware.csrf_protection import CSRFProtectionMiddleware
 
 
-# WebSocket connection manager
+# ============================================================================
+# WebSocket Security — Secure Connection Manager
+# ============================================================================
+
+# WebSocket security constants
+WS_MAX_CONNECTIONS_PER_IP = 3        # Max simultaneous WS connections per IP
+WS_RATE_LIMIT_CONNECTIONS = 5        # Max new connections per IP per minute
+WS_RATE_LIMIT_WINDOW_SECONDS = 60    # Rate limit window (1 minute)
+WS_MAX_MESSAGE_SIZE_BYTES = 4096     # Max inbound message size (4 KB)
+WS_MAX_MESSAGES_PER_MINUTE = 60      # Max messages per session per minute
+
+
 class ConnectionManager:
-    """Manages WebSocket connections for real-time updates"""
-    
+    """
+    Secure WebSocket connection manager.
+
+    Security features:
+    - JWT authentication required before accepting connections
+    - Per-IP rate limiting for new connections (prevents flood)
+    - Max concurrent connections per IP (prevents resource exhaustion)
+    - Per-session message rate limiting (prevents message flood)
+    - Max inbound message size (prevents large payload attacks)
+    - Safe disconnect with no KeyError on double-remove
+    - Audit logging on connect and disconnect
+    """
+
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
-    
-    async def connect(self, websocket: WebSocket):
+        # {websocket: {user_id, username, rol, ip, connected_at, msg_count, msg_window_start}}
+        self._connections: Dict[WebSocket, dict] = {}
+
+        # {ip: [timestamp, ...]}  — sliding window for connection rate limiting
+        self._conn_attempts: Dict[str, List[datetime]] = defaultdict(list)
+
+        # {ip: count}  — current open connections per IP
+        self._connections_by_ip: Dict[str, int] = defaultdict(int)
+
+    # ------------------------------------------------------------------
+    # Rate limiting helpers
+    # ------------------------------------------------------------------
+
+    def _check_connection_rate(self, ip: str) -> bool:
+        """Return True if the IP is allowed to open a new connection."""
+        now = datetime.now(timezone.utc)
+        window_start = now - timedelta(seconds=WS_RATE_LIMIT_WINDOW_SECONDS)
+
+        # Prune old timestamps
+        self._conn_attempts[ip] = [
+            ts for ts in self._conn_attempts[ip] if ts > window_start
+        ]
+
+        if len(self._conn_attempts[ip]) >= WS_RATE_LIMIT_CONNECTIONS:
+            return False
+
+        self._conn_attempts[ip].append(now)
+        return True
+
+    def _check_concurrent_limit(self, ip: str) -> bool:
+        """Return True if the IP has not exceeded the concurrent connection limit."""
+        return self._connections_by_ip.get(ip, 0) < WS_MAX_CONNECTIONS_PER_IP
+
+    def _check_message_rate(self, websocket: WebSocket) -> bool:
+        """Return True if the session is within the message rate limit."""
+        meta = self._connections.get(websocket)
+        if not meta:
+            return False
+
+        now = datetime.now(timezone.utc)
+        window_start = now - timedelta(seconds=60)
+
+        if meta["msg_window_start"] < window_start:
+            # Reset window
+            meta["msg_count"] = 0
+            meta["msg_window_start"] = now
+
+        meta["msg_count"] += 1
+        return meta["msg_count"] <= WS_MAX_MESSAGES_PER_MINUTE
+
+    # ------------------------------------------------------------------
+    # Connection lifecycle
+    # ------------------------------------------------------------------
+
+    async def connect(self, websocket: WebSocket, user_id: int, username: str, rol: str, ip: str):
+        """Accept a pre-authenticated WebSocket connection."""
         await websocket.accept()
-        self.active_connections.append(websocket)
-    
+        self._connections[websocket] = {
+            "user_id": user_id,
+            "username": username,
+            "rol": rol,
+            "ip": ip,
+            "connected_at": datetime.now(timezone.utc),
+            "msg_count": 0,
+            "msg_window_start": datetime.now(timezone.utc),
+        }
+        self._connections_by_ip[ip] = self._connections_by_ip.get(ip, 0) + 1
+        logger.info(f"[WS] CONNECTED — user={username} ip={ip} total={len(self._connections)}")
+
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-    
-    async def broadcast(self, message: dict):
-        """Broadcast message to all connected clients"""
-        for connection in self.active_connections:
+        """Safely remove a connection without raising if already gone."""
+        meta = self._connections.pop(websocket, None)
+        if meta:
+            ip = meta["ip"]
+            self._connections_by_ip[ip] = max(0, self._connections_by_ip.get(ip, 1) - 1)
+            logger.info(
+                f"[WS] DISCONNECTED — user={meta['username']} ip={ip} "
+                f"duration={(datetime.now(timezone.utc) - meta['connected_at']).seconds}s "
+                f"remaining={len(self._connections)}"
+            )
+
+    # ------------------------------------------------------------------
+    # Broadcast (role-aware)
+    # ------------------------------------------------------------------
+
+    async def broadcast(self, message: dict, allowed_roles: Optional[List[str]] = None):
+        """
+        Broadcast to connected clients.
+
+        Args:
+            message: JSON-serializable dict
+            allowed_roles: If set, only clients with one of these roles receive the message.
+                           None = send to all authenticated connections.
+        """
+        stale: List[WebSocket] = []
+        for ws, meta in list(self._connections.items()):
+            # Role filter: skip if this client's role is not in allowed_roles
+            if allowed_roles and meta.get("rol") not in allowed_roles:
+                continue
             try:
-                await connection.send_json(message)
-            except:
-                pass
+                await ws.send_json(message)
+            except Exception as exc:
+                logger.warning(f"[WS] Failed to send to {meta.get('username')}: {exc}")
+                stale.append(ws)
+
+        # Clean up stale connections
+        for ws in stale:
+            self.disconnect(ws)
+
+    @property
+    def active_count(self) -> int:
+        return len(self._connections)
 
 
 manager = ConnectionManager()
@@ -249,8 +368,10 @@ else:
 
 if enable_csrf:
     logger.info(f"🛡️ CSRF Protection enabled (ENVIRONMENT={environment})")
+    print(f"DEBUG: Adding CSRF Protection! environment={environment}, enable_csrf_env={enable_csrf_env}")
     app.add_middleware(CSRFProtectionMiddleware)
 else:
+    print(f"DEBUG: Skipping CSRF Protection! environment={environment}, enable_csrf_env={enable_csrf_env}")
     logger.warning(f"⚠️ CSRF Protection disabled (ENVIRONMENT={environment}, not recommended for production)")
 
 
@@ -344,40 +465,136 @@ async def root():
     }
 
 
-# WebSocket endpoint for real-time logs
+# ============================================================================
+# WebSocket endpoint — /ws/logs  (authenticated, rate-limited)
+# ============================================================================
+
 @app.websocket("/ws/logs")
-async def websocket_logs(websocket: WebSocket):
+async def websocket_logs(
+    websocket: WebSocket,
+    token: str = Query(..., description="JWT access token for authentication"),
+):
     """
-    WebSocket endpoint for real-time log streaming
-    Clients can connect to receive live updates
+    Secure WebSocket endpoint for real-time log streaming.
+
+    Security measures applied before accepting the connection:
+      1. JWT validation  — token must be a valid, non-expired access token.
+      2. Session check   — token must have an active DB session (not logged out).
+      3. Account check   — user must be active.
+      4. Connection rate — max 5 new connections per IP per minute.
+      5. Concurrent cap  — max 3 simultaneous connections per IP.
+
+    While connected:
+      6. Message size    — inbound messages exceeding 4 KB are silently dropped.
+      7. Message rate    — max 60 inbound messages per minute per session.
     """
-    await manager.connect(websocket)
+    from db.database import SessionLocal
+    from services.auth_service import AuthService
+    from services.jwt_service import InvalidTokenError, ExpiredTokenError
+
+    # ----------------------------------------------------------------
+    # Resolve client IP (support reverse-proxy headers)
+    # ----------------------------------------------------------------
+    client_ip = "unknown"
+    forwarded_for = websocket.headers.get("x-forwarded-for")
+    if forwarded_for:
+        client_ip = forwarded_for.split(",")[0].strip()
+    elif websocket.client:
+        client_ip = websocket.client.host
+
+    # ----------------------------------------------------------------
+    # 1-3: Authenticate BEFORE accepting the WebSocket handshake
+    # ----------------------------------------------------------------
+    db = SessionLocal()
     try:
-        # Send welcome message
+        authenticated_user = AuthService.validate_token(db, token)
+        user_id = authenticated_user.id
+        username = authenticated_user.username
+        rol = authenticated_user.rol
+    except (InvalidTokenError, ExpiredTokenError) as exc:
+        logger.warning(f"[WS] AUTH FAILED from {client_ip}: {exc}")
+        # Reject before handshake — send 403 via plain HTTP upgrade rejection
+        await websocket.close(code=4001, reason="Unauthorized: invalid or expired token")
+        return
+    except Exception as exc:
+        logger.error(f"[WS] AUTH ERROR from {client_ip}: {exc}")
+        await websocket.close(code=4001, reason="Unauthorized: authentication error")
+        return
+    finally:
+        db.close()
+
+    # ----------------------------------------------------------------
+    # 4: Connection rate limit
+    # ----------------------------------------------------------------
+    if not manager._check_connection_rate(client_ip):
+        logger.warning(
+            f"[WS] RATE LIMIT exceeded for {client_ip} (user={username}). "
+            f"Max {WS_RATE_LIMIT_CONNECTIONS} connections/{WS_RATE_LIMIT_WINDOW_SECONDS}s."
+        )
+        await websocket.close(code=4029, reason="Too many connection attempts. Try again later.")
+        return
+
+    # ----------------------------------------------------------------
+    # 5: Concurrent connection limit
+    # ----------------------------------------------------------------
+    if not manager._check_concurrent_limit(client_ip):
+        logger.warning(
+            f"[WS] CONCURRENT LIMIT exceeded for {client_ip} (user={username}). "
+            f"Max {WS_MAX_CONNECTIONS_PER_IP} simultaneous connections."
+        )
+        await websocket.close(code=4008, reason="Too many simultaneous connections from this IP.")
+        return
+
+    # ----------------------------------------------------------------
+    # All checks passed — accept the connection
+    # ----------------------------------------------------------------
+    await manager.connect(websocket, user_id=user_id, username=username, rol=rol, ip=client_ip)
+
+    try:
+        # Send authenticated welcome message
         await websocket.send_json({
             "id": "system",
             "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": "Connected to Ricoh Equipment Management Console",
+            "message": f"Connected to Ricoh Equipment Management Console — {username}",
             "type": "info"
         })
-        
-        # Simple loop to keep alive, listening for any message (even if we ignore them)
+
+        # Keep-alive loop — listen for inbound messages (ping/pong or commands)
         while True:
             try:
-                # Escuchar pero con un timeout implícito o simplemente esperar
-                await websocket.receive_text()
-            except Exception:
-                # Si hay error en la recepción (como un timeout del cliente), seguimos vivos
+                # 6: Enforce max message size — receive raw bytes first
+                raw = await websocket.receive_bytes()
+                if len(raw) > WS_MAX_MESSAGE_SIZE_BYTES:
+                    logger.warning(
+                        f"[WS] Message too large ({len(raw)} bytes) from "
+                        f"{username}@{client_ip} — dropped"
+                    )
+                    continue
+
+                # 7: Message rate limiting
+                if not manager._check_message_rate(websocket):
+                    logger.warning(
+                        f"[WS] Message rate limit exceeded for {username}@{client_ip} — dropped"
+                    )
+                    continue
+
+                # (messages from client are informational — no action needed)
+
+            except WebSocketDisconnect:
                 break
-                
+            except RuntimeError:
+                # Connection already closed
+                break
+            except Exception as exc:
+                logger.debug(f"[WS] Receive error for {username}: {exc}")
+                break
+
     except WebSocketDisconnect:
+        pass
+    except Exception as exc:
+        logger.error(f"[WS] Unexpected error for {username}@{client_ip}: {exc}")
+    finally:
         manager.disconnect(websocket)
-    except Exception as e:
-        print(f"WebSocket Error: {e}")
-        try:
-            manager.disconnect(websocket)
-        except:
-            pass
 
 
 # Helper function to broadcast logs

@@ -17,6 +17,24 @@ from sqlalchemy.dialects import postgresql
 postgresql.JSONB = JSON
 
 
+@pytest.fixture(autouse=True)
+def clear_ddos_state():
+    """Clear DDoS protection state between tests to prevent tests affecting each other"""
+    from middleware.ddos_protection import IPBlockList, BurstDetector
+    from services.rate_limiter_service import RateLimiterService
+    
+    IPBlockList._blocked_ips.clear()
+    BurstDetector._request_times.clear()
+    if hasattr(RateLimiterService, '_storage'):
+        RateLimiterService._memory_storage.clear()
+    if getattr(RateLimiterService, '_redis_client', None):
+        try:
+            RateLimiterService._redis_client.flushdb()
+        except Exception:
+            pass
+    yield
+
+
 @pytest.fixture(scope="function")
 def db_engine():
     """Create a test database engine"""
@@ -31,7 +49,7 @@ def db_engine():
     
     # Import all models to register them with Base.metadata
     # This must be done before create_all
-    from db.models import User, Printer, UserPrinterAssignment
+    from db.models import User, Printer, UserPrinterAssignment, CentroCosto, CierreMensual, CierreMensualUsuario, ContadorImpresora, ContadorUsuario
     from db.models_auth import (
         Empresa, AdminUser, AdminSession, AdminAuditLog
     )
@@ -54,11 +72,19 @@ def db_session(db_engine):
 
 
 @pytest.fixture(scope="function")
-def client():
-    """Create a test client"""
+def client(db_session):
+    """Create a test client with overridden database dependency"""
     from fastapi.testclient import TestClient
     from main import app
-    return TestClient(app)
+    from db.database import get_db
+    
+    def override_get_db():
+        yield db_session
+        
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -122,17 +148,32 @@ def admin_user(db_session, test_empresa):
 
 
 @pytest.fixture
-def superadmin_token(superadmin_user):
-    """Generate a JWT token for superadmin"""
-    from services.jwt_service import JWTService
-    return JWTService.create_access_token(superadmin_user)
+def superadmin_token(superadmin_user, db_session):
+    """Generate a JWT token and session for superadmin"""
+    from services.auth_service import AuthService
+    # Create a session in DB via AuthService and return the token
+    login_response = AuthService.login(
+        db=db_session,
+        username=superadmin_user.username,
+        password="TestPass123!",
+        ip_address="127.0.0.1",
+        user_agent="testclient"
+    )
+    return login_response.access_token
 
 
 @pytest.fixture
-def admin_token(admin_user):
-    """Generate a JWT token for admin"""
-    from services.jwt_service import JWTService
-    return JWTService.create_access_token(admin_user)
+def admin_token(admin_user, db_session):
+    """Generate a JWT token and session for admin"""
+    from services.auth_service import AuthService
+    login_response = AuthService.login(
+        db=db_session,
+        username=admin_user.username,
+        password="TestPass123!",
+        ip_address="127.0.0.1",
+        user_agent="testclient"
+    )
+    return login_response.access_token
 
 
 @pytest.fixture

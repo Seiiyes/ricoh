@@ -34,3 +34,5 @@ export { Card } from './card';
 
 export { EmpresaAutocomplete } from './EmpresaAutocomplete';
 export type { default as EmpresaAutocompleteProps } from './EmpresaAutocomplete';
+
+export { CentroCostosAutocomplete } from './CentroCostosAutocomplete';

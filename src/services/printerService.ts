@@ -245,35 +245,61 @@ export async function getUserProvisioningStatus(userId: number): Promise<any> {
 // ============================================================================
 
 /**
- * Connects to WebSocket for real-time log updates
- * 
- * @param onMessage - Callback for received messages
- * @returns WebSocket instance
+ * Connects to the authenticated WebSocket endpoint for real-time log updates.
+ *
+ * Security: The server requires a valid JWT access token passed as a query
+ * parameter (?token=...). The browser WebSocket API does not support custom
+ * headers, so the token is appended to the URL instead.
+ *
+ * The token is read from localStorage where the auth interceptor stores it
+ * after a successful login.
+ *
+ * @param onMessage - Callback invoked for each received JSON message
+ * @returns WebSocket instance (already connecting)
+ * @throws Error if no access token is found in localStorage
  */
 export function connectWebSocket(onMessage: (event: any) => void): WebSocket {
-  const wsUrl = API_BASE_URL.replace('http', 'ws') + '/ws/logs';
+  // Retrieve stored JWT access token
+  const token = localStorage.getItem('access_token');
+
+  if (!token) {
+    throw new Error('No access token found. Please log in before connecting to the log stream.');
+  }
+
+  // Build authenticated WS URL — token travels as query param (WS headers not supported in browsers)
+  const wsBase = API_BASE_URL.replace(/^http/, 'ws');
+  const wsUrl = `${wsBase}/ws/logs?token=${encodeURIComponent(token)}`;
+
   const ws = new WebSocket(wsUrl);
-  
+
   ws.onopen = () => {
-    console.log('WebSocket connected');
+    console.log('[WS] Connected to log stream (authenticated)');
   };
-  
+
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
       onMessage(data);
     } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
+      console.error('[WS] Failed to parse message:', error);
     }
   };
-  
+
   ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
+    console.error('[WS] Connection error:', error);
   };
-  
-  ws.onclose = () => {
-    console.log('WebSocket disconnected');
+
+  ws.onclose = (event) => {
+    if (event.code === 4001) {
+      console.warn('[WS] Connection rejected: authentication failed. Token may have expired.');
+    } else if (event.code === 4029) {
+      console.warn('[WS] Connection rejected: too many connection attempts. Try again later.');
+    } else if (event.code === 4008) {
+      console.warn('[WS] Connection rejected: too many simultaneous connections from this IP.');
+    } else {
+      console.log(`[WS] Disconnected (code=${event.code})`);
+    }
   };
-  
+
   return ws;
 }

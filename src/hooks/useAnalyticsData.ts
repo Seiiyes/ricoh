@@ -48,6 +48,9 @@ export interface GlobalCierreUsuario {
   user_id: number;
   codigo_usuario: string;
   nombre_usuario: string;
+  empresa_nombre?: string;
+  consumo_bn?: number;
+  consumo_color?: number;
   
   // Contadores al cierre
   total_paginas: number;
@@ -73,10 +76,12 @@ export interface GlobalCierreUsuario {
   printer_hostname: string;
   printer_ip: string;
   printer_location: string;
+  printer_serial?: string;
   fecha_inicio: string;
   fecha_fin: string;
   fecha_cierre: string;
   cerrado_por?: string;
+  centro_costos?: string | null;
 }
 
 export interface PaginatedGlobalUserConsumption {
@@ -170,6 +175,17 @@ export const useTopUsers = (filters: TopUserFilter) => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
     enabled: !!(filters.fechaInicio && filters.fechaFin),
+  });
+};
+
+export const useMonthlyCloses = () => {
+  return useQuery<any[]>({
+    queryKey: ['analytics', 'monthly-closes'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/api/counters/monthly');
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 };
 

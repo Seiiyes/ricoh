@@ -193,7 +193,7 @@ class TestDDoSProtectionIntegration:
         # Localhost should be whitelisted
         # Make many requests quickly
         for _ in range(150):  # More than global limit
-            response = client.get("/")
+            response = client.get("/", headers={"X-Forwarded-For": "127.0.0.1"})
             # Should not get rate limited
             assert response.status_code != 429
     

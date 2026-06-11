@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import os
 import logging
+from typing import Optional
 
 from db.database import get_db
 from db.repository import PrinterRepository
@@ -169,10 +170,9 @@ async def refresh_printer_snmp(
     current_user = Depends(get_current_user)
 ):
     """
-    Refresh printer information via SNMP
-    Updates toner levels, model, serial number, etc.
-    
-    Note: Currently SNMP is disabled, returns informational message
+    Refresh printer information.
+    Attempts SNMP first, and falls back to scraping Web Image Monitor (WIM)
+    to dynamically retrieve toner levels, status, etc.
     """
     # Get printer from database
     printer = PrinterRepository.get_by_id(db, printer_id)
@@ -184,54 +184,97 @@ async def refresh_printer_snmp(
     
     # Check if SNMP is available
     snmp_client = get_snmp_client()
-    if not snmp_client:
-        return MessageResponse(
-            success=False,
-            message="SNMP functionality is currently disabled. Printer data cannot be refreshed automatically."
-        )
-    
+    if snmp_client:
+        try:
+            # Query SNMP
+            snmp_info = await snmp_client.get_printer_info(printer.ip_address)
+            
+            # Update printer with SNMP data
+            update_data = {}
+            
+            if snmp_info.model:
+                update_data['detected_model'] = snmp_info.model
+            if snmp_info.serial_number:
+                update_data['serial_number'] = snmp_info.serial_number
+            if snmp_info.location:
+                update_data['location'] = snmp_info.location
+            
+            # Update toner levels
+            if snmp_info.toner_black is not None:
+                update_data['toner_black'] = snmp_info.toner_black
+            if snmp_info.toner_cyan is not None:
+                update_data['toner_cyan'] = snmp_info.toner_cyan
+            if snmp_info.toner_magenta is not None:
+                update_data['toner_magenta'] = snmp_info.toner_magenta
+            if snmp_info.toner_yellow is not None:
+                update_data['toner_yellow'] = snmp_info.toner_yellow
+            
+            # Update in database
+            if update_data:
+                PrinterRepository.update(db, printer_id, **update_data)
+                
+                # Invalidate dashboard cache so changes reflect instantly
+                try:
+                    from services.redis_service import redis_service
+                    redis_service.invalidate_pattern("dashboard:*")
+                except Exception as cache_err:
+                    logger.warning(f"Failed to invalidate dashboard cache: {cache_err}")
+
+                return MessageResponse(
+                    success=True,
+                    message=f"Printer {printer.hostname} updated via SNMP"
+                )
+            else:
+                return MessageResponse(
+                    success=False,
+                    message="No SNMP data available for this printer"
+                )
+                
+        except Exception as e:
+            logger.warning(f"SNMP query failed for {printer.ip_address}, falling back to Web Image Monitor: {e}")
+            
+    # Web Image Monitor scraping fallback (SNMP is disabled or failed)
     try:
-        # Query SNMP
-        snmp_info = await snmp_client.get_printer_info(printer.ip_address)
+        from services.parsers import get_printer_toner_levels
+        import asyncio
         
-        # Update printer with SNMP data
-        update_data = {}
+        loop = asyncio.get_event_loop()
+        # Run synchronous scraping in an executor to avoid blocking the event loop
+        toner_data = await loop.run_in_executor(None, get_printer_toner_levels, printer.ip_address)
         
-        if snmp_info.model:
-            update_data['detected_model'] = snmp_info.model
-        if snmp_info.serial_number:
-            update_data['serial_number'] = snmp_info.serial_number
-        if snmp_info.location:
-            update_data['location'] = snmp_info.location
-        
-        # Update toner levels
-        if snmp_info.toner_black is not None:
-            update_data['toner_black'] = snmp_info.toner_black
-        if snmp_info.toner_cyan is not None:
-            update_data['toner_cyan'] = snmp_info.toner_cyan
-        if snmp_info.toner_magenta is not None:
-            update_data['toner_magenta'] = snmp_info.toner_magenta
-        if snmp_info.toner_yellow is not None:
-            update_data['toner_yellow'] = snmp_info.toner_yellow
-        
-        # Update in database
-        if update_data:
+        if toner_data.get('success'):
+            update_data = {
+                'toner_cyan': toner_data.get('cyan', 0),
+                'toner_magenta': toner_data.get('magenta', 0),
+                'toner_yellow': toner_data.get('yellow', 0),
+                'toner_black': toner_data.get('black', 0),
+                'status': PrinterStatus.ONLINE
+            }
             PrinterRepository.update(db, printer_id, **update_data)
+            
+            # Invalidate dashboard cache so changes reflect instantly
+            try:
+                from services.redis_service import redis_service
+                redis_service.invalidate_pattern("dashboard:*")
+            except Exception as cache_err:
+                logger.warning(f"Failed to invalidate dashboard cache: {cache_err}")
+
             return MessageResponse(
                 success=True,
-                message=f"Printer {printer.hostname} updated via SNMP"
+                message=f"Niveles de tóner de {printer.hostname} actualizados desde Web Image Monitor: Negro={update_data['toner_black']}%, Cian={update_data['toner_cyan']}%, Magenta={update_data['toner_magenta']}%, Amarillo={update_data['toner_yellow']}%."
             )
         else:
             return MessageResponse(
                 success=False,
-                message="No SNMP data available for this printer"
+                message=f"No se pudo leer la información de tóners desde la web de la impresora: {toner_data.get('message')}"
             )
-            
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"SNMP query failed: {str(e)}"
+        logger.error(f"Error scraping toner levels for printer {printer.ip_address}: {e}")
+        return MessageResponse(
+            success=False,
+            message=f"Error al intentar obtener niveles de tóner desde la web: {str(e)}"
         )
+
 
 
 @router.get("/user-details", status_code=status.HTTP_200_OK)
@@ -269,7 +312,7 @@ async def get_user_details_endpoint(
 
 @router.post("/sync-users-from-printers", status_code=status.HTTP_200_OK)
 async def sync_users_from_printers(
-    user_code: str = None,
+    user_code: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -340,7 +383,7 @@ async def sync_users_from_printers(
                 ricoh_client.reset_session()
                 logger.info(f"🔄 Sesión reseteada para impresora {printer.hostname} ({printer.ip_address})")
                 
-                if mode == "specific":
+                if mode == "specific" and user_code is not None:
                     # Buscar usuario específico (Incluye detalles/permisos automáticamente)
                     logger.info(f"🎯 Llamando a find_specific_user para {printer.ip_address}, usuario {user_code}")
                     user_found = ricoh_client.find_specific_user(printer.ip_address, user_code)

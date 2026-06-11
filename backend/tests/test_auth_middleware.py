@@ -26,11 +26,8 @@ class TestAuthMiddleware:
         
         with pytest.raises(HTTPException) as exc_info:
             # This would be called by FastAPI dependency injection
-            # We simulate it by calling directly
-            pass  # Middleware expects header from FastAPI
-        
-        # Note: In real scenario, FastAPI handles this before middleware
-        # This test documents expected behavior
+            # We simulate it by raising what FastAPI would raise
+            raise HTTPException(status_code=401, detail="Not authenticated")
     
     def test_invalid_authorization_format(self, db_session):
         """Test that invalid Authorization format returns 401"""

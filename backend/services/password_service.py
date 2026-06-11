@@ -115,23 +115,23 @@ class PasswordService:
         
         # Check minimum length
         if len(password) < cls.MIN_LENGTH:
-            errors.append(f"Password must be at least {cls.MIN_LENGTH} characters long")
+            errors.append(f"La contraseña debe tener al menos {cls.MIN_LENGTH} caracteres")
         
         # Check uppercase
         if cls.REQUIRE_UPPERCASE and not any(c.isupper() for c in password):
-            errors.append("Password must contain at least one uppercase letter")
+            errors.append("La contraseña debe tener al menos una letra mayúscula")
         
         # Check lowercase
         if cls.REQUIRE_LOWERCASE and not any(c.islower() for c in password):
-            errors.append("Password must contain at least one lowercase letter")
+            errors.append("La contraseña debe tener al menos una letra minúscula")
         
         # Check digit
         if cls.REQUIRE_DIGIT and not any(c.isdigit() for c in password):
-            errors.append("Password must contain at least one number")
+            errors.append("La contraseña debe tener al menos un número")
         
         # Check special character
         if cls.REQUIRE_SPECIAL and not any(c in cls.SPECIAL_CHARS for c in password):
-            errors.append(f"Password must contain at least one special character ({cls.SPECIAL_CHARS})")
+            errors.append(f"La contraseña debe tener al menos un carácter especial ({cls.SPECIAL_CHARS})")
         
         return ValidationResult(is_valid=len(errors) == 0, errors=errors)
     

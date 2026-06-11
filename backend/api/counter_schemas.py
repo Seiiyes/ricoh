@@ -396,6 +396,8 @@ class ComparacionCierresResponse(BaseModel):
     diferencia_impresora: int
     diferencia_escaner: int
     diferencia_fax: int
+    diferencia_bn: Optional[int] = None
+    diferencia_color: Optional[int] = None
     
     # Período entre cierres
     dias_entre_cierres: int
@@ -503,12 +505,17 @@ class CierreUsuarioGlobalResponse(BaseModel):
     printer_hostname: Optional[str] = None
     printer_ip: Optional[str] = None
     printer_location: Optional[str] = None
+    printer_serial: Optional[str] = None
     
     # Datos del cierre principal
     fecha_inicio: date
     fecha_fin: date
     fecha_cierre: datetime
     cerrado_por: Optional[str] = None
+    centro_costos: Optional[str] = None
+    empresa_nombre: Optional[str] = None
+    consumo_bn: int = 0
+    consumo_color: int = 0
 
     class Config:
         from_attributes = True

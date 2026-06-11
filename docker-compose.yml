@@ -112,7 +112,7 @@ services:
       # Comma-separated list of allowed origins
       # ✅ ACTUALIZADA: 6 Mayo 2026 - Restringido a red local
       # Permite acceso desde localhost y tu IP local
-      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.91.34:5173,http://localhost:8000,http://192.168.91.34:8000
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.91.34:5173,http://localhost:8000,http://192.168.91.34:8000,http://192.168.91.131:5173,http://192.168.91.131:8000
       
       # =============================================================================
       # SECURITY CONFIGURATION - CSRF

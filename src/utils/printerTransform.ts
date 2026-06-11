@@ -14,6 +14,7 @@ interface PrinterCardProps {
   status: 'online' | 'offline';
   location?: string;
   toner: TonerLevels;
+  isColor?: boolean;
 }
 
 /**
@@ -37,5 +38,6 @@ export function printerDeviceToCardProps(device: Partial<PrinterDevice> & Pick<P
       y: device.toner_levels?.yellow ?? 0,
       k: device.toner_levels?.black ?? 0,
     },
+    isColor: device.has_color,
   };
 }
