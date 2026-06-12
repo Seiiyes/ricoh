@@ -49,8 +49,8 @@ class AuthService:
     """Service for authentication operations"""
     
     # Account lockout settings
-    MAX_FAILED_ATTEMPTS = 5
-    LOCKOUT_DURATION_MINUTES = 15
+    MAX_FAILED_ATTEMPTS = 999  # Incrementado: no bloquear cuentas en la práctica
+    LOCKOUT_DURATION_MINUTES = 1   # Si se llega al límite, bloqueo de solo 1 minuto
     
     @classmethod
     def login(
