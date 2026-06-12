@@ -145,16 +145,25 @@ class RicohWebClient:
             logger.debug(f"Warmup falló: {e}")
             return False
     
-    def _authenticate(self, printer_ip: str) -> bool:
+    def _authenticate(self, printer_ip: str, admin_password: Optional[str] = None) -> bool:
         """
         Authenticate with the printer's web interface
         """
+        # Set cookie to bypass WIM cookie checker redirect
+        try:
+            self.session.cookies.set('cookieOnOffChecker', 'on', path='/')
+        except Exception as ce:
+            logger.debug(f"Error setting cookieOnOffChecker: {ce}")
+
         if printer_ip in self._authenticated_printers:
             return True
             
         logger.info(f"🔒 Autenticando con impresora {printer_ip}...")
         
         try:
+            # Determine the password to use
+            pwd = admin_password if admin_password is not None else self.admin_password
+
             # 1. Intentar acceder a la lista para ver si ya estamos logueados
             test_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
             test_response = self.session.get(test_url, timeout=self.timeout, allow_redirects=False)
@@ -188,7 +197,7 @@ class RicohWebClient:
             
             # Step 3: Encode credentials in Base64
             userid_b64 = base64.b64encode(self.admin_user.encode()).decode()
-            password_b64 = base64.b64encode(self.admin_password.encode()).decode() if self.admin_password else ""
+            password_b64 = base64.b64encode(pwd.encode()).decode() if pwd else ""
             
             # Step 4: Perform login
             login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
@@ -227,13 +236,14 @@ class RicohWebClient:
             logger.error(f"❌ Error durante autenticación: {e}")
             return False
     
-    def provision_user(self, printer_ip: str, user_config: Dict):
+    def provision_user(self, printer_ip: str, user_config: Dict, admin_password: Optional[str] = None):
         """
         Provision a user to a Ricoh printer via web interface
         
         Args:
             printer_ip: Printer IP address
             user_config: User configuration dictionary
+            admin_password: Optional printer-specific admin password
         
         Returns:
             True if successful
@@ -255,7 +265,7 @@ class RicohWebClient:
             logger.info(f"   User: {user_config.get('nombre')} (Code: {user_config.get('codigo_de_usuario')})")
             
             # Step 1: Authenticate
-            if not self._authenticate(printer_ip):
+            if not self._authenticate(printer_ip, admin_password):
                 logger.error("✗ Cannot proceed without authentication")
                 return False
             
@@ -495,7 +505,7 @@ class RicohWebClient:
         logger.debug("Session reset - cleared cookies and tokens")
     
     
-    def find_specific_user(self, printer_ip: str, user_code: str) -> Optional[Dict]:
+    def find_specific_user(self, printer_ip: str, user_code: str, admin_password: Optional[str] = None) -> Optional[Dict]:
         """
         Busca un usuario específico en una impresora por su código.
         """
@@ -503,7 +513,7 @@ class RicohWebClient:
         
         try:
             # 1. Leer solo la lista básica (Rápido)
-            all_users = self.read_users_from_printer(printer_ip, fast_list=True)
+            all_users = self.read_users_from_printer(printer_ip, fast_list=True, admin_password=admin_password)
             
             logger.info(f"   Total usuarios en impresora: {len(all_users)}")
             
@@ -529,7 +539,7 @@ class RicohWebClient:
             logger.info(f"✅ Usuario {user_code} encontrado: {target_user.get('nombre')} (entry_index: {target_user.get('entry_index')})")
             
             # 3. Solo ahora pedimos los detalles (permisos, carpeta) de ESTE usuario
-            details = self._get_user_details(printer_ip, target_user['entry_index'])
+            details = self._get_user_details(printer_ip, target_user['entry_index'], admin_password=admin_password)
             
             if not details:
                 logger.error(f"❌ No se pudieron recuperar los detalles reales del usuario {user_code}")
@@ -549,7 +559,7 @@ class RicohWebClient:
             logger.error(traceback.format_exc())
             return None
     
-    def read_users_from_printer(self, printer_ip: str, fast_list: bool = False) -> list:
+    def read_users_from_printer(self, printer_ip: str, fast_list: bool = False, admin_password: Optional[str] = None) -> list:
         """
         Lee todos los usuarios de una impresora usando el endpoint AJAX original de Ricoh
         
@@ -557,12 +567,13 @@ class RicohWebClient:
             printer_ip: IP de la impresora
             fast_list: Si es True, no descarga los detalles (permisos) de cada usuario.
                        Ideal para vistas de lista rápidas (Lazy Loading).
+            admin_password: Optional printer-specific admin password
         """
         logger.info(f"📋 Leyendo usuarios de {printer_ip} vía AJAX (CGI)... {'(Modo Rápido)' if fast_list else ''}")
         
         try:
             # 1. Autenticar
-            if not self._authenticate(printer_ip):
+            if not self._authenticate(printer_ip, admin_password):
                 logger.error(f"❌ No se pudo autenticar con {printer_ip}")
                 return []
             
@@ -728,7 +739,7 @@ class RicohWebClient:
             # USO SECUENCIAL: Ricoh no soporta múltiples flujos concurrentes en la misma sesión (causa BADFLOW)
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future_to_user = {
-                    executor.submit(self._get_user_details, printer_ip, u[2], fast_sync=True): u 
+                    executor.submit(self._get_user_details, printer_ip, u[2], fast_sync=True, admin_password=admin_password): u 
                     for u in unique_user_data
                 }
                 
@@ -758,8 +769,8 @@ class RicohWebClient:
         except Exception as e:
             logger.error(f"❌ Error leyendo usuarios vía AJAX: {e}")
             return []
-    
-    def _get_user_details(self, printer_ip: str, entry_index: str, fast_sync: bool = False) -> Optional[Dict]:
+
+    def _get_user_details(self, printer_ip: str, entry_index: str, fast_sync: bool = False, admin_password: Optional[str] = None) -> Optional[Dict]:
         """
         Lee los detalles de un usuario específico, incluyendo funciones disponibles
         OPTIMIZADO: Usa el flujo correcto descubierto mediante reverse engineering
@@ -768,6 +779,7 @@ class RicohWebClient:
             printer_ip: IP de la impresora
             entry_index: Índice del usuario
             fast_sync: Si es True, no usa Selenium para ser más rápido
+            admin_password: Optional printer-specific admin password
             
         Returns:
             Dict con detalles del usuario o None
@@ -790,7 +802,7 @@ class RicohWebClient:
                 self._wim_tokens[printer_ip] = wim_token
             else:
                 wim_token = self._wim_tokens.get(printer_ip, "")
-
+ 
             # 2. Cargar el batch que contiene este usuario (CRÍTICO para evitar BADFLOW)
             ajax_url = f"http://{printer_ip}/web/entry/es/address/adrsListLoadEntry.cgi"
             batch = (int(entry_index) // 50) + 1
@@ -832,7 +844,7 @@ class RicohWebClient:
             if "authForm.cgi" in response.text or response.status_code == 302:
                 logger.warning(f"⚠️  Sesión expirada, re-autenticando...")
                 # Re-autenticar
-                if not self._authenticate(printer_ip):
+                if not self._authenticate(printer_ip, admin_password):
                     logger.error(f"❌ No se pudo re-autenticar")
                     return None
                 
@@ -989,7 +1001,7 @@ class RicohWebClient:
             logger.error(f"❌ Error leyendo detalles: {e}")
             return None
 
-    def set_user_functions(self, printer_ip: str, entry_index: str, permissions: Dict) -> bool:
+    def set_user_functions(self, printer_ip: str, entry_index: str, permissions: Dict, admin_password: Optional[str] = None) -> bool:
             """
             Actualiza las funciones de un usuario en la impresora.
             Usa el flujo correcto descubierto mediante reverse engineering.
@@ -998,7 +1010,7 @@ class RicohWebClient:
             try:
                 logger.info(f"🔄 Actualizando funciones: Usuario {entry_index} en {printer_ip}")
 
-                if not self._authenticate(printer_ip):
+                if not self._authenticate(printer_ip, admin_password):
                     logger.error(f"❌ Fallo autenticacion con {printer_ip}")
                     return False
 
@@ -1060,12 +1072,13 @@ class RicohWebClient:
                         from services.ricoh_selenium_client import get_selenium_client
                         selenium_client = get_selenium_client()
 
+                        pwd = admin_password if admin_password is not None else self.admin_password
                         return selenium_client.set_user_permissions(
                             printer_ip,
                             entry_index,
                             permissions,
                             self.admin_user,
-                            self.admin_password,
+                            pwd,
                             http_session=self.session
                         )
                     except Exception as sel_err:
@@ -1260,7 +1273,7 @@ class RicohWebClient:
                 logger.debug(traceback.format_exc())
                 return False
 
-    def update_user_in_printer(self, printer_ip: str, user_data: Dict) -> bool:
+    def update_user_in_printer(self, printer_ip: str, user_data: Dict, admin_password: Optional[str] = None) -> bool:
         """
         Actualiza un usuario existente en una impresora con nuevos datos (carpeta, credenciales, permisos)
         
@@ -1279,6 +1292,7 @@ class RicohWebClient:
                 - carpeta: Ruta SMB (opcional)
                 - usuario_red: Usuario de red (opcional)
                 - permisos: Dict con permisos (opcional - si no viene, lee y mantiene los actuales)
+            admin_password: Optional printer-specific admin password
         
         Returns:
             True si se actualizó correctamente, False en caso contrario
@@ -1289,7 +1303,7 @@ class RicohWebClient:
         
         try:
             # 1. Autenticar
-            if not self._authenticate(printer_ip):
+            if not self._authenticate(printer_ip, admin_password):
                 logger.error(f"❌ No se pudo autenticar con {printer_ip}")
                 return False
             
@@ -1302,7 +1316,7 @@ class RicohWebClient:
             if 'permisos' not in user_data or not user_data['permisos']:
                 logger.info(f"   🔍 Leyendo permisos actuales de la impresora...")
                 try:
-                    current_details = self._get_user_details(printer_ip, entry_index, fast_sync=True)
+                    current_details = self._get_user_details(printer_ip, entry_index, fast_sync=True, admin_password=admin_password)
                     if current_details and 'permisos' in current_details:
                         user_data['permisos'] = current_details['permisos']
                         logger.info(f"   ✅ Permisos actuales obtenidos: {user_data['permisos']}")
@@ -1504,6 +1518,108 @@ class RicohWebClient:
             logger.debug(traceback.format_exc())
             return False
     
+    def get_stored_jobs(self, printer_ip: str, admin_password: Optional[str] = None) -> list:
+        """
+        Scrape and parse active/stored print jobs from WIM storedJob.cgi
+        
+        Args:
+            printer_ip: Printer IP address
+            admin_password: Optional printer-specific admin password
+            
+        Returns:
+            list: List of parsed print jobs
+        """
+        logger.info(f"Scraping stored jobs from printer {printer_ip}...")
+        
+        # 1. Authenticate
+        if not self._authenticate(printer_ip, admin_password):
+            logger.error(f"❌ Cannot proceed with get_stored_jobs without authentication for {printer_ip}")
+            return []
+            
+        try:
+            # 2. Get the stored jobs page
+            jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/storedJob.cgi"
+            headers = {
+                'Referer': f'http://{printer_ip}/web/entry/es/websys/webArch/topPage.cgi'
+            }
+            
+            response = self.session.get(jobs_url, headers=headers, timeout=self.timeout)
+            
+            if response.status_code != 200:
+                logger.error(f"❌ Failed to fetch stored jobs page (Status {response.status_code})")
+                return []
+                
+            # 3. Parse with BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
+            jobs = []
+            
+            table = soup.find('table', class_='reportListCommon')
+            if not table:
+                logger.warning("⚠️ Table reportListCommon not found in WIM stored jobs page")
+                return []
+                
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all('td', class_='listData')
+                if len(cells) < 8:
+                    continue
+                    
+                try:
+                    # Job ID
+                    checkbox = cells[0].find('input', type='checkbox')
+                    job_id = checkbox.get('value') if checkbox else None
+                    if not job_id:
+                        hidden = cells[0].find('input', type='hidden')
+                        job_id = hidden.get('value') if hidden else None
+                        
+                    # Type
+                    tipo = cells[1].get_text(strip=True)
+                    
+                    # User ID
+                    usuario = cells[3].get_text(strip=True)
+                    
+                    # File Name
+                    documento = cells[4].get_text(strip=True)
+                    
+                    # Created date
+                    fecha_parts = [t.strip() for t in cells[5].stripped_strings]
+                    fecha = " ".join(fecha_parts)
+                    
+                    # Page count
+                    paginas_str = cells[7].get_text(strip=True)
+                    try:
+                        paginas = int(paginas_str)
+                    except ValueError:
+                        paginas = 0
+                        
+                    # Copies
+                    copias = None
+                    if len(cells) >= 9:
+                        copias_str = cells[8].get_text(strip=True)
+                        if copias_str != "---":
+                            try:
+                                copias = int(copias_str)
+                            except ValueError:
+                                pass
+                                
+                    jobs.append({
+                        "job_id": job_id,
+                        "tipo": tipo,
+                        "usuario": usuario,
+                        "documento": documento,
+                        "fecha": fecha,
+                        "paginas": paginas,
+                        "copias": copias
+                    })
+                except Exception as row_err:
+                    logger.debug(f"Error parsing job row: {row_err}")
+                    
+            return jobs
+            
+        except Exception as e:
+            logger.error(f"❌ Error fetching stored jobs from printer {printer_ip}: {e}")
+            return []
+
     def test_connection(self, printer_ip: str) -> bool:
         """
         Test if printer web interface is accessible

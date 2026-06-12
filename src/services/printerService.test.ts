@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest';
-import { fetchPrinters } from './printerService';
+import { fetchPrinters, fetchPrinterJobs } from './printerService';
 import type { PrinterDevice } from '@/types';
 
 describe('printerService', () => {
@@ -22,4 +21,11 @@ describe('printerService', () => {
       expect(typedResult).toBeDefined();
     });
   });
+
+  describe('fetchPrinterJobs', () => {
+    it('should throw an error when not authenticated or invalid printer', async () => {
+      await expect(fetchPrinterJobs(9999)).rejects.toThrow();
+    });
+  });
 });
+

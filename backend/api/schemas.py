@@ -270,6 +270,7 @@ class PrinterCreate(PrinterBase):
     toner_magenta: int = Field(0, ge=0, le=100)
     toner_yellow: int = Field(0, ge=0, le=100)
     toner_black: int = Field(0, ge=0, le=100)
+    admin_password: Optional[str] = Field(None, max_length=255, description="Printer admin password")
 
 
 class PrinterUpdate(BaseModel):
@@ -284,6 +285,18 @@ class PrinterUpdate(BaseModel):
     toner_yellow: Optional[int] = Field(None, ge=0, le=100)
     toner_black: Optional[int] = Field(None, ge=0, le=100)
     notes: Optional[str] = None
+    admin_password: Optional[str] = Field(None, max_length=255, description="Printer admin password")
+
+
+class PrintJobResponse(BaseModel):
+    """Schema for print job response"""
+    job_id: Optional[str] = None
+    tipo: str
+    usuario: str
+    documento: str
+    fecha: str
+    paginas: int
+    copias: Optional[int] = None
 
 
 class PrinterResponse(PrinterBase):

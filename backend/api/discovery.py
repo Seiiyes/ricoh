@@ -291,9 +291,13 @@ async def get_user_details_endpoint(
     from services.ricoh_web_client import get_ricoh_web_client
     
     try:
+        # Resolve printer password
+        printer = PrinterRepository.get_by_ip(db, printer_ip)
+        printer_pwd = printer.admin_password if printer else None
+
         ricoh_client = get_ricoh_web_client()
         # No reseteamos sesión aquí para aprovechar cookies si ya existen
-        details = ricoh_client._get_user_details(printer_ip, entry_index, fast_sync=False)
+        details = ricoh_client._get_user_details(printer_ip, entry_index, fast_sync=False, admin_password=printer_pwd)
         
         if not details:
             raise HTTPException(status_code=404, detail="No se pudieron obtener los detalles del usuario")
@@ -386,7 +390,7 @@ async def sync_users_from_printers(
                 if mode == "specific" and user_code is not None:
                     # Buscar usuario específico (Incluye detalles/permisos automáticamente)
                     logger.info(f"🎯 Llamando a find_specific_user para {printer.ip_address}, usuario {user_code}")
-                    user_found = ricoh_client.find_specific_user(printer.ip_address, user_code)
+                    user_found = ricoh_client.find_specific_user(printer.ip_address, user_code, admin_password=printer.admin_password)
                     logger.info(f"📋 Resultado de find_specific_user: {user_found}")
                     if user_found:
                         printer_users = [user_found]
@@ -396,7 +400,7 @@ async def sync_users_from_printers(
                     # Leer todos los usuarios de la impresora (MODO RÁPIDO - sin permisos)
                     # Los permisos se cargan bajo demanda cuando se abre el usuario
                     logger.info(f"📋 Leyendo lista de usuarios de {printer.ip_address}...")
-                    printer_users = ricoh_client.read_users_from_printer(printer.ip_address, fast_list=True)
+                    printer_users = ricoh_client.read_users_from_printer(printer.ip_address, fast_list=True, admin_password=printer.admin_password)
                 
                 printers_scanned.append({
                     'id': printer.id,

@@ -8,12 +8,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { ProvisioningPanel } from '../components/governance/ProvisioningPanel';
 import { AdministracionUsuarios } from '../components/usuarios/AdministracionUsuarios';
 import { ContadoresModule } from '../components/contadores/ContadoresModule';
-import { UserCog, UserPlus, Search, BarChart3, Building2, Users, LogOut, ChevronDown, LayoutDashboard, TrendingUp } from 'lucide-react';
+import { UserCog, UserPlus, Search, BarChart3, Building2, Users, LogOut, ChevronDown, LayoutDashboard, TrendingUp, Printer } from 'lucide-react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import EmpresasPage from './EmpresasPage';
 import AdminUsersPage from './AdminUsersPage';
 import OverviewDashboard from './OverviewDashboard';
 import AnalyticsPage from './AnalyticsPage';
+import PrintJobsPage from './PrintJobsPage';
 import { cn } from '../lib/utils';
 
 const Dashboard = () => {
@@ -84,6 +85,12 @@ const Dashboard = () => {
             to="/contadores"
             icon={<BarChart3 size={18} />}
             label="Lectura de Contadores"
+          />
+          
+          <NavButton
+            to="/trabajos"
+            icon={<Printer size={18} />}
+            label="Trabajos de Impresión"
           />
           
           {/* Opciones solo para superadmin */}
@@ -169,6 +176,7 @@ const Dashboard = () => {
               <Route path="/aprovisionamiento" element={<ProvisioningPanel showDiscoveryOnly={false} />} />
               <Route path="/administracion" element={<AdministracionUsuarios />} />
               <Route path="/contadores" element={<ContadoresModule />} />
+              <Route path="/trabajos" element={<PrintJobsPage />} />
               
               {/* Rutas solo para superadmin */}
               <Route

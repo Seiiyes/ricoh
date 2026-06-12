@@ -303,3 +303,24 @@ export function connectWebSocket(onMessage: (event: any) => void): WebSocket {
 
   return ws;
 }
+
+// ============================================================================
+// Print Jobs API
+// ============================================================================
+
+/**
+ * Fetches stored print jobs for a specific printer
+ * 
+ * @param printerId - ID of the printer
+ * @returns Promise resolving to an array of print jobs
+ */
+export async function fetchPrinterJobs(printerId: number): Promise<any[]> {
+  try {
+    const response = await apiClient.get(`/printers/${printerId}/jobs`);
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to fetch print jobs for printer ${printerId}:`, error);
+    throw error;
+  }
+}
+

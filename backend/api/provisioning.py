@@ -358,7 +358,7 @@ async def sync_printer_users(
         
         # 2. Leer usuarios desde la impresora
         client = get_ricoh_web_client()
-        users_from_printer = client.read_users_from_printer(printer_ip, fast_list=False)
+        users_from_printer = client.read_users_from_printer(printer_ip, fast_list=False, admin_password=printer.admin_password)
         
         if not users_from_printer:
             return MessageResponse(
@@ -480,7 +480,8 @@ async def sync_user_to_all_printers(
         logger.info(f"   Permisos: se mantienen los actuales de cada impresora")
         
         # 2. Actualizar en cada impresora física
-        client = RicohWebClient()
+        from services.ricoh_web_client import get_ricoh_web_client
+        client = get_ricoh_web_client()
         success_count = 0
         error_count = 0
         
@@ -504,7 +505,7 @@ async def sync_user_to_all_printers(
                     logger.info(f"   🔍 No hay assignment, buscando usuario {user.codigo_de_usuario} en {printer_ip}...")
                     try:
                         # Buscar el usuario directamente en la impresora
-                        user_in_printer = client.find_specific_user(printer_ip, user.codigo_de_usuario)
+                        user_in_printer = client.find_specific_user(printer_ip, user.codigo_de_usuario, admin_password=printer.admin_password)
                         if user_in_printer and user_in_printer.get('entry_index'):
                             entry_index = user_in_printer['entry_index']
                             logger.info(f"   ✅ Usuario encontrado en impresora con entry_index: {entry_index}")
@@ -543,7 +544,7 @@ async def sync_user_to_all_printers(
                 }
                 
                 # Actualizar en la impresora física
-                result = client.update_user_in_printer(printer.ip_address, user_data)
+                result = client.update_user_in_printer(printer.ip_address, user_data, admin_password=printer.admin_password)
                 
                 if result:
                     logger.info(f"   ✅ Actualizado en {printer.hostname} ({printer.ip_address})")

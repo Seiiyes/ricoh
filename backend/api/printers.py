@@ -17,7 +17,8 @@ from .schemas import (
     PrinterListResponse,
     MessageResponse,
     CapabilitiesResponse,
-    CapabilitiesUpdate
+    CapabilitiesUpdate,
+    PrintJobResponse
 )
 from middleware.auth_middleware import get_current_user, get_client_ip, get_user_agent
 from services.company_filter_service import CompanyFilterService
@@ -79,6 +80,7 @@ async def create_printer(
             toner_magenta=printer_data.get('toner_magenta'),
             toner_yellow=printer_data.get('toner_yellow'),
             toner_black=printer_data.get('toner_black'),
+            admin_password=printer_data.get('admin_password'),
             status=PrinterStatus.ONLINE
         )
         
@@ -477,4 +479,47 @@ async def update_printer_capabilities(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update capabilities: {str(e)}"
+        )
+
+
+@router.get("/{printer_id}/jobs", response_model=List[PrintJobResponse])
+async def get_printer_jobs(
+    printer_id: int,
+    current_user: AdminUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get active print jobs for a printer from WIM storedJob.cgi
+    """
+    printer = PrinterRepository.get_by_id(db, printer_id)
+    if not printer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Printer with ID {printer_id} not found"
+        )
+    
+    # Validate company access
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this printer"
+        )
+    
+    from services.ricoh_web_client import get_ricoh_web_client
+    client = get_ricoh_web_client()
+    
+    try:
+        # Resolve password
+        admin_password = printer.admin_password
+        
+        # Scrape jobs
+        jobs = client.get_stored_jobs(printer.ip_address, admin_password=admin_password)
+        return jobs
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting print jobs for printer {printer_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get print jobs: {str(e)}"
         )

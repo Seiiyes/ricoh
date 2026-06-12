@@ -292,10 +292,18 @@ class UserSyncService:
         if not printer:
             raise ValueError(f"Impresora {printer_id} no encontrada")
         
+        # Resolver contraseña
+        resolved_password = admin_password
+        if not resolved_password:
+            resolved_password = printer.admin_password
+        if not resolved_password:
+            import os
+            resolved_password = os.getenv("RICOH_ADMIN_PASSWORD", "")
+
         logger.info(f"Sincronizando usuarios desde libreta de direcciones de {printer.hostname} ({printer.ip_address})...")
         
         # Leer usuarios desde la impresora
-        client = RicohWebClient(admin_user=admin_user, admin_password=admin_password)
+        client = RicohWebClient(admin_user=admin_user, admin_password=resolved_password)
         users_from_printer = client.read_users_from_printer(printer.ip_address, fast_list=False)
         
         if not users_from_printer:

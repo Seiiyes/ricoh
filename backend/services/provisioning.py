@@ -203,7 +203,7 @@ class ProvisioningService:
             logger.info(f"Attempt {attempt} for printer {printer.ip_address}")
             
             # Attempt provisioning
-            result = ricoh_client.provision_user(printer.ip_address, ricoh_payload)
+            result = ricoh_client.provision_user(printer.ip_address, ricoh_payload, admin_password=printer.admin_password)
             
             # Classify error
             error_type = ProvisioningService._classify_provisioning_result(result)
@@ -340,7 +340,7 @@ class ProvisioningService:
                 printer = PrinterRepository.get_by_id(db, printer_id)
                 if printer:
                     logger.info(f"🚫 Deshabilitando funciones de usuario {user_id} en impresora {printer.ip_address}...")
-                    ricoh_client.set_user_functions(printer.ip_address, assignment.entry_index, disabled_permissions)
+                    ricoh_client.set_user_functions(printer.ip_address, assignment.entry_index, disabled_permissions, admin_password=printer.admin_password)
             
             # 3. Eliminar de la base de datos
             if AssignmentRepository.delete(db, user_id, printer_id):

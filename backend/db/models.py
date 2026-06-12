@@ -221,6 +221,9 @@ class Printer(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Printer admin password (encrypted)
+    admin_password_encrypted = Column("admin_password", String(255), nullable=True)
+
     # Relationships
     empresa = relationship("Empresa", back_populates="printers")
     user_assignments = relationship(
@@ -228,6 +231,32 @@ class Printer(Base):
         back_populates="printer",
         cascade="all, delete-orphan"
     )
+
+    def set_admin_password(self, password: str):
+        """Encriptar y guardar password de admin"""
+        if not password:
+            self.admin_password_encrypted = None
+            return
+        from services.encryption_service import EncryptionService
+        self.admin_password_encrypted = EncryptionService.encrypt(password)
+
+    def get_admin_password(self) -> Optional[str]:
+        """Obtener password de admin desencriptado"""
+        if self.admin_password_encrypted:
+            try:
+                from services.encryption_service import EncryptionService
+                return EncryptionService.decrypt(self.admin_password_encrypted)
+            except Exception:
+                return None
+        return None
+
+    @property
+    def admin_password(self) -> Optional[str]:
+        return self.get_admin_password()
+
+    @admin_password.setter
+    def admin_password(self, value: str):
+        self.set_admin_password(value)
 
     @property
     def capabilities(self) -> Optional[dict]:
