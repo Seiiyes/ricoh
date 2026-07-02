@@ -68,13 +68,11 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
     }
 
     /**
-     * Clasificación de estado del usuario:
-     * - Activos   → is_active === true  en BD (fuente de verdad oficial)
-     * - Inactivos → is_active === false en BD
-     * Los dos grupos son mutuamente excluyentes: Activos + Inactivos = Total
+     * Un usuario se considera INACTIVO cuando:
+     * - O bien en la BD tiene is_active === false.
+     * - O bien tiene impresoras asignadas y en TODAS ellas tiene TODOS sus permisos desactivados (en false).
      *
-     * Nota: La función esInactivo (permisos) se mantiene disponible para uso futuro
-     * (ej: badge visual "Sin permisos"), pero NO rige el filtro de estado.
+     * Los filtros Activos/Inactivos son mutuamente excluyentes: u es Inactivo o es Activo.
      */
     const esInactivo = (u: Usuario): boolean => {
       const impresoras = u.impresoras;
@@ -97,16 +95,13 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
       return !u.is_active;
     };
 
-    // Suprimir advertencia del compilador: esInactivo está disponible para uso futuro
-    void esInactivo;
-
     let filtrados = usuarios;
     
-    // Filtros mutuamente excluyentes — usan is_active de BD
+    // Filtros mutuamente excluyentes basados en el estado real de permisos/BD
     if (filtroEstado === 'activos' && !busqueda.trim()) {
-      filtrados = filtrados.filter((u) => u.is_active);
+      filtrados = filtrados.filter((u) => !esInactivo(u));
     } else if (filtroEstado === 'inactivos') {
-      filtrados = filtrados.filter((u) => !u.is_active);
+      filtrados = filtrados.filter((u) => esInactivo(u));
     }
     
     // Filtrar por búsqueda
