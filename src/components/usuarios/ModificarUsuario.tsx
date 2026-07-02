@@ -119,6 +119,7 @@ export const ModificarUsuario = ({
         const dataConEquipos = await obtenerUsuarioConEquipos(Number(userId));
         if (dataConEquipos.equipos) {
           const mappedImpresoras: ImpresoraUsuario[] = dataConEquipos.equipos.map((eq: any) => ({
+            id: eq.id,
             printer_id: eq.printer_id,
             printer_name: eq.printer_name,
             printer_ip: eq.printer_ip,
@@ -154,6 +155,7 @@ export const ModificarUsuario = ({
       const dataConEquipos = await obtenerUsuarioConEquipos(finalId);
       if (dataConEquipos.equipos) {
         const mappedImpresoras: ImpresoraUsuario[] = dataConEquipos.equipos.map((eq: any) => ({
+          id: eq.id,
           printer_id: eq.printer_id,
           printer_name: eq.printer_name,
           printer_ip: eq.printer_ip,
@@ -267,12 +269,12 @@ export const ModificarUsuario = ({
 
   // Al cambiar de impresora seleccionada, actualizar los permisos del editor desde local
   useEffect(() => {
-    // console.log('🔄 useEffect disparado - impresoraSeleccionada:', impresoraSeleccionada?.printer_id);
+    // console.log('🔄 useEffect disparado - impresoraSeleccionada ID:', impresoraSeleccionada?.id || impresoraSeleccionada?.printer_id);
     
     if (impresoraSeleccionada) {
-      // Buscar la versión actualizada de la impresora en el array
+      // Buscar la versión actualizada de la impresora en el array usando el id de asignación (o fallback a printer_id si no hay id)
       const impresoraActualizada = impresorasAsignadas.find(
-        p => p.printer_id === impresoraSeleccionada.printer_id
+        p => (p.id && p.id === impresoraSeleccionada.id) || (!p.id && p.printer_id === impresoraSeleccionada.printer_id)
       );
       
       // console.log('🔍 Impresora actualizada encontrada:', impresoraActualizada);
@@ -292,7 +294,7 @@ export const ModificarUsuario = ({
         setPermisos(nuevosPermisos);
       }
     }
-  }, [impresoraSeleccionada?.printer_id]);
+  }, [impresoraSeleccionada?.id, impresoraSeleccionada?.printer_id]);
 
   const handleCambioPermisos = (nuevosPermisos: any) => {
     setPermisos(nuevosPermisos);
@@ -300,7 +302,7 @@ export const ModificarUsuario = ({
 
     if (impresoraSeleccionada) {
       setImpresorasAsignadas(prev => prev.map(p =>
-        p.printer_id === impresoraSeleccionada.printer_id
+        ((p.id && p.id === impresoraSeleccionada.id) || (!p.id && p.printer_id === impresoraSeleccionada.printer_id))
           ? {
               ...p,
               permisos: {
@@ -541,15 +543,18 @@ export const ModificarUsuario = ({
               {impresorasAsignadas.map((p, index) => {
                 const estaCargandoEsta = cargandoPermisoIds.has(p.printer_id);
                 const yaFueCargada = permisosYaCargados.has(p.printer_id);
+                const esSeleccionada = impresoraSeleccionada 
+                  ? ((p.id && p.id === impresoraSeleccionada.id) || (!p.id && p.printer_id === impresoraSeleccionada.printer_id))
+                  : false;
                 return (
                 <button
-                  key={`${p.printer_id}-${p.entry_index || index}`}
+                  key={`${p.id || p.printer_id}-${p.entry_index || index}`}
                   onClick={() => { setImpresoraSeleccionada(p); setTabActiva('permisos'); }}
-                  className={`flex-shrink-0 w-auto md:w-full flex flex-row md:flex-col items-center md:items-start px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all group gap-2 md:gap-0 min-w-0 ${impresoraSeleccionada?.printer_id === p.printer_id ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
+                  className={`flex-shrink-0 w-auto md:w-full flex flex-row md:flex-col items-center md:items-start px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all group gap-2 md:gap-0 min-w-0 ${esSeleccionada ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center gap-2 w-full min-w-0">
-                    <Printer size={14} className={impresoraSeleccionada?.printer_id === p.printer_id ? 'text-red-400' : 'text-slate-500'} />
-                    <span className={`text-xs font-black truncate text-left ${impresoraSeleccionada?.printer_id === p.printer_id ? 'text-white' : 'text-slate-400'}`}>
+                    <Printer size={14} className={esSeleccionada ? 'text-red-400' : 'text-slate-500'} />
+                    <span className={`text-xs font-black truncate text-left ${esSeleccionada ? 'text-white' : 'text-slate-400'}`}>
                       {p.printer_location || p.printer_name}
                     </span>
                     {/* Indicador de estado de carga */}

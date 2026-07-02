@@ -1,6 +1,7 @@
 // Tipos para la gestión de usuarios
 
 export interface ImpresoraUsuario {
+  id?: number; // Identificador único de la asignación en la base de datos
   printer_id: number;
   printer_name: string;
   printer_ip: string;
