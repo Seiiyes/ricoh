@@ -69,13 +69,41 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
 
 
 
+    /**
+     * Definición de negocio del Usuario:
+     * - Activo:   Tiene al menos un permiso habilitado en al menos una impresora asignada.
+     * - Inactivo: No tiene ningún permiso habilitado en ninguna de sus impresoras asignadas
+     *             (o no tiene impresoras asignadas).
+     */
+    const esInactivo = (u: Usuario): boolean => {
+      const impresoras = u.impresoras;
+      if (impresoras && impresoras.length > 0) {
+        return impresoras.every((imp) => {
+          const p = imp.permisos;
+          if (!p) return true; // Sin permisos = inactivo
+          return (
+            !p.copiadora &&
+            !p.copiadora_color &&
+            !p.impresora &&
+            !p.impresora_color &&
+            !p.document_server &&
+            !p.fax &&
+            !p.escaner &&
+            !p.navegador
+          );
+        });
+      }
+      // Sin impresoras asignadas = no tiene ningún permiso = Inactivo
+      return true;
+    };
+
     let filtrados = usuarios;
     
-    // Filtros mutuamente excluyentes basados en el estado oficial is_active de base de datos
+    // Filtros basados puramente en la existencia de permisos en las impresoras
     if (filtroEstado === 'activos' && !busqueda.trim()) {
-      filtrados = filtrados.filter((u) => u.is_active);
+      filtrados = filtrados.filter((u) => !esInactivo(u));
     } else if (filtroEstado === 'inactivos') {
-      filtrados = filtrados.filter((u) => !u.is_active);
+      filtrados = filtrados.filter((u) => esInactivo(u));
     }
     
     // Filtrar por búsqueda
