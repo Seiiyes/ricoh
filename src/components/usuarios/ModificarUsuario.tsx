@@ -71,6 +71,7 @@ export const ModificarUsuario = ({
   // Equipos asignados (con sus metadatos)
   const [impresorasAsignadas, setImpresorasAsignadas] = useState<ImpresoraUsuario[]>([]);
   const [equipoIds, setEquipoIds] = useState<number[]>([]);
+  const [sincronizarPermisosBase, setSincronizarPermisosBase] = useState(false);
 
   // Cargar datos al abrir
   useEffect(() => {
@@ -479,7 +480,7 @@ export const ModificarUsuario = ({
           try {
             // Extraer las IPs de todas las impresoras asignadas
             const printerIps = impresorasAsignadas.map(imp => imp.printer_ip);
-            const syncResult = await sincronizarUsuarioTodasImpresoras(finalUsuarioId, printerIps);
+            const syncResult = await sincronizarUsuarioTodasImpresoras(finalUsuarioId, printerIps, sincronizarPermisosBase);
             // console.log("✅ Resultado de sincronización:", syncResult.message);
           } catch (syncError: any) {
             console.error("⚠️ Error en sincronización a impresoras:", syncError);
@@ -715,6 +716,20 @@ export const ModificarUsuario = ({
                     permisos={permisosBase}
                     onChange={handleCambioPermisosBase}
                   />
+                  {impresorasAsignadas.length > 0 && (
+                    <div className="flex items-center gap-3 bg-red-50 border border-red-100/80 rounded-2xl p-4 mt-4 animate-in fade-in duration-300">
+                      <input
+                        type="checkbox"
+                        id="syncPermissionsToAll"
+                        checked={sincronizarPermisosBase}
+                        onChange={(e) => setSincronizarPermisosBase(e.target.checked)}
+                        className="w-4 h-4 text-ricoh-red border-slate-300 rounded focus:ring-ricoh-red cursor-pointer"
+                      />
+                      <label htmlFor="syncPermissionsToAll" className="text-xs font-black text-slate-700 cursor-pointer select-none">
+                        Sincronizar estos permisos base a todas las impresoras asignadas al guardar
+                      </label>
+                    </div>
+                  )}
                 </section>
               </div>
             )}

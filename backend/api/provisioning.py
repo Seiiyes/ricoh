@@ -528,6 +528,7 @@ async def sync_user_to_all_printers(
             )
         
         printer_ips = request.get('printer_ips', [])
+        sync_permissions = request.get('sync_permissions', False)
         
         if not printer_ips:
             return MessageResponse(
@@ -538,7 +539,7 @@ async def sync_user_to_all_printers(
         logger.info(f"🔄 Sincronizando usuario {user.codigo_de_usuario} a {len(printer_ips)} impresoras EN PARALELO")
         logger.info(f"   IPs: {printer_ips}")
         logger.info(f"   Solo sincronizando: nombre, código, carpeta, usuario_red")
-        logger.info(f"   Permisos: se mantienen los actuales de cada impresora")
+        logger.info(f"   Permisos: {'Sincronizando permisos base' if sync_permissions else 'se mantienen los actuales de cada impresora'}")
         
         # 2. Pre-cargar datos de impresoras y asignaciones en el hilo principal
         printers_to_sync = []
@@ -557,7 +558,8 @@ async def sync_user_to_all_printers(
                 'printer_name': printer.hostname,
                 'admin_password': printer.admin_password,
                 'entry_index': entry_index,
-                'has_assignment': assignment is not None
+                'has_assignment': assignment is not None,
+                'has_color': printer.has_color
             })
             
         if not printers_to_sync:
@@ -595,7 +597,7 @@ async def sync_user_to_all_printers(
                             'error': "Usuario no registrado en esta impresora"
                         }
                 
-                # B. Preparar datos de sincronización (sin permisos para conservar los actuales del equipo)
+                # B. Preparar datos de sincronización
                 user_data = {
                     'entry_index': resolved_entry_index,
                     'nombre': user.name,
@@ -603,6 +605,20 @@ async def sync_user_to_all_printers(
                     'carpeta': user.smb_path,
                     'usuario_red': user.network_username,
                 }
+                
+                if sync_permissions:
+                    # Adaptar color según capacidades de la impresora
+                    has_color = p_data.get('has_color', False)
+                    user_data['permisos'] = {
+                        'copiadora': user.func_copier,
+                        'copiadora_color': user.func_copier_color if has_color else False,
+                        'impresora': user.func_printer,
+                        'impresora_color': user.func_printer_color if has_color else False,
+                        'escaner': user.func_scanner,
+                        'document_server': user.func_document_server,
+                        'fax': user.func_fax,
+                        'navegador': user.func_browser
+                    }
                 
                 # C. Actualizar datos en la impresora física con reintentos para BUSY/TIMEOUT
                 logger.info(f"   📤 [{printer_ip}] Enviando datos de carpeta/perfil...")
@@ -674,16 +690,33 @@ async def sync_user_to_all_printers(
             printer_ip = res['ip']
             if res['success']:
                 success_count += 1
-                # Si el worker resolvió un entry_index nuevo o necesita actualizar asignación en DB:
-                if res['assignment_needs_update']:
+                if sync_permissions or res['assignment_needs_update']:
                     try:
-                        logger.info(f"   💾 Guardando nuevo assignment en DB para {printer_ip}...")
+                        logger.info(f"   💾 Guardando asignación en DB para {printer_ip}...")
+                        
+                        # Si sincronizamos permisos, usamos los que se mandaron a la impresora
+                        if sync_permissions:
+                            p_info = next((p for p in printers_to_sync if p['printer_ip'] == printer_ip), {})
+                            has_color = p_info.get('has_color', False)
+                            perms_to_save = {
+                                'copiadora': user.func_copier,
+                                'copiadora_color': user.func_copier_color if has_color else False,
+                                'impresora': user.func_printer,
+                                'impresora_color': user.func_printer_color if has_color else False,
+                                'escaner': user.func_scanner,
+                                'document_server': user.func_document_server,
+                                'fax': user.func_fax,
+                                'navegador': user.func_browser
+                            }
+                        else:
+                            perms_to_save = res['permissions'] or {}
+
                         AssignmentRepository.update_assignment_state(
                             db=db,
                             user_id=user_id,
                             printer_id=res['printer_id'],
                             entry_index=res['entry_index'],
-                            permissions=res['permissions'] or {}
+                            permissions=perms_to_save
                         )
                     except Exception as db_err:
                         logger.error(f"   ❌ Error guardando asignación en DB para {printer_ip}: {db_err}")

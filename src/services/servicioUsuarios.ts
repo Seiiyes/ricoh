@@ -389,11 +389,13 @@ export async function sincronizarUsuariosImpresora(
  */
 export async function sincronizarUsuarioTodasImpresoras(
   usuarioId: number,
-  printerIps: string[]
+  printerIps: string[],
+  syncPermissions: boolean = false
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await apiClient.put(`/provisioning/users/${usuarioId}/sync-to-all-printers`, {
       printer_ips: printerIps,
+      sync_permissions: syncPermissions,
     });
     return response.data;
   } catch (error: any) {
