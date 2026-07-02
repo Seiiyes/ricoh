@@ -69,9 +69,11 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
 
 
 
+
+
     /**
-     * Definición de negocio del Usuario:
-     * - Activo:   Tiene al menos un permiso habilitado en al menos una impresora asignada.
+     * Definición de negocio solicitada por el usuario:
+     * - Activo:   Tiene al menos un permiso habilitado en alguna impresora asignada.
      * - Inactivo: No tiene ningún permiso habilitado en ninguna de sus impresoras asignadas
      *             (o no tiene impresoras asignadas).
      */
@@ -93,7 +95,7 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
           );
         });
       }
-      // Sin impresoras asignadas = no tiene ningún permiso = Inactivo
+      // Sin impresoras asignadas = Inactivo
       return true;
     };
 

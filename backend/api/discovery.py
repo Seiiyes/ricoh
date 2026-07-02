@@ -522,16 +522,19 @@ async def sync_users_from_printers(
                                     UserPrinterAssignment.printer_id == printer.id
                                 ).first()
                                 if not existing_assignment:
-                                    # Crear nueva asignación con permisos en False (aún no sabemos sus permisos reales)
+                                    # Crear nueva asignación con permisos básicos activos por defecto (usuario descubierto activo físicamente)
                                     new_assignment = UserPrinterAssignment(
                                         user_id=existing.id,
                                         printer_id=printer.id,
                                         entry_index=user.get('entry_index', ''),
-                                        is_active=True
+                                        is_active=True,
+                                        func_copier=True,
+                                        func_printer=True,
+                                        func_scanner=True
                                     )
                                     db.add(new_assignment)
                                     db.commit()
-                                    logger.info(f"   ➕ Nueva asignación creada para usuario {codigo} en impresora {printer.hostname} (permisos pendientes de consulta real)")
+                                    logger.info(f"   ➕ Nueva asignación creada con permisos activos por defecto para usuario {codigo} en impresora {printer.hostname}")
                                 else:
                                     # Asignación ya existe: reactivar pero NO tocar los permisos
                                     if not existing_assignment.is_active:
