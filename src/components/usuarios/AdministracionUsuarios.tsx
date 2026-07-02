@@ -31,6 +31,8 @@ export const AdministracionUsuarios = () => {
   const [mostrarOrigen, setMostrarOrigen] = useState<'todos' | 'db' | 'impresora'>('todos');
   const [modoSincronizacion, setModoSincronizacion] = useState<'todos' | 'especifico'>('todos');
   const [codigoUsuarioBuscar, setCodigoUsuarioBuscar] = useState('');
+  const [usuarioADesactivar, setUsuarioADesactivar] = useState<Usuario | null>(null);
+  const [confirmandoDesactivar, setConfirmandoDesactivar] = useState(false);
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -150,28 +152,35 @@ export const AdministracionUsuarios = () => {
     setUsuarioEditar(null);
   };
 
-  const handleDesactivarUsuario = async (usuario: Usuario) => {
+  const [desactivandoUsuarioId, setDesactivandoUsuarioId] = useState<number | null>(null);
+
+  const handleDesactivarUsuario = (usuario: Usuario) => {
     if (!usuario) return;
-    
     const id = usuario.id;
     if (typeof id !== 'number') {
       notify.error('Acción no permitida', 'Solo se pueden desactivar usuarios guardados en la base de datos.');
       return;
     }
-    
-    const verificado = window.confirm(`¿Estás seguro de que deseas desactivar al usuario "${usuario.name}"? Se desactivará en el sistema y se le deshabilitarán todos los permisos en las impresoras físicas asignadas.`);
-    if (!verificado) return;
-    
+    setUsuarioADesactivar(usuario);
+  };
+
+  const confirmarDesactivacion = async () => {
+    if (!usuarioADesactivar || typeof usuarioADesactivar.id !== 'number') return;
+    const id = usuarioADesactivar.id;
+    const nombre = usuarioADesactivar.name;
+    setConfirmandoDesactivar(true);
     try {
-      setCargando(true);
+      setDesactivandoUsuarioId(id);
+      setUsuarioADesactivar(null);
       await eliminarUsuario(id);
-      notify.success('Usuario desactivado', `El usuario "${usuario.name}" fue desactivado correctamente.`);
+      notify.success('Usuario desactivado', `El usuario "${nombre}" fue desactivado correctamente y sus permisos en los equipos asignados fueron removidos.`);
       await cargarUsuarios();
     } catch (error: any) {
       console.error('Error al desactivar usuario:', error);
       notify.error('Error al desactivar', parseApiError(error, 'No se pudo desactivar el usuario.'));
     } finally {
-      setCargando(false);
+      setDesactivandoUsuarioId(null);
+      setConfirmandoDesactivar(false);
     }
   };
 
@@ -484,6 +493,7 @@ export const AdministracionUsuarios = () => {
                 usuarios={usuariosPaginados}
                 onEditar={handleEditarUsuario}
                 onDesactivar={handleDesactivarUsuario}
+                desactivandoUsuarioId={desactivandoUsuarioId}
                 campoOrden={campoOrden}
                 direccionOrden={direccionOrden}
                 onOrdenar={handleOrdenar}
@@ -541,6 +551,57 @@ export const AdministracionUsuarios = () => {
           onCerrar={handleCerrarModal}
           onUsuarioGuardado={cargarUsuarios}
         />
+      )}
+
+      {/* Modal de confirmación de desactivación */}
+      {usuarioADesactivar && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="bg-red-50 px-6 py-5 border-b border-red-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Desactivar usuario</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Esta acción afectará los equipos asignados</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                ¿Estás seguro de que deseas desactivar al usuario{' '}
+                <span className="font-black text-slate-900">"{usuarioADesactivar.name}"</span>?
+              </p>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Se desactivará en el sistema y se le deshabilitarán todos los permisos en las impresoras físicas asignadas.
+              </p>
+            </div>
+            <div className="px-6 pb-5 flex gap-3 justify-end">
+              <button
+                onClick={() => setUsuarioADesactivar(null)}
+                disabled={confirmandoDesactivar}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarDesactivacion}
+                disabled={confirmandoDesactivar}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-black text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all shadow-lg shadow-red-500/25 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {confirmandoDesactivar ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    Desactivando...
+                  </>
+                ) : (
+                  'Sí, desactivar'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
