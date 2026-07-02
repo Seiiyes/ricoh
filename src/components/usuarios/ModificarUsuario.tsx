@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, Printer, ShieldCheck, Settings, Globe, Trash2, Plus, RefreshCw } from 'lucide-react';
 import { actualizarUsuario, obtenerUsuarioConEquipos, actualizarPermisosAsignacion, crearUsuario, obtenerDetallesUsuarioImpresora, sincronizarUsuarioTodasImpresoras, desasignarEquipos } from '@/services/servicioUsuarios';
 import { EditorPermisos } from './EditorPermisos';
@@ -544,9 +545,9 @@ export const ModificarUsuario = ({
                 <button
                   key={`${p.printer_id}-${p.entry_index || index}`}
                   onClick={() => { setImpresoraSeleccionada(p); setTabActiva('permisos'); }}
-                  className={`flex-shrink-0 w-auto md:w-full flex flex-row md:flex-col items-center md:items-start px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all group gap-2 md:gap-0 ${impresoraSeleccionada?.printer_id === p.printer_id ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
+                  className={`flex-shrink-0 w-auto md:w-full flex flex-row md:flex-col items-center md:items-start px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all group gap-2 md:gap-0 min-w-0 ${impresoraSeleccionada?.printer_id === p.printer_id ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
                 >
-                  <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="flex items-center gap-2 w-full min-w-0">
                     <Printer size={14} className={impresoraSeleccionada?.printer_id === p.printer_id ? 'text-red-400' : 'text-slate-500'} />
                     <span className={`text-xs font-black truncate text-left ${impresoraSeleccionada?.printer_id === p.printer_id ? 'text-white' : 'text-slate-400'}`}>
                       {p.printer_location || p.printer_name}
@@ -559,7 +560,7 @@ export const ModificarUsuario = ({
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" title="Permisos cargados" />
                     )}
                   </div>
-                  <span className="text-[9px] md:text-[10px] text-slate-400 font-bold bg-white/10 px-1.5 py-0.5 rounded md:mt-1">{p.printer_ip}</span>
+                  <span className="text-[9px] md:text-[10px] text-slate-400 font-bold bg-white/10 px-1.5 py-0.5 rounded md:mt-1 flex-shrink-0">{p.printer_ip}</span>
                 </button>
                 );
               })}
@@ -814,6 +815,7 @@ export const ModificarUsuario = ({
                   loading={guardando}
                 >
                   Quitar de este equipo
+                    Quitar de este equipo
                 </Button>
               )}
             </div>
@@ -837,6 +839,7 @@ export const ModificarUsuario = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
