@@ -36,6 +36,8 @@ files_to_upload = [
     "backend/tests/test_secure_session_migration.py",
     "src/pages/OverviewDashboard.tsx",
     "src/pages/AnalyticsPage.tsx",
+    "src/pages/Dashboard.tsx",
+    "src/index.css",
     "src/components/usuarios/AdministracionUsuarios.tsx",
     "src/components/usuarios/ModificarUsuario.tsx",
     "src/components/usuarios/FilaUsuario.tsx",
