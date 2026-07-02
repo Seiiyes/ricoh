@@ -30,7 +30,7 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
   usuarioSeleccionado: null,
   cargando: false,
   busqueda: '',
-  filtroEstado: 'activos',
+  filtroEstado: 'todos',
   
   // Acciones
   setUsuarios: (usuarios) => set({ usuarios }),
@@ -128,6 +128,6 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
     usuarioSeleccionado: null,
     cargando: false,
     busqueda: '',
-    filtroEstado: 'activos',
+    filtroEstado: 'todos',
   }),
 }));

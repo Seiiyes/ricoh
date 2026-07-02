@@ -388,24 +388,36 @@ export const AdministracionUsuarios = () => {
               </div>
             )}
 
-            {/* Filtro de estado — toggle binario Activos / Inactivos */}
+            {/* Filtro de estado — toggle Activos / Inactivos (sin pre-selección obligatoria) */}
             <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
               <button
-                onClick={() => setFiltroEstado('activos')}
+                onClick={() => {
+                  if (filtroEstado === 'activos') {
+                    setFiltroEstado('todos');
+                  } else {
+                    setFiltroEstado('activos');
+                  }
+                }}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${
                   filtroEstado === 'activos'
                     ? 'bg-emerald-500 text-white shadow-md'
-                    : 'text-slate-500 hover:text-slate-700'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                 }`}
               >
                 ● Activos
               </button>
               <button
-                onClick={() => setFiltroEstado('inactivos')}
+                onClick={() => {
+                  if (filtroEstado === 'inactivos') {
+                    setFiltroEstado('todos');
+                  } else {
+                    setFiltroEstado('inactivos');
+                  }
+                }}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${
                   filtroEstado === 'inactivos'
                     ? 'bg-red-500 text-white shadow-md'
-                    : 'text-slate-500 hover:text-slate-700'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                 }`}
               >
                 ○ Inactivos
