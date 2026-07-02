@@ -39,7 +39,7 @@ const Dashboard = () => {
           <div className="absolute bottom-[-5%] left-[-5%] w-48 h-48 bg-slate-700/30 rounded-full blur-[60px]"></div>
         </div>
 
-        <div className="relative z-10 px-6 lg:px-8 py-8 lg:py-10">
+        <div className="relative z-10 px-6 lg:px-8 py-6 lg:py-7">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-7 h-7 lg:w-8 lg:h-8 bg-ricoh-red rounded-lg flex items-center justify-center shadow-lg shadow-red-900/20">
                <div className="w-3.5 h-3.5 lg:w-4 lg:h-4 border-2 border-white rounded-sm rotate-45"></div>
@@ -51,15 +51,15 @@ const Dashboard = () => {
           <p className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Equipment Manager</p>
         </div>
         
-        <div className="relative z-10 flex-1 py-4 lg:py-6 px-3 lg:px-4 space-y-1.5 lg:space-y-2 overflow-y-auto scrollbar-none">
-          <div className="px-3 lg:px-4 pb-3 lg:pb-4">
+        <div className="relative z-10 flex-1 py-3 lg:py-4 px-3 lg:px-4 space-y-1 lg:space-y-1.5 overflow-y-auto scrollbar-none">
+          <div className="px-3 lg:px-4 pb-2 lg:pb-2.5">
             <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">Inicio</p>
           </div>
 
           <NavButton to="/overview" icon={<LayoutDashboard size={18} />} label="Resumen" />
           <NavButton to="/analytics" icon={<TrendingUp size={18} />} label="Reportes & Analytics" />
 
-          <div className="px-3 lg:px-4 pb-3 lg:pb-4 pt-4 lg:pt-6">
+          <div className="px-3 lg:px-4 pb-2 lg:pb-2.5 pt-2.5 lg:pt-3">
              <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">Operaciones</p>
           </div>
           
@@ -95,8 +95,8 @@ const Dashboard = () => {
           
           {/* Opciones solo para superadmin */}
           {user?.rol === 'superadmin' && (
-            <div className="pt-4 lg:pt-6 space-y-1.5 lg:space-y-2">
-              <div className="px-3 lg:px-4 pb-3 lg:pb-4">
+            <div className="pt-2.5 lg:pt-3 space-y-1 lg:space-y-1.5">
+              <div className="px-3 lg:px-4 pb-2 lg:pb-2.5">
                 <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                   Sistema & Control
                 </p>
@@ -118,7 +118,7 @@ const Dashboard = () => {
         </div>
         
         {/* Usuario info Premium */}
-        <div className="relative z-10 p-4 lg:p-6">
+        <div className="relative z-10 p-3 lg:p-4.5">
           <div className="bg-slate-800/40 backdrop-blur-md rounded-2xl lg:rounded-3xl border border-slate-700/50 p-1.5 lg:p-2">
             <div className="relative">
               <button
