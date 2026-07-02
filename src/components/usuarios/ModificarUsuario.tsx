@@ -510,7 +510,7 @@ export const ModificarUsuario = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-2xl shadow-2xl modal-content w-full h-[95vh] md:h-[85vh] flex flex-col md:flex-row overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
 
@@ -815,7 +815,6 @@ export const ModificarUsuario = ({
                   loading={guardando}
                 >
                   Quitar de este equipo
-                    Quitar de este equipo
                 </Button>
               )}
             </div>
