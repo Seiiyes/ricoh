@@ -357,14 +357,27 @@ class AssignmentRepository:
         assignment.func_scanner = permissions.get('escaner', False)
         assignment.func_browser = permissions.get('navegador', False)
         
-        # Reactivar asignación y usuario si estaban inactivos (deriva detectada en hardware)
-        assignment.is_active = True
+        # Verificar si hay al menos un permiso activo en los datos del hardware
+        tiene_permisos_activos = any([
+            assignment.func_copier,
+            assignment.func_copier_color,
+            assignment.func_printer,
+            assignment.func_printer_color,
+            assignment.func_document_server,
+            assignment.func_fax,
+            assignment.func_scanner,
+            assignment.func_browser
+        ])
         
-        # Reactivar el usuario directamente (sin depender del lazy-load de la relación)
-        from db.models import User
-        user_obj = db.query(User).filter(User.id == user_id).first()
-        if user_obj and not user_obj.is_active:
-            user_obj.is_active = True
+        # Solo reactivar la asignación y el usuario si se detectan permisos activos en el hardware.
+        # Si todos los permisos están desactivados, conservamos el estado de desactivación (soft delete).
+        if tiene_permisos_activos:
+            assignment.is_active = True
+            
+            from db.models import User
+            user_obj = db.query(User).filter(User.id == user_id).first()
+            if user_obj and not user_obj.is_active:
+                user_obj.is_active = True
         
         db.commit()
         db.refresh(assignment)
