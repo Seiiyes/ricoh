@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { X, Save, Printer, ShieldCheck, Settings, Globe, Trash2, Plus, RefreshCw } from 'lucide-react';
 import { actualizarUsuario, obtenerUsuarioConEquipos, actualizarPermisosAsignacion, crearUsuario, obtenerDetallesUsuarioImpresora, sincronizarUsuarioTodasImpresoras, desasignarEquipos } from '@/services/servicioUsuarios';
 import { EditorPermisos } from './EditorPermisos';
@@ -535,7 +534,7 @@ export const ModificarUsuario = ({
     }
   };
 
-  return createPortal(
+  return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-2xl shadow-2xl modal-content w-full h-[95vh] md:h-[85vh] flex flex-col md:flex-row overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
 
@@ -866,7 +865,6 @@ export const ModificarUsuario = ({
           </div>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
