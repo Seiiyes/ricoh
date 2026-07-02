@@ -388,35 +388,27 @@ export const AdministracionUsuarios = () => {
               </div>
             )}
 
-            {/* Filtro de estado de base de datos */}
-            <div className="flex gap-2 items-center">
-              <span className="text-xs text-slate-500 font-semibold">Estado DB:</span>
+            {/* Filtro de estado — toggle binario Activos / Inactivos */}
+            <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
               <button
                 onClick={() => setFiltroEstado('activos')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${filtroEstado === 'activos'
-                  ? 'bg-slate-800 text-white shadow-md'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${
+                  filtroEstado === 'activos'
+                    ? 'bg-emerald-500 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
               >
-                Activos
+                ● Activos
               </button>
               <button
                 onClick={() => setFiltroEstado('inactivos')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${filtroEstado === 'inactivos'
-                  ? 'bg-slate-800 text-white shadow-md'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${
+                  filtroEstado === 'inactivos'
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
               >
-                Inactivos
-              </button>
-              <button
-                onClick={() => setFiltroEstado('todos')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ${filtroEstado === 'todos'
-                  ? 'bg-slate-800 text-white shadow-md'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-              >
-                Todos
+                ○ Inactivos
               </button>
             </div>
           </div>

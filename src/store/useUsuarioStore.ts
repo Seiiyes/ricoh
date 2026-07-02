@@ -68,19 +68,20 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
     }
 
     /**
-     * Un usuario se considera INACTIVO cuando:
-     * - Tiene al menos una impresora asignada (impresoras.length > 0), Y
-     * - En TODAS sus impresoras asignadas, TODOS los permisos están en false.
-     * 
-     * Si el usuario no tiene impresoras asignadas, se cae en el campo is_active de la BD.
+     * Clasificación de estado del usuario:
+     * - Activos   → is_active === true  en BD (fuente de verdad oficial)
+     * - Inactivos → is_active === false en BD
+     * Los dos grupos son mutuamente excluyentes: Activos + Inactivos = Total
+     *
+     * Nota: La función esInactivo (permisos) se mantiene disponible para uso futuro
+     * (ej: badge visual "Sin permisos"), pero NO rige el filtro de estado.
      */
     const esInactivo = (u: Usuario): boolean => {
       const impresoras = u.impresoras;
       if (impresoras && impresoras.length > 0) {
-        // Revisar si TODAS las impresoras tienen TODOS los permisos en false
         return impresoras.every((imp) => {
           const p = imp.permisos;
-          if (!p) return true; // Sin permisos = todo desactivado
+          if (!p) return true;
           return (
             !p.copiadora &&
             !p.copiadora_color &&
@@ -93,19 +94,19 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
           );
         });
       }
-      // Sin impresoras: usar el campo is_active de BD como fallback
       return !u.is_active;
     };
 
+    // Suprimir advertencia del compilador: esInactivo está disponible para uso futuro
+    void esInactivo;
+
     let filtrados = usuarios;
     
-    // Filtrar por estado
+    // Filtros mutuamente excluyentes — usan is_active de BD
     if (filtroEstado === 'activos' && !busqueda.trim()) {
-      // Activos: campo is_active de BD (comportamiento original)
       filtrados = filtrados.filter((u) => u.is_active);
     } else if (filtroEstado === 'inactivos') {
-      // Inactivos: usuario con TODAS las impresoras con TODOS los permisos en false
-      filtrados = filtrados.filter((u) => esInactivo(u));
+      filtrados = filtrados.filter((u) => !u.is_active);
     }
     
     // Filtrar por búsqueda
