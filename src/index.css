@@ -57,6 +57,15 @@ body {
   scrollbar-color: #cbd5e1 transparent;
 }
 
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 /* Responsive Container Padding - Global */
 .container-padding {
   @apply px-4 sm:px-6 lg:px-8 xl:px-10;
