@@ -39,8 +39,8 @@ const Dashboard = () => {
           <div className="absolute bottom-[-5%] left-[-5%] w-48 h-48 bg-slate-700/30 rounded-full blur-[60px]"></div>
         </div>
 
-        <div className="relative z-10 px-5 lg:px-6 py-3.5 lg:py-4">
-          <div className="flex items-center gap-3 mb-1.5">
+        <div className="relative z-10 px-6 lg:px-8 py-8 lg:py-10">
+          <div className="flex items-center gap-3 mb-2">
             <div className="w-7 h-7 lg:w-8 lg:h-8 bg-ricoh-red rounded-lg flex items-center justify-center shadow-lg shadow-red-900/20">
                <div className="w-3.5 h-3.5 lg:w-4 lg:h-4 border-2 border-white rounded-sm rotate-45"></div>
             </div>
@@ -51,52 +51,52 @@ const Dashboard = () => {
           <p className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Equipment Manager</p>
         </div>
         
-        <div className="relative z-10 flex-1 py-1.5 lg:py-2 px-3 lg:px-4 space-y-0.5 lg:space-y-1 overflow-y-auto custom-scrollbar">
-          <div className="px-3 lg:px-4 pb-1 lg:pb-1.5">
+        <div className="relative z-10 flex-1 py-4 lg:py-6 px-3 lg:px-4 space-y-1.5 lg:space-y-2 overflow-y-auto scrollbar-none">
+          <div className="px-3 lg:px-4 pb-3 lg:pb-4">
             <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">Inicio</p>
           </div>
 
-          <NavButton to="/overview" icon={<LayoutDashboard size={16} />} label="Resumen" />
-          <NavButton to="/analytics" icon={<TrendingUp size={16} />} label="Reportes & Analytics" />
+          <NavButton to="/overview" icon={<LayoutDashboard size={18} />} label="Resumen" />
+          <NavButton to="/analytics" icon={<TrendingUp size={18} />} label="Reportes & Analytics" />
 
-          <div className="px-3 lg:px-4 pb-1 lg:pb-1.5 pt-1.5 lg:pt-2">
+          <div className="px-3 lg:px-4 pb-3 lg:pb-4 pt-4 lg:pt-6">
              <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">Operaciones</p>
           </div>
           
           <NavButton
             to="/descubrimiento"
-            icon={<Search size={16} />}
+            icon={<Search size={18} />}
             label="Buscar Equipos"
           />
           
           <NavButton
             to="/aprovisionamiento"
-            icon={<UserPlus size={16} />}
+            icon={<UserPlus size={18} />}
             label="Asignar Usuarios"
           />
           
           <NavButton
             to="/administracion"
-            icon={<UserCog size={16} />}
+            icon={<UserCog size={18} />}
             label="Gestión de Usuarios"
           />
           
           <NavButton
             to="/contadores"
-            icon={<BarChart3 size={16} />}
+            icon={<BarChart3 size={18} />}
             label="Lectura de Contadores"
           />
           
           <NavButton
             to="/trabajos"
-            icon={<Printer size={16} />}
+            icon={<Printer size={18} />}
             label="Trabajos de Impresión"
           />
           
           {/* Opciones solo para superadmin */}
           {user?.rol === 'superadmin' && (
-            <div className="pt-1.5 lg:pt-2 space-y-0.5 lg:space-y-1">
-              <div className="px-3 lg:px-4 pb-1 lg:pb-1.5">
+            <div className="pt-4 lg:pt-6 space-y-1.5 lg:space-y-2">
+              <div className="px-3 lg:px-4 pb-3 lg:pb-4">
                 <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                   Sistema & Control
                 </p>
@@ -104,13 +104,13 @@ const Dashboard = () => {
               
               <NavButton
                 to="/empresas"
-                icon={<Building2 size={16} />}
+                icon={<Building2 size={18} />}
                 label="Mis Empresas"
               />
               
               <NavButton
                 to="/admin-users"
-                icon={<Users size={16} />}
+                icon={<Users size={18} />}
                 label="Administradores"
               />
             </div>
@@ -118,7 +118,7 @@ const Dashboard = () => {
         </div>
         
         {/* Usuario info Premium */}
-        <div className="relative z-10 p-2 lg:p-3">
+        <div className="relative z-10 p-4 lg:p-6">
           <div className="bg-slate-800/40 backdrop-blur-md rounded-2xl lg:rounded-3xl border border-slate-700/50 p-1.5 lg:p-2">
             <div className="relative">
               <button
@@ -212,7 +212,7 @@ const NavButton = ({ to, icon, label }: { to: string; icon: React.ReactNode; lab
   return (
     <button
       onClick={() => navigate(to)}
-      className={`w-full flex items-center gap-3 lg:gap-4 px-4 lg:px-5 py-2 lg:py-2 text-[9px] lg:text-[9.5px] font-black uppercase tracking-widest rounded-xl lg:rounded-2xl transition-all duration-500 group relative overflow-hidden ${
+      className={`w-full flex items-center gap-3 lg:gap-4 px-4 lg:px-5 py-3 lg:py-4 text-[10px] lg:text-[11px] font-black uppercase tracking-widest rounded-xl lg:rounded-2xl transition-all duration-500 group relative overflow-hidden ${
         isActive
           ? 'bg-gradient-to-r from-ricoh-red/20 to-transparent text-white'
           : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
