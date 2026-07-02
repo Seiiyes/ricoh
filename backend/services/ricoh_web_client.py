@@ -10,11 +10,24 @@ import base64
 import os
 import time
 import re
-import time
 import concurrent.futures
 from typing import List, Tuple
+import threading
+from functools import wraps
 
 logger = logging.getLogger(__name__)
+
+
+def with_printer_session(func):
+    """
+    Decorator to dynamically set the current printer IP in the thread-local state
+    before executing WIM client methods, enabling isolated sessions per printer.
+    """
+    @wraps(func)
+    def wrapper(self, printer_ip: str, *args, **kwargs):
+        self._thread_local.current_ip = printer_ip
+        return func(self, printer_ip, *args, **kwargs)
+    return wrapper
 
 
 class RicohWebClient:
@@ -31,33 +44,87 @@ class RicohWebClient:
             admin_user: Administrator username (default: "admin")
             admin_password: Administrator password (required, can be set via RICOH_ADMIN_PASSWORD env var)
         """
-        self.timeout = timeout
+        if isinstance(timeout, (int, float)):
+            self.timeout = (3.05, float(timeout))
+        else:
+            self.timeout = timeout
         self.admin_user = admin_user
         
         # Try to get password from parameter or environment variable
         if admin_password is None:
             admin_password = os.getenv("RICOH_ADMIN_PASSWORD", None)
         
-        # Reject empty or None password - some Ricoh printers require it
-        if not admin_password:
+        # Allow empty password - some Ricoh printers don't have an admin password
+        if admin_password is None:
             raise ValueError(
                 "RICOH_ADMIN_PASSWORD must be set. "
                 "Provide admin_password parameter or set RICOH_ADMIN_PASSWORD environment variable."
             )
         
         self.admin_password = admin_password
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
-        })
-        # Disable SSL verification for self-signed certificates
-        self.session.verify = False
-        # Store authenticated sessions per printer IP
-        self._authenticated_printers = set()
-        self._wim_tokens = {}  # Map printer_ip to current wimToken
+        self._thread_local = threading.local()
+
+    @property
+    def _authenticated_printers(self) -> set:
+        if not hasattr(self._thread_local, 'authenticated_printers'):
+            self._thread_local.authenticated_printers = set()
+        return self._thread_local.authenticated_printers
+
+    @_authenticated_printers.setter
+    def _authenticated_printers(self, value: set):
+        self._thread_local.authenticated_printers = value
+
+    @property
+    def _wim_tokens(self) -> dict:
+        if not hasattr(self._thread_local, 'wim_tokens'):
+            self._thread_local.wim_tokens = {}
+        return self._thread_local.wim_tokens
+
+    @_wim_tokens.setter
+    def _wim_tokens(self, value: dict):
+        self._thread_local.wim_tokens = value
+
+
+    @property
+    def session(self) -> requests.Session:
+        """
+        Retrieve or create a requests.Session isolated for the current printer IP
+        in the current thread. Reuses connection pool (Keep-Alive) per printer.
+        """
+        import sys
+        current_ip = getattr(self._thread_local, 'current_ip', None)
+        if "pytest" in sys.modules:
+            current_ip = None
+            
+        if not current_ip:
+            # Fallback to a default thread-local session if no current IP is active
+            if not hasattr(self._thread_local, 'default_session'):
+                s = requests.Session()
+                s.headers.update({
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
+                })
+                s.verify = False
+                self._thread_local.default_session = s
+            return self._thread_local.default_session
+            
+        if not hasattr(self._thread_local, 'sessions'):
+            self._thread_local.sessions = {}
+            
+        if current_ip not in self._thread_local.sessions:
+            s = requests.Session()
+            s.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
+            })
+            s.verify = False
+            self._thread_local.sessions[current_ip] = s
+            
+        return self._thread_local.sessions[current_ip]
     
+    @with_printer_session
     def _get_login_token(self, printer_ip: str) -> Optional[str]:
         """
         Get wimToken from login page
@@ -82,6 +149,7 @@ class RicohWebClient:
             logger.debug(f"Error obteniendo login token: {e}")
             return None
 
+    @with_printer_session
     def _refresh_wim_token(self, printer_ip: str) -> str:
         """
         Visita la lista de direcciones para obtener un wimToken fresco.
@@ -114,6 +182,7 @@ class RicohWebClient:
             logger.error(f"❌ Error refrescando wimToken: {e}")
             return self._wim_tokens.get(printer_ip, "")
 
+    @with_printer_session
     def _warmup_entry_session(self, printer_ip: str, entry_index: str) -> bool:
         """
         Llama al endpoint AJAX para asegurar que la entrada esté en el cache de la sesión del equipo.
@@ -144,91 +213,165 @@ class RicohWebClient:
         except Exception as e:
             logger.debug(f"Warmup falló: {e}")
             return False
-    
+
+    def _save_session_cookies(self, printer_ip: str, session: requests.Session):
+        """Save authenticated WIM cookies in Redis for 15 minutes."""
+        try:
+            import sys
+            if "pytest" in sys.modules:
+                return
+            from services.redis_service import redis_service
+            if redis_service.is_enabled():
+                cookies_dict = requests.utils.dict_from_cookiejar(session.cookies)
+                if cookies_dict:
+                    redis_service.set(f"wim:cookies:{printer_ip}", cookies_dict, ttl=900)
+                    logger.debug(f"💾 Guardadas cookies de WIM para {printer_ip} en Redis")
+        except Exception as e:
+            logger.debug(f"Error guardando cookies en Redis: {e}")
+
+    def _load_session_cookies(self, printer_ip: str, session: requests.Session) -> bool:
+        """Load WIM cookies from Redis if available and verify connection."""
+        try:
+            import sys
+            if "pytest" in sys.modules:
+                return False
+            from services.redis_service import redis_service
+            if redis_service.is_enabled():
+                cookies_dict = redis_service.get(f"wim:cookies:{printer_ip}")
+                if cookies_dict:
+                    requests.utils.cookiejar_from_dict(cookies_dict, session.cookies)
+                    # Verify by making a fast request to a cheap page to ensure session is valid
+                    test_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
+                    resp = session.get(test_url, timeout=5, allow_redirects=False)
+                    if resp.status_code == 200 and 'wimToken' in resp.text and 'authForm.cgi' not in resp.text and 'login.cgi' not in resp.text:
+                        logger.info(f"🔄 Reutilizando sesión WIM activa de Redis para {printer_ip}")
+                        match = re.search(r'name="wimToken"\s+value="(\d+)"', resp.text)
+                        if match:
+                            self._wim_tokens[printer_ip] = match.group(1)
+                        self._authenticated_printers.add(printer_ip)
+                        return True
+                    else:
+                        session.cookies.clear()
+        except Exception as e:
+            logger.debug(f"Error cargando cookies de Redis: {e}")
+        return False
+
+    @with_printer_session
     def _authenticate(self, printer_ip: str, admin_password: Optional[str] = None) -> bool:
         """
         Authenticate with the printer's web interface
         """
-        # Set cookie to bypass WIM cookie checker redirect
-        try:
-            self.session.cookies.set('cookieOnOffChecker', 'on', path='/')
-        except Exception as ce:
-            logger.debug(f"Error setting cookieOnOffChecker: {ce}")
-
         if printer_ip in self._authenticated_printers:
             return True
+
+        session = self.session
+
+        # Try to load cookies from Redis cache first
+        if self._load_session_cookies(printer_ip, session):
+            return True
+
+        # Set cookie to bypass WIM cookie checker redirect
+        try:
+            session.cookies.set('cookieOnOffChecker', 'on', path='/')
+        except Exception as ce:
+            logger.debug(f"Error setting cookieOnOffChecker: {ce}")
             
         logger.info(f"🔒 Autenticando con impresora {printer_ip}...")
         
         try:
-            # Determine the password to use
-            pwd = admin_password if admin_password is not None else self.admin_password
-
             # 1. Intentar acceder a la lista para ver si ya estamos logueados
             test_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
-            test_response = self.session.get(test_url, timeout=self.timeout, allow_redirects=False)
+            test_response = session.get(test_url, timeout=self.timeout, allow_redirects=False)
             
-            # Si recibimos 200 y el token, ya estamos dentro
-            if test_response.status_code == 200 and 'wimToken' in test_response.text:
+            # Si recibimos 200 y el token sin login page, ya estamos dentro
+            if (test_response.status_code == 200 
+                    and 'wimToken' in test_response.text 
+                    and 'authForm.cgi' not in test_response.text 
+                    and 'login.cgi' not in test_response.text):
                 logger.debug("Sesión ya activa")
                 self._authenticated_printers.add(printer_ip)
                 match = re.search(r'name="wimToken"\s+value="(\d+)"', test_response.text)
                 if match:
                     self._wim_tokens[printer_ip] = match.group(1)
+                self._save_session_cookies(printer_ip, session)
                 return True
             
             # 2. Si nos redirige o devuelve algo diferente, ir a login
             logger.info(f"🔑 Realizando login con usuario: {self.admin_user}")
             
-            # Necesitamos un wimToken del formulario de login
-            login_form_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi"
-            form_response = self.session.get(login_form_url, timeout=self.timeout)
+            # Construir la lista de contraseñas a intentar en orden de prioridad
+            passwords_to_try = []
             
-            token_match = re.search(r'name="wimToken"\s+value="(\d+)"', form_response.text)
-            login_token = token_match.group(1) if token_match else ""
-            
-            if not login_token:
-                logger.error("❌ No se pudo obtener wimToken para el login")
-                return False
-            
-            # Mask token to show only first 4 and last 4 characters
-            token_preview = f"{login_token[:4]}...{login_token[-4:]}" if len(login_token) > 8 else login_token
-            logger.debug(f"Login wimToken obtenido: {token_preview}")
-            
-            # Step 3: Encode credentials in Base64
-            userid_b64 = base64.b64encode(self.admin_user.encode()).decode()
-            password_b64 = base64.b64encode(pwd.encode()).decode() if pwd else ""
-            
-            # Step 4: Perform login
-            login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
-            login_data = {
-                'wimToken': login_token,
-                'userid_work': '',
-                'userid': userid_b64,
-                'password_work': '',
-                'password': password_b64,
-                'open': '',
-            }
-            
-            login_response = self.session.post(
-                login_url,
-                data=login_data,
-                timeout=self.timeout,
-                allow_redirects=True
-            )
-            
-            # Step 5: Verify authentication by accessing protected page
-            verify_response = self.session.get(test_url, timeout=self.timeout)
-            if verify_response.status_code == 200 and 'wimToken' in verify_response.text:
-                logger.info(f"✅ Autenticación exitosa")
-                # Extract current wimToken for future requests
-                token_match = re.search(r'name="wimToken"\s+value="(\d+)"', verify_response.text)
-                if token_match:
-                    self._wim_tokens[printer_ip] = token_match.group(1)
+            # 1. Contraseña de la base de datos (si está definida)
+            if admin_password is not None:
+                passwords_to_try.append(admin_password)
                 
-                self._authenticated_printers.add(printer_ip)
-                return True
+            # 2. Contraseña global de la variable de entorno (si no está ya en la lista)
+            if self.admin_password not in passwords_to_try:
+                passwords_to_try.append(self.admin_password)
+                
+            # 3. Contraseña vacía de fábrica (si no está ya en la lista)
+            if "" not in passwords_to_try:
+                passwords_to_try.append("")
+                
+            login_success = False
+            for current_pwd in passwords_to_try:
+                if current_pwd != passwords_to_try[0]:
+                    logger.info(f"🔑 Reintentando login con contraseña alternativa para {printer_ip}...")
+                
+                # Necesitamos un wimToken del formulario de login para cada intento
+                login_form_url = f"http://{printer_ip}/web/guest/es/websys/webArch/authForm.cgi"
+                form_response = session.get(login_form_url, timeout=self.timeout)
+                
+                token_match = re.search(r'name="wimToken"\s+value="(\d+)"', form_response.text)
+                login_token = token_match.group(1) if token_match else ""
+                
+                if not login_token:
+                    logger.error("❌ No se pudo obtener wimToken para el login")
+                    continue
+                
+                # Step 3: Encode credentials in Base64
+                userid_b64 = base64.b64encode(self.admin_user.encode()).decode()
+                password_b64 = base64.b64encode(current_pwd.encode()).decode() if current_pwd else ""
+                
+                # Step 4: Perform login
+                login_url = f"http://{printer_ip}/web/guest/es/websys/webArch/login.cgi"
+                login_data = {
+                    'wimToken': login_token,
+                    'userid_work': '',
+                    'userid': userid_b64,
+                    'password_work': '',
+                    'password': password_b64,
+                    'open': '',
+                }
+                
+                login_response = session.post(
+                    login_url,
+                    data=login_data,
+                    timeout=self.timeout,
+                    allow_redirects=True
+                )
+                
+                # Step 5: Verify authentication by accessing protected page
+                verify_response = session.get(test_url, timeout=self.timeout)
+                if (verify_response.status_code == 200 
+                        and 'wimToken' in verify_response.text
+                        and 'authForm.cgi' not in verify_response.text
+                        and 'login.cgi' not in verify_response.text):
+                    logger.info(f"✅ Autenticación exitosa")
+                    # Extract current wimToken for future requests
+                    token_match = re.search(r'name="wimToken"\s+value="(\d+)"', verify_response.text)
+                    if token_match:
+                        self._wim_tokens[printer_ip] = token_match.group(1)
+                    
+                    self._authenticated_printers.add(printer_ip)
+                    self._save_session_cookies(printer_ip, session)
+                    login_success = True
+                    break
             
+            if login_success:
+                return True
+                
             logger.error(f"❌ Autenticación fallida")
             return False
             
@@ -236,23 +379,19 @@ class RicohWebClient:
             logger.error(f"❌ Error durante autenticación: {e}")
             return False
     
-    def provision_user(self, printer_ip: str, user_config: Dict, admin_password: Optional[str] = None):
+    @with_printer_session
+    def provision_user(self, printer_ip: str, user_config: Dict, admin_password: Optional[str] = None, logout: bool = True):
         """
         Provision a user to a Ricoh printer via web interface
-        
-        Args:
-            printer_ip: Printer IP address
-            user_config: User configuration dictionary
-            admin_password: Optional printer-specific admin password
-        
-        Returns:
-            True if successful
-            "BUSY" if printer is busy
-            "BADFLOW" if anti-scraping protection triggered
-            "TIMEOUT" if connection timeout
-            "CONNECTION" if connection error
-            False for other errors
         """
+        try:
+            return self._provision_user_internal(printer_ip, user_config, admin_password)
+        finally:
+            if logout:
+                self._logout(printer_ip)
+
+    @with_printer_session
+    def _provision_user_internal(self, printer_ip: str, user_config: Dict, admin_password: Optional[str] = None):
         try:
             print(f"\n{'='*70}")
             print(f"🔄 ricoh_web_client.provision_user() INICIADO")
@@ -268,6 +407,64 @@ class RicohWebClient:
             if not self._authenticate(printer_ip, admin_password):
                 logger.error("✗ Cannot proceed without authentication")
                 return False
+
+            # Check if user already exists on printer
+            existing_user = self.find_specific_user(printer_ip, user_config.get('codigo_de_usuario'), admin_password=admin_password, logout=False)
+            if existing_user:
+                entry_index = existing_user.get('entry_index')
+                logger.info(f"🔄 User already exists on printer {printer_ip} at entry_index {entry_index}. Updating instead of creating.")
+                
+                funciones = user_config.get('funciones_disponibles', {})
+                user_data = {
+                    'entry_index': entry_index,
+                    'nombre': user_config.get('nombre'),
+                    'codigo': user_config.get('codigo_de_usuario'),
+                    'carpeta': user_config.get('carpeta_smb', {}).get('ruta', ''),
+                    'usuario_red': user_config.get('nombre_usuario_inicio_sesion', ''),
+                    'permisos': {
+                        'copiadora': funciones.get('copiadora', False),
+                        'copiadora_color': funciones.get('copiadora_color', False),
+                        'impresora': funciones.get('impresora', False),
+                        'impresora_color': funciones.get('impresora_color', False),
+                        'escaner': funciones.get('escaner', False),
+                        'document_server': funciones.get('document_server', False),
+                        'fax': funciones.get('fax', False),
+                        'navegador': funciones.get('navegador', False)
+                    }
+                }
+                
+                update_success = self.update_user_in_printer(printer_ip, user_data, admin_password=admin_password, logout=False)
+                if update_success in ["BUSY", "TIMEOUT", "CONNECTION", "BADFLOW"]:
+                    return update_success
+                elif not update_success:
+                    logger.error(f"❌ Failed to update existing user details on printer {printer_ip}")
+                    return False
+                
+                next_wim_token = self._wim_tokens.get(printer_ip)
+                
+                # Configure password using the password flow
+                logger.info(f"🔐 Configurando contraseña de carpeta para usuario existente...")
+                from services.ricoh_password_flow import RicohPasswordFlow
+                password_flow = RicohPasswordFlow(self.session, self.timeout)
+                password_result = password_flow.set_folder_password(
+                    printer_ip=printer_ip,
+                    entry_index=entry_index,
+                    password=user_config.get('contrasena_inicio_sesion', 'Temporal2021'),
+                    wim_token=next_wim_token
+                )
+                
+                if password_result is True:
+                    logger.info(f"✅ Usuario existente actualizado y aprovisionado completamente en {printer_ip}")
+                    return (True, entry_index)
+                elif password_result == "BUSY":
+                    logger.error(f"✗ Impresora ocupada al configurar contraseña de carpeta")
+                    return "BUSY"
+                elif password_result == "TIMEOUT":
+                    logger.error(f"✗ Timeout al configurar contraseña")
+                    return "TIMEOUT"
+                else:
+                    logger.warning(f"⚠️  Usuario actualizado pero SIN contraseña de carpeta")
+                    return False
             
             # Step 2: Get wimToken from list page
             list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
@@ -420,7 +617,7 @@ class RicohWebClient:
                 data=form_data,
                 headers=headers,
                 timeout=self.timeout,
-                allow_redirects=False
+                allow_redirects=True
             )
             
             logger.debug(f"Response status: {response.status_code}")
@@ -438,11 +635,42 @@ class RicohWebClient:
                 logger.error(f"✗ Printer is BUSY")
                 return "BUSY"
             
+            if 'error' in response.text.lower() or 'se ha producido un error' in response.text.lower():
+                logger.error(f"✗ La impresora retornó un error al crear el usuario: {response.text[:200]}")
+                return False
+            
             if response.status_code not in [200, 302]:
                 logger.error(f"✗ User creation failed, status: {response.status_code}")
                 return False
             
             logger.info(f"✅ Usuario creado exitosamente (sin contraseña)")
+            
+            # Extraer el nuevo wimToken de la respuesta (adrsList.cgi final redireccionada)
+            next_wim_token = None
+            match = re.search(r'name="wimToken"\s+value="(\d+)"', response.text)
+            if match:
+                next_wim_token = match.group(1)
+                self._wim_tokens[printer_ip] = next_wim_token
+                logger.debug(f"🔍 Nuevo wimToken extraído tras ADDUSER: {next_wim_token[:4]}...{next_wim_token[-4:]}")
+            
+            # If entry_index is empty, fetch it with the current active session
+            if not entry_index:
+                logger.info(f"🔍 entry_index vacío. Buscando al usuario ({user_config.get('codigo_de_usuario')}) con la sesión activa...")
+                user_found = self.find_specific_user(printer_ip, user_config.get('codigo_de_usuario'), admin_password=admin_password, logout=False)
+                if user_found and user_found.get('entry_index'):
+                    entry_index = user_found.get('entry_index')
+                    logger.info(f"✅ entry_index recuperado dinámicamente: {entry_index}")
+                else:
+                    logger.error(f"✗ No se pudo encontrar el entry_index para el usuario con código {user_config.get('codigo_de_usuario')}")
+                    return False
+            
+            # IMPORTANTE: NO hacer reset_session() aquí.
+            # Después del ADDUSER (wayTo='adrsList.cgi'), la impresora tiene el estado WIM
+            # en la página de lista y la sesión HTTP es completamente válida.
+            # Si se hace reset_session() + _authenticate(), el flujo de contraseña crea
+            # un segundo GET a adrsList.cgi que rompe la cadena de wimTokens y produce
+            # TIMEOUT consistente en el paso MODUSER de adrsGetUser.cgi.
+            # Reutilizar la sesión activa evita este conflicto.
             
             # Step 6: Configure folder password using the correct flow
             logger.info(f"🔐 Paso 4: Configurando contraseña de carpeta...")
@@ -454,7 +682,8 @@ class RicohWebClient:
             password_result = password_flow.set_folder_password(
                 printer_ip=printer_ip,
                 entry_index=entry_index,
-                password=user_config.get('contrasena_inicio_sesion', 'Temporal2021')
+                password=user_config.get('contrasena_inicio_sesion', 'Temporal2021'),
+                wim_token=next_wim_token
             )
             
             if password_result is True:
@@ -463,7 +692,7 @@ class RicohWebClient:
                 logger.info(f"   Código: {user_config.get('codigo_de_usuario')}")
                 logger.info(f"   Índice: {entry_index}")
                 logger.info(f"   Contraseña: Configurada ✓")
-                return True
+                return (True, entry_index)
             elif password_result == "BUSY":
                 logger.error(f"✗ Impresora ocupada al configurar contraseña")
                 return "BUSY"
@@ -488,24 +717,202 @@ class RicohWebClient:
             logger.error(traceback.format_exc())
             return False
     
+    @with_printer_session
+    def delete_user_from_printer(self, printer_ip: str, entry_index: str, admin_password: Optional[str] = None, logout: bool = True) -> bool:
+        """
+        Elimina físicamente un usuario de la libreta de direcciones de la impresora.
+        
+        Args:
+            printer_ip: IP de la impresora
+            entry_index: Índice del usuario en la libreta (ej: '00089')
+            admin_password: Contraseña del administrador
+            logout: Si se debe cerrar sesión al finalizar
+            
+        Returns:
+            True si el usuario fue eliminado, False en caso de error
+        """
+        try:
+            return self._delete_user_from_printer_internal(printer_ip, entry_index, admin_password)
+        finally:
+            if logout:
+                self._logout(printer_ip)
+
+    @with_printer_session
+    def _delete_user_from_printer_internal(self, printer_ip: str, entry_index: str, admin_password: Optional[str] = None) -> bool:
+        """
+        Implementación interna de eliminación de usuario del equipo Ricoh.
+        Flujo: autenticación → obtener wimToken → cargar batch → DELETEUSER en adrsSetUser.cgi
+        """
+        try:
+            logger.info(f"🗑️  Eliminando usuario (entry_index={entry_index}) de {printer_ip}")
+
+            if not self._authenticate(printer_ip, admin_password):
+                logger.error(f"❌ No se pudo autenticar con {printer_ip}")
+                return False
+
+            # 1. Obtener wimToken fresco desde adrsList.cgi
+            list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
+            list_resp = self.session.get(list_url, timeout=self.timeout)
+
+            wim_token = ""
+            match = re.search(r'name="wimToken"\s+value="(\d+)"', list_resp.text)
+            if match:
+                wim_token = match.group(1)
+                self._wim_tokens[printer_ip] = wim_token
+            else:
+                logger.error(f"❌ No se pudo obtener wimToken desde adrsList.cgi")
+                return False
+
+            # 2. Cargar el batch AJAX correspondiente al entry_index (CRÍTICO para el flujo WIM)
+            ajax_url = f"http://{printer_ip}/web/entry/es/address/adrsListLoadEntry.cgi"
+            batch = (int(entry_index) // 50) + 1
+            ajax_data = {
+                'wimToken': wim_token,
+                'listCountIn': '50',
+                'getCountIn': str(batch)
+            }
+            ajax_headers = {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Referer': list_url,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            self.session.post(ajax_url, data=ajax_data, headers=ajax_headers, timeout=self.timeout)
+            logger.debug(f"   Batch {batch} cargado para entry_index {entry_index}")
+
+            # 3. Obtener formulario de confirmación de eliminación (DELETEUSER)
+            edit_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"
+            form_data = {
+                'wimToken': wim_token,
+                'mode': 'DELETEUSER',
+                'outputSpecifyModeIn': 'PROGRAMMED',
+                'inputSpecifyModeIn': 'READ',
+                'entryIndexIn': entry_index
+            }
+            headers = {
+                'Referer': list_url,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+
+            logger.info(f"   Obteniendo formulario de eliminación...")
+            response = self.session.post(edit_url, data=form_data, headers=headers, timeout=self.timeout)
+
+            if response.status_code != 200:
+                logger.error(f"❌ Error al obtener formulario DELETEUSER: Status {response.status_code}")
+                return False
+
+            if "BADFLOW" in response.text:
+                logger.error(f"❌ BADFLOW al obtener formulario de eliminación")
+                return False
+
+            if "BUSY" in response.text:
+                logger.warning(f"⚠️ Impresora ocupada (BUSY) al obtener formulario de eliminación")
+                return False
+
+            # Extraer wimToken actualizado del formulario
+            soup = BeautifulSoup(response.text, 'html.parser')
+            token_input = soup.find('input', {'name': 'wimToken'})
+            if token_input:
+                wim_token = token_input.get('value', wim_token)
+
+            # 4. Confirmar eliminación con DELETEUSER
+            payload = [
+                ('wimToken', wim_token),
+                ('mode', 'DELETEUSER'),
+                ('inputSpecifyModeIn', 'WRITE'),
+                ('listUpdateIn', 'UPDATE'),
+                ('entryIndexIn', entry_index),
+                ('outputSpecifyModeIn', ''),
+                ('pageSpecifiedIn', ''),
+                ('pageNumberIn', ''),
+                ('wayFrom', 'adrsGetUser.cgi?outputSpecifyModeIn=SETTINGS'),
+                ('wayTo', 'adrsList.cgi'),
+            ]
+
+            update_url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
+            update_headers = {
+                'Referer': edit_url,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+
+            logger.info(f"   Enviando confirmación de eliminación...")
+            resp = self.session.post(update_url, data=payload, headers=update_headers, timeout=self.timeout, allow_redirects=True)
+
+            logger.info(f"   Respuesta: Status {resp.status_code}")
+
+            if resp.status_code not in [200, 302]:
+                logger.error(f"❌ La impresora rechazó la eliminación (Status {resp.status_code})")
+                return False
+
+            if "BADFLOW" in resp.text:
+                logger.error(f"❌ BADFLOW en respuesta de eliminación")
+                return False
+
+            if "BUSY" in resp.text or 'está siendo utilizado' in resp.text:
+                logger.warning(f"⚠️ Impresora ocupada (BUSY) en eliminación")
+                return False
+
+            if "error" in resp.text.lower() or "se ha producido un error" in resp.text.lower():
+                logger.error(f"❌ La impresora reportó un error al eliminar")
+                return False
+
+            logger.info(f"✅ Usuario (entry_index={entry_index}) eliminado físicamente de {printer_ip}")
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Error al eliminar usuario de {printer_ip}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return False
+
     def reset_session(self):
         """
         Reset the session and authenticated printers cache
         Useful when switching between different printers
         """
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
-        })
-        self.session.verify = False
+        if hasattr(self._thread_local, 'sessions'):
+            self._thread_local.sessions.clear()
+        if hasattr(self._thread_local, 'default_session'):
+            delattr(self._thread_local, 'default_session')
+            
         self._authenticated_printers = set()
         self._wim_tokens = {}  # Limpiar tokens cacheados
         logger.debug("Session reset - cleared cookies and tokens")
     
+    @with_printer_session
+    def _logout(self, printer_ip: str):
+        """
+        Log out from the printer's Web Image Monitor to release session locks.
+        """
+        try:
+            logout_url = f"http://{printer_ip}/web/guest/es/websys/webArch/logout.cgi"
+            logger.info(f"🔓 Cerrando sesión WIM en la impresora {printer_ip}...")
+            self.session.get(logout_url, timeout=(3.05, 5.0))
+        except Exception as e:
+            logger.debug(f"Error durante logout en {printer_ip}: {e}")
+        finally:
+            if printer_ip in self._authenticated_printers:
+                self._authenticated_printers.remove(printer_ip)
+            if hasattr(self._thread_local, 'sessions') and printer_ip in self._thread_local.sessions:
+                self._thread_local.sessions[printer_ip].cookies.clear()
+            try:
+                from services.redis_service import redis_service
+                if redis_service.is_enabled():
+                    redis_service.delete(f"wim:cookies:{printer_ip}")
+                    logger.debug(f"🗑️ Sesión eliminada en Redis para {printer_ip}")
+            except Exception:
+                pass
     
-    def find_specific_user(self, printer_ip: str, user_code: str, admin_password: Optional[str] = None) -> Optional[Dict]:
+    @with_printer_session
+    def find_specific_user(self, printer_ip: str, user_code: str, admin_password: Optional[str] = None, logout: bool = True) -> Optional[Dict]:
+        try:
+            return self._find_specific_user_internal(printer_ip, user_code, admin_password)
+        finally:
+            if logout:
+                self._logout(printer_ip)
+
+    @with_printer_session
+    def _find_specific_user_internal(self, printer_ip: str, user_code: str, admin_password: Optional[str] = None) -> Optional[Dict]:
         """
         Busca un usuario específico en una impresora por su código.
         """
@@ -513,7 +920,7 @@ class RicohWebClient:
         
         try:
             # 1. Leer solo la lista básica (Rápido)
-            all_users = self.read_users_from_printer(printer_ip, fast_list=True, admin_password=admin_password)
+            all_users = self.read_users_from_printer(printer_ip, fast_list=True, admin_password=admin_password, logout=False)
             
             logger.info(f"   Total usuarios en impresora: {len(all_users)}")
             
@@ -559,15 +966,18 @@ class RicohWebClient:
             logger.error(traceback.format_exc())
             return None
     
-    def read_users_from_printer(self, printer_ip: str, fast_list: bool = False, admin_password: Optional[str] = None) -> list:
+    @with_printer_session
+    def read_users_from_printer(self, printer_ip: str, fast_list: bool = False, admin_password: Optional[str] = None, logout: bool = True) -> list:
+        try:
+            return self._read_users_from_printer_internal(printer_ip, fast_list, admin_password)
+        finally:
+            if logout:
+                self._logout(printer_ip)
+
+    @with_printer_session
+    def _read_users_from_printer_internal(self, printer_ip: str, fast_list: bool = False, admin_password: Optional[str] = None) -> list:
         """
         Lee todos los usuarios de una impresora usando el endpoint AJAX original de Ricoh
-        
-        Args:
-            printer_ip: IP de la impresora
-            fast_list: Si es True, no descarga los detalles (permisos) de cada usuario.
-                       Ideal para vistas de lista rápidas (Lazy Loading).
-            admin_password: Optional printer-specific admin password
         """
         logger.info(f"📋 Leyendo usuarios de {printer_ip} vía AJAX (CGI)... {'(Modo Rápido)' if fast_list else ''}")
         
@@ -769,7 +1179,7 @@ class RicohWebClient:
         except Exception as e:
             logger.error(f"❌ Error leyendo usuarios vía AJAX: {e}")
             return []
-
+    @with_printer_session
     def _get_user_details(self, printer_ip: str, entry_index: str, fast_sync: bool = False, admin_password: Optional[str] = None) -> Optional[Dict]:
         """
         Lee los detalles de un usuario específico, incluyendo funciones disponibles
@@ -785,6 +1195,11 @@ class RicohWebClient:
             Dict con detalles del usuario o None
         """
         logger.debug(f"📋 Detalles de usuario {entry_index}")
+        
+        # Validar entry_index antes de procesar
+        if not entry_index or not entry_index.strip():
+            logger.error(f"❌ entry_index vacío o inválido: '{entry_index}'")
+            return None
         
         # NO usar permisos por defecto - si no se pueden leer, devolver None
         # Esto fuerza al frontend a mostrar un error en lugar de datos incorrectos
@@ -802,10 +1217,14 @@ class RicohWebClient:
                 self._wim_tokens[printer_ip] = wim_token
             else:
                 wim_token = self._wim_tokens.get(printer_ip, "")
- 
+
             # 2. Cargar el batch que contiene este usuario (CRÍTICO para evitar BADFLOW)
             ajax_url = f"http://{printer_ip}/web/entry/es/address/adrsListLoadEntry.cgi"
-            batch = (int(entry_index) // 50) + 1
+            try:
+                batch = (int(entry_index) // 50) + 1
+            except ValueError:
+                logger.error(f"❌ entry_index no es numérico: '{entry_index}'")
+                return None
             
             ajax_data = {
                 'wimToken': wim_token,
@@ -819,7 +1238,16 @@ class RicohWebClient:
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
             
-            self.session.post(ajax_url, data=ajax_data, headers=ajax_headers, timeout=self.timeout)
+            if not hasattr(self._thread_local, 'last_batch'):
+                self._thread_local.last_batch = {}
+                
+            cache_key = (printer_ip, batch)
+            if self._thread_local.last_batch.get(cache_key) != wim_token:
+                self.session.post(ajax_url, data=ajax_data, headers=ajax_headers, timeout=self.timeout)
+                self._thread_local.last_batch[cache_key] = wim_token
+                logger.debug(f"🔄 Loaded batch {batch} for {printer_ip} (WIM token: {wim_token})")
+            else:
+                logger.debug(f"⚡ Batch {batch} for {printer_ip} already loaded in current session, skipping load request")
             
             # 3. Solicitar formulario con el flujo correcto (descubierto en JavaScript)
             edit_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"
@@ -890,7 +1318,7 @@ class RicohWebClient:
                 # Verificar si es una redirección (sesión expirada)
                 if "authForm.cgi" in response.text or "<form name='form1'" in response.text:
                     logger.warning(f"⚠️  Detectada redirección a login, re-autenticando...")
-                    if not self._authenticate(printer_ip):
+                    if not self._authenticate(printer_ip, admin_password):
                         logger.error(f"❌ No se pudo re-autenticar")
                         return None
                 
@@ -1001,33 +1429,45 @@ class RicohWebClient:
             logger.error(f"❌ Error leyendo detalles: {e}")
             return None
 
-    def set_user_functions(self, printer_ip: str, entry_index: str, permissions: Dict, admin_password: Optional[str] = None) -> bool:
-            """
-            Actualiza las funciones de un usuario en la impresora.
-            Usa el flujo correcto descubierto mediante reverse engineering.
-            ACTUALIZADO: Ahora usa el flujo correcto de contraseña (RicohPasswordFlow)
-            """
-            try:
-                logger.info(f"🔄 Actualizando funciones: Usuario {entry_index} en {printer_ip}")
+    @with_printer_session
+    def set_user_functions(self, printer_ip: str, entry_index: str, permissions: Dict, admin_password: Optional[str] = None, set_password: bool = True, logout: bool = True) -> bool:
+        try:
+            return self._set_user_functions_internal(printer_ip, entry_index, permissions, admin_password, set_password)
+        finally:
+            if logout:
+                self._logout(printer_ip)
 
-                if not self._authenticate(printer_ip, admin_password):
-                    logger.error(f"❌ Fallo autenticacion con {printer_ip}")
-                    return False
+    @with_printer_session
+    def _set_user_functions_internal(self, printer_ip: str, entry_index: str, permissions: Dict, admin_password: Optional[str] = None, set_password: bool = True) -> bool:
+        """
+        Actualiza las funciones de un usuario en la impresora.
+        """
+        try:
+            logger.info(f"🔄 Actualizando funciones: Usuario {entry_index} en {printer_ip}")
 
-                # 1. Obtener wimToken fresco
-                list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
-                list_resp = self.session.get(list_url, timeout=self.timeout)
+            if not self._authenticate(printer_ip, admin_password):
+                logger.error(f"❌ Fallo autenticacion con {printer_ip}")
+                return False
 
-                wim_token = ""
-                match = re.search(r'name="wimToken"\s+value="(\d+)"', list_resp.text)
-                if match:
-                    wim_token = match.group(1)
-                    self._wim_tokens[printer_ip] = wim_token
+            # 1. Obtener wimToken fresco
+            list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
+            list_resp = self.session.get(list_url, timeout=self.timeout)
 
-                # 2. Cargar batch AJAX (CRÍTICO)
-                ajax_url = f"http://{printer_ip}/web/entry/es/address/adrsListLoadEntry.cgi"
-                batch = (int(entry_index) // 50) + 1
+            wim_token = ""
+            match = re.search(r'name="wimToken"\s+value="(\d+)"', list_resp.text)
+            if match:
+                wim_token = match.group(1)
+                self._wim_tokens[printer_ip] = wim_token
 
+            # 2. Cargar batch AJAX (CRÍTICO)
+            ajax_url = f"http://{printer_ip}/web/entry/es/address/adrsListLoadEntry.cgi"
+            batch = (int(entry_index) // 50) + 1
+
+            if not hasattr(self._thread_local, 'last_batch'):
+                self._thread_local.last_batch = {}
+                
+            cache_key = (printer_ip, batch)
+            if self._thread_local.last_batch.get(cache_key) != wim_token:
                 ajax_data = {
                     'wimToken': wim_token,
                     'listCountIn': '50',
@@ -1041,261 +1481,258 @@ class RicohWebClient:
                 }
 
                 self.session.post(ajax_url, data=ajax_data, headers=ajax_headers, timeout=self.timeout)
+                self._thread_local.last_batch[cache_key] = wim_token
+                logger.debug(f"🔄 Loaded batch {batch} for {printer_ip} (WIM token: {wim_token})")
+            else:
+                logger.debug(f"⚡ Batch {batch} for {printer_ip} already loaded in current session, skipping load request")
 
-                # 3. Obtener formulario con flujo correcto
-                edit_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"
+            # 3. Obtener formulario con flujo correcto
+            edit_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"
 
-                # USAR FLUJO CORRECTO: MODUSER + PROGRAMMED para leer
-                form_data = {
-                    'wimToken': wim_token,
-                    'mode': 'MODUSER',
-                    'outputSpecifyModeIn': 'PROGRAMMED',
-                    'inputSpecifyModeIn': 'READ',
-                    'entryIndexIn': entry_index
-                }
+            # USAR FLUJO CORRECTO: MODUSER + PROGRAMMED para leer
+            form_data = {
+                'wimToken': wim_token,
+                'mode': 'MODUSER',
+                'outputSpecifyModeIn': 'PROGRAMMED',
+                'inputSpecifyModeIn': 'READ',
+                'entryIndexIn': entry_index
+            }
 
-                headers = {
-                    'Referer': list_url,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                }
+            headers = {
+                'Referer': list_url,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
 
-                logger.info(f"   Obteniendo formulario...")
-                response = self.session.post(edit_url, data=form_data, headers=headers, timeout=self.timeout)
+            logger.info(f"   Obteniendo formulario...")
+            response = self.session.post(edit_url, data=form_data, headers=headers, timeout=self.timeout)
 
-                if response.status_code != 200:
-                    logger.error(f"❌ Error al leer formulario: Status {response.status_code}")
+            if response.status_code != 200:
+                logger.error(f"❌ Error al leer formulario: Status {response.status_code}")
+                return False
+
+            if "BADFLOW" in response.text:
+                logger.warning("⚠️  BADFLOW detectado, usando Selenium...")
+                try:
+                    from services.ricoh_selenium_client import get_selenium_client
+                    selenium_client = get_selenium_client()
+
+                    pwd = admin_password if admin_password is not None else self.admin_password
+                    return selenium_client.set_user_permissions(
+                        printer_ip,
+                        entry_index,
+                        permissions,
+                        self.admin_user,
+                        pwd,
+                        http_session=self.session
+                    )
+                except Exception as sel_err:
+                    logger.error(f"❌ Fallo Selenium: {sel_err}")
                     return False
 
-                if "BADFLOW" in response.text:
-                    logger.warning("⚠️  BADFLOW detectado, usando Selenium...")
-                    try:
-                        from services.ricoh_selenium_client import get_selenium_client
-                        selenium_client = get_selenium_client()
+            soup = BeautifulSoup(response.text, 'html.parser')
 
-                        pwd = admin_password if admin_password is not None else self.admin_password
-                        return selenium_client.set_user_permissions(
-                            printer_ip,
-                            entry_index,
-                            permissions,
-                            self.admin_user,
-                            pwd,
-                            http_session=self.session
-                        )
-                    except Exception as sel_err:
-                        logger.error(f"❌ Fallo Selenium: {sel_err}")
-                        return False
+            # Obtener nuevo wimToken del formulario
+            token_input = soup.find('input', {'name': 'wimToken'})
+            if token_input:
+                wim_token = token_input.get('value', wim_token)
 
-                soup = BeautifulSoup(response.text, 'html.parser')
+            # 4. Leer funciones actuales de los checkboxes
+            html_checkboxes = soup.find_all('input', {'name': 'availableFuncIn', 'type': 'checkbox'})
 
-                # Obtener nuevo wimToken del formulario
-                token_input = soup.find('input', {'name': 'wimToken'})
-                if token_input:
-                    wim_token = token_input.get('value', wim_token)
+            if not html_checkboxes:
+                logger.error("❌ No se encontraron checkboxes de funciones")
+                return False
 
-                # 4. Leer funciones actuales de los checkboxes
-                html_checkboxes = soup.find_all('input', {'name': 'availableFuncIn', 'type': 'checkbox'})
+            logger.info(f"   {len(html_checkboxes)} checkboxes encontrados")
+            
+            # Log de TODOS los checkboxes disponibles
+            all_checkbox_values = [cb.get('value', '') for cb in html_checkboxes]
+            logger.info(f"   Checkboxes disponibles: {all_checkbox_values}")
+            
+            logger.info(f"   Permisos solicitados: {permissions}")
 
-                if not html_checkboxes:
-                    logger.error("❌ No se encontraron checkboxes de funciones")
-                    return False
+            # 5. Determinar qué funciones activar según permisos solicitados
+            active_funcs = []
+            excluded_funcs = []
+            for cb in html_checkboxes:
+                val = cb.get('value', '').upper()
+                is_needed = False
 
-                logger.info(f"   {len(html_checkboxes)} checkboxes encontrados")
-                
-                # Log de TODOS los checkboxes disponibles
-                all_checkbox_values = [cb.get('value', '') for cb in html_checkboxes]
-                logger.info(f"   Checkboxes disponibles: {all_checkbox_values}")
-                
-                logger.info(f"   Permisos solicitados: {permissions}")
-
-                # 5. Determinar qué funciones activar según permisos solicitados
-                active_funcs = []
-                excluded_funcs = []
-                for cb in html_checkboxes:
-                    val = cb.get('value', '').upper()
-                    is_needed = False
-
-                    # Mapeo basado en valores reales de Ricoh
-                    if 'COPY' in val:
-                        # FC = Full Color (A todo color)
-                        # TC = Two Colors (Dos colores) 
-                        # MC = Multi Color (Color personalizado)
-                        # BW = Black & White (Blanco y negro)
-                        if any(x in val for x in ['FC', 'FULL', 'COLOR', 'TC', 'MC']):
-                            # Solo incluir funciones de color si copiadora_color está habilitado
-                            if permissions.get('copiadora_color'):
-                                is_needed = True
-                            # Si copiadora_color=False, explícitamente NO incluir (is_needed queda False)
-                        elif 'BW' in val:
-                            # Incluir funciones B/N si copiadora está habilitado
-                            if permissions.get('copiadora'):
-                                is_needed = True
-                    elif 'PRT' in val or 'PRINT' in val:
-                        if any(x in val for x in ['FC', 'FULL', 'COLOR']):
-                            # Solo incluir funciones de color si impresora_color está habilitado
-                            if permissions.get('impresora_color'):
-                                is_needed = True
-                            # Si impresora_color=False, explícitamente NO incluir (is_needed queda False)
-                        elif 'BW' in val:
-                            # Incluir funciones B/N si impresora está habilitado
-                            if permissions.get('impresora'):
-                                is_needed = True
-                    elif 'SCAN' in val:
-                        if permissions.get('escaner'): is_needed = True
-                    elif any(x in val for x in ['DBX', 'DOC_SERVER', 'DOCSERVER']):
-                        if permissions.get('document_server'): is_needed = True
-                    elif 'FAX' in val:
-                        if permissions.get('fax'): is_needed = True
-                    elif 'BROWSER' in val or 'MFPBROWSER' in val:
-                        if permissions.get('navegador'): is_needed = True
-
-                    if is_needed:
-                        active_funcs.append(cb.get('value'))
+                # Mapeo basado en valores reales de Ricoh
+                if 'COPY' in val:
+                    # FC = Full Color (A todo color), TC = Two Colors, MC = Multi Color
+                    if any(x in val for x in ['FC', 'FULL', 'COLOR', 'TC', 'MC']):
+                        # Solo incluir funciones de color si copiadora_color está habilitado
+                        if permissions.get('copiadora_color'):
+                            is_needed = True
                     else:
-                        # Registrar funciones que se están excluyendo explícitamente
-                        if 'COPY' in val or 'PRT' in val or 'PRINT' in val:
-                            excluded_funcs.append(cb.get('value'))
+                        # Incluir si es BW o valor base sin sufijo (ej: 'COPY')
+                        if permissions.get('copiadora'):
+                            is_needed = True
+                elif 'PRT' in val or 'PRINT' in val:
+                    if any(x in val for x in ['FC', 'FULL', 'COLOR']):
+                        # Solo incluir funciones de color si impresora_color está habilitado
+                        if permissions.get('impresora_color'):
+                            is_needed = True
+                    else:
+                        # Incluir si es BW o valor base sin sufijo (ej: 'PRT', 'PRINT')
+                        if permissions.get('impresora'):
+                            is_needed = True
+                elif 'SCAN' in val:
+                    if permissions.get('escaner'): is_needed = True
+                elif any(x in val for x in ['DBX', 'DOC_SERVER', 'DOCSERVER']):
+                    if permissions.get('document_server'): is_needed = True
+                elif 'FAX' in val:
+                    if permissions.get('fax'): is_needed = True
+                elif 'BROWSER' in val or 'MFPBROWSER' in val:
+                    if permissions.get('navegador'): is_needed = True
 
-                logger.info(f"   Funciones a ACTIVAR ({len(active_funcs)}): {active_funcs}")
-                logger.info(f"   Funciones a DESACTIVAR ({len(excluded_funcs)}): {excluded_funcs}")
-
-                # 6. Obtener información del usuario para campos obligatorios
-                user_name_input = soup.find('input', {'name': 'entryNameIn'})
-                user_code_input = soup.find('input', {'name': 'userCodeIn'})
-                folder_path_input = soup.find('input', {'name': 'folderPathNameIn'})
-                folder_username_input = soup.find('input', {'name': 'folderAuthUserNameIn'})
-
-                user_name = user_name_input.get('value', '') if user_name_input else ''
-                user_code = user_code_input.get('value', '') if user_code_input else ''
-                folder_path = folder_path_input.get('value', '') if folder_path_input else ''
-                folder_username = folder_username_input.get('value', '') if folder_username_input else ''
-
-                # 7. Construir payload SIN contraseña (se configurará después con el flujo correcto)
-                # Estos son los campos mínimos que Ricoh requiere para actualizar
-                payload = [
-                    ('wimToken', wim_token),
-                    ('mode', 'MODUSER'),
-                    ('inputSpecifyModeIn', 'WRITE'),
-                    ('listUpdateIn', 'UPDATE'),
-                    ('entryIndexIn', entry_index),
-                    ('entryNameIn', user_name),
-                    ('entryDisplayNameIn', user_name),
-                    ('userCodeIn', user_code),
-                    ('priorityIn', '5'),
-                    ('outputSpecifyModeIn', ''),
-                    ('pageSpecifiedIn', ''),
-                    ('pageNumberIn', ''),
-                    ('wayFrom', 'adrsGetUser.cgi?outputSpecifyModeIn=SETTINGS'),
-                    ('wayTo', 'adrsList.cgi'),
-                    ('isSelfPasswordEditMode', 'false'),
-                    ('isLocalAuthPasswordUpdated', 'false'),
-                    ('isFolderAuthPasswordUpdated', 'false'),  # false porque usaremos el flujo correcto después
-                    ('entryTagInfoIn', '1'),
-                    ('entryTagInfoIn', '1'),
-                    ('entryTagInfoIn', '1'),
-                    ('entryTagInfoIn', '1'),
-                    ('smtpAuthAccountIn', 'AUTH_SYSTEM_O'),
-                    ('folderAuthAccountIn', 'AUTH_ASSIGNMENT_O'),
-                    ('folderAuthUserNameIn', folder_username),
-                    ('ldapAuthAccountIn', 'AUTH_SYSTEM_O'),
-                    ('entryUseIn', 'ENTRYUSE_TO_O'),
-                    ('entryUseIn', 'ENTRYUSE_FROM_O'),
-                    ('isCertificateExist', 'false'),
-                    ('isEncryptAlways', 'false'),
-                    ('folderProtocolIn', 'SMB_O'),
-                    ('folderPathNameIn', folder_path),
-                ]
-
-                # Agregar funciones seleccionadas
-                for func in active_funcs:
-                    payload.append(('availableFuncIn', func))
-
-                logger.info(f"   Enviando: {len(payload)} campos + {len(active_funcs)} funciones")
-
-                # 8. Enviar actualización de funciones (SIN contraseña)
-                update_url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
-                update_headers = { 
-                    'Referer': edit_url,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-
-                resp = self.session.post(update_url, data=payload, headers=update_headers, timeout=self.timeout)
-
-                logger.info(f"   Respuesta: Status {resp.status_code}")
-
-                if resp.status_code != 200:
-                    logger.error(f"❌ La impresora rechazó la actualización (Status {resp.status_code})")
-                    return False
-
-                # Verificar que no haya errores en la respuesta
-                if "BADFLOW" in resp.text:
-                    logger.error(f"❌ BADFLOW en la respuesta")
-                    return False
-                
-                if "BUSY" in resp.text or 'está siendo utilizado' in resp.text:
-                    logger.error(f"❌ Impresora ocupada")
-                    return "BUSY"
-
-                logger.info(f"✅ Funciones actualizadas exitosamente")
-
-                # 9. Configurar contraseña usando el flujo correcto
-                logger.info(f"🔐 Configurando contraseña de carpeta con flujo correcto...")
-                
-                from services.ricoh_password_flow import RicohPasswordFlow
-                
-                password_flow = RicohPasswordFlow(self.session, self.timeout)
-                password_result = password_flow.set_folder_password(
-                    printer_ip=printer_ip,
-                    entry_index=entry_index,
-                    password="Temporal2021"
-                )
-                
-                if password_result is True:
-                    logger.info(f"✅ Actualización completa (funciones + contraseña) en {printer_ip}")
-                    return True
-                elif password_result == "BUSY":
-                    logger.error(f"❌ Impresora ocupada al configurar contraseña")
-                    return "BUSY"
-                elif password_result == "TIMEOUT":
-                    logger.error(f"❌ Timeout al configurar contraseña")
-                    return "TIMEOUT"
+                if is_needed:
+                    active_funcs.append(cb.get('value'))
                 else:
-                    logger.warning(f"⚠️  Funciones actualizadas pero contraseña NO configurada")
-                    logger.warning(f"   Deberá configurarse manualmente")
-                    return False
+                    # Registrar funciones que se están excluyendo explícitamente
+                    if 'COPY' in val or 'PRT' in val or 'PRINT' in val:
+                        excluded_funcs.append(cb.get('value'))
 
-            except Exception as e:
-                logger.error(f"❌ Error en set_user_functions: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
-                return False
-                import traceback
-                logger.debug(traceback.format_exc())
+            logger.info(f"   Funciones a ACTIVAR ({len(active_funcs)}): {active_funcs}")
+            logger.info(f"   Funciones a DESACTIVAR ({len(excluded_funcs)}): {excluded_funcs}")
+
+            # 6. Obtener información del usuario para campos obligatorios
+            user_name_input = soup.find('input', {'name': 'entryNameIn'})
+            user_code_input = soup.find('input', {'name': 'userCodeIn'})
+            folder_path_input = soup.find('input', {'name': 'folderPathNameIn'})
+            folder_username_input = soup.find('input', {'name': 'folderAuthUserNameIn'})
+
+            user_name = user_name_input.get('value', '') if user_name_input else ''
+            user_code = user_code_input.get('value', '') if user_code_input else ''
+            folder_path = folder_path_input.get('value', '') if folder_path_input else ''
+            folder_username = folder_username_input.get('value', '') if folder_username_input else ''
+
+            # 7. Construir payload SIN contraseña (se configurará después con el flujo correcto)
+            # Estos son los campos mínimos que Ricoh requiere para actualizar
+            payload = [
+                ('wimToken', wim_token),
+                ('mode', 'MODUSER'),
+                ('inputSpecifyModeIn', 'WRITE'),
+                ('listUpdateIn', 'UPDATE'),
+                ('entryIndexIn', entry_index),
+                ('entryNameIn', user_name),
+                ('entryDisplayNameIn', user_name),
+                ('userCodeIn', user_code),
+                ('priorityIn', '5'),
+                ('outputSpecifyModeIn', ''),
+                ('pageSpecifiedIn', ''),
+                ('pageNumberIn', ''),
+                ('wayFrom', 'adrsGetUser.cgi?outputSpecifyModeIn=SETTINGS'),
+                ('wayTo', 'adrsList.cgi'),
+                ('isSelfPasswordEditMode', 'false'),
+                ('isLocalAuthPasswordUpdated', 'false'),
+                ('isFolderAuthPasswordUpdated', 'false'),  # false porque usaremos el flujo correcto después
+                ('entryTagInfoIn', '1'),
+                ('entryTagInfoIn', '1'),
+                ('entryTagInfoIn', '1'),
+                ('entryTagInfoIn', '1'),
+                ('smtpAuthAccountIn', 'AUTH_SYSTEM_O'),
+                ('folderAuthAccountIn', 'AUTH_ASSIGNMENT_O'),
+                ('folderAuthUserNameIn', folder_username),
+                ('ldapAuthAccountIn', 'AUTH_SYSTEM_O'),
+                ('entryUseIn', 'ENTRYUSE_TO_O'),
+                ('entryUseIn', 'ENTRYUSE_FROM_O'),
+                ('isCertificateExist', 'false'),
+                ('isEncryptAlways', 'false'),
+                ('folderProtocolIn', 'SMB_O'),
+                ('folderPathNameIn', folder_path),
+            ]
+
+            # Agregar funciones seleccionadas
+            for func in active_funcs:
+                payload.append(('availableFuncIn', func))
+
+            logger.info(f"   Enviando: {len(payload)} campos + {len(active_funcs)} funciones")
+
+            # 8. Enviar actualización de funciones (SIN contraseña)
+            update_url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
+            update_headers = { 
+                'Referer': edit_url,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+
+            resp = self.session.post(update_url, data=payload, headers=update_headers, timeout=self.timeout, allow_redirects=True)
+
+            logger.info(f"   Respuesta: Status {resp.status_code}")
+
+            if resp.status_code not in [200, 302]:
+                logger.error(f"❌ La impresora rechazó la actualización (Status {resp.status_code})")
                 return False
 
-    def update_user_in_printer(self, printer_ip: str, user_data: Dict, admin_password: Optional[str] = None) -> bool:
+            # Verificar que no haya errores en la respuesta
+            if "BADFLOW" in resp.text:
+                logger.error(f"❌ BADFLOW en la respuesta")
+                return False
+            
+            if "BUSY" in resp.text or 'está siendo utilizado' in resp.text:
+                logger.error(f"❌ Impresora ocupada")
+                return "BUSY"
+
+            logger.info(f"✅ Funciones actualizadas exitosamente")
+
+            # Extraer el nuevo wimToken de la respuesta
+            next_wim_token = None
+            match = re.search(r'name="wimToken"\s+value="(\d+)"', resp.text)
+            if match:
+                next_wim_token = match.group(1)
+                self._wim_tokens[printer_ip] = next_wim_token
+                logger.debug(f"🔍 Nuevo wimToken extraído tras MODUSER: {next_wim_token[:4]}...{next_wim_token[-4:]}")
+
+            if not set_password:
+                logger.info(f"✅ Omitiendo configuracion de contrasena de carpeta")
+                return True
+
+            # 9. Configurar contraseña usando el flujo correcto
+            logger.info(f"🔐 Configurando contraseña de carpeta con flujo correcto...")
+            
+            from services.ricoh_password_flow import RicohPasswordFlow
+            
+            password_flow = RicohPasswordFlow(self.session, self.timeout)
+            password_result = password_flow.set_folder_password(
+                printer_ip=printer_ip,
+                entry_index=entry_index,
+                password="Temporal2021",
+                wim_token=next_wim_token
+            )
+            
+            if password_result is True:
+                logger.info(f"✅ Actualización completa (funciones + contraseña) en {printer_ip}")
+                return True
+            elif password_result == "BUSY":
+                logger.error(f"❌ Impresora ocupada al configurar contraseña")
+                return "BUSY"
+            elif password_result == "TIMEOUT":
+                logger.error(f"❌ Timeout al configurar contraseña")
+                return "TIMEOUT"
+            else:
+                logger.warning(f"⚠️  Funciones actualizadas pero contraseña NO configurada")
+                logger.warning(f"   Deberá configurarse manualmente")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Error en set_user_functions: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return False
+
+    @with_printer_session
+    def update_user_in_printer(self, printer_ip: str, user_data: Dict, admin_password: Optional[str] = None, logout: bool = True) -> bool:
+        try:
+            return self._update_user_in_printer_internal(printer_ip, user_data, admin_password)
+        finally:
+            if logout:
+                self._logout(printer_ip)
+
+    @with_printer_session
+    def _update_user_in_printer_internal(self, printer_ip: str, user_data: Dict, admin_password: Optional[str] = None) -> bool:
         """
         Actualiza un usuario existente en una impresora con nuevos datos (carpeta, credenciales, permisos)
-        
-        IMPORTANTE: 
-        - Solo actualiza campos que existen en la impresora Ricoh
-        - Actualización inteligente: solo modifica los campos que vienen en user_data
-        - Si no vienen permisos, LEE los actuales de la impresora y los mantiene
-        - NO incluye empresa ni centro_costos (esos son solo para DB)
-        
-        Args:
-            printer_ip: IP de la impresora
-            user_data: Diccionario con los datos del usuario:
-                - entry_index: ID del usuario en la impresora (REQUERIDO)
-                - nombre: Nombre del usuario (opcional)
-                - codigo: Código de usuario (opcional)
-                - carpeta: Ruta SMB (opcional)
-                - usuario_red: Usuario de red (opcional)
-                - permisos: Dict con permisos (opcional - si no viene, lee y mantiene los actuales)
-            admin_password: Optional printer-specific admin password
-        
-        Returns:
-            True si se actualizó correctamente, False en caso contrario
         """
         logger.info(f"🔄 Actualizando usuario {user_data.get('codigo', 'N/A')} en {printer_ip}")
         logger.info(f"   Actualización inteligente: solo campos proporcionados")
@@ -1501,7 +1938,26 @@ class RicohWebClient:
             
             if resp.status_code == 200:
                 # Verificar que no haya errores en la respuesta
-                if "BADFLOW" not in resp.text and "Error" not in resp.text and "error" not in resp.text.lower():
+                if "BUSY" in resp.text or 'está siendo utilizado' in resp.text:
+                    logger.error(f"   ❌ La impresora está ocupada (BUSY)")
+                    return "BUSY"
+                if "BADFLOW" in resp.text:
+                    logger.error(f"   ❌ BADFLOW detectado en actualización")
+                    return "BADFLOW"
+                    
+                if "Error" not in resp.text and "error" not in resp.text.lower():
+                    # El POST de actualización AJAX retorna JSON y no contiene wimToken.
+                    # Hacemos un GET rápido a la lista para obtener el siguiente wimToken válido.
+                    try:
+                        list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
+                        list_resp = self.session.get(list_url, timeout=self.timeout)
+                        match = re.search(r'name="wimToken"\s+value="(\d+)"', list_resp.text)
+                        if match:
+                            self._wim_tokens[printer_ip] = match.group(1)
+                            logger.debug(f"🔍 Nuevo wimToken obtenido tras recargar lista post-update: {match.group(1)}")
+                    except Exception as e_tok:
+                        logger.warning(f"⚠️  No se pudo refrescar wimToken de la lista post-update: {e_tok}")
+                    
                     logger.info(f"   ✅ Usuario actualizado correctamente en {printer_ip}")
                     return True
                 else:
@@ -1518,6 +1974,7 @@ class RicohWebClient:
             logger.debug(traceback.format_exc())
             return False
     
+    @with_printer_session
     def get_stored_jobs(self, printer_ip: str, admin_password: Optional[str] = None) -> list:
         """
         Scrape and parse active/stored print jobs from WIM storedJob.cgi
@@ -1620,6 +2077,110 @@ class RicohWebClient:
             logger.error(f"❌ Error fetching stored jobs from printer {printer_ip}: {e}")
             return []
 
+    @with_printer_session
+    def delete_stored_job(self, printer_ip: str, job_id: str, admin_password: Optional[str] = None) -> bool:
+        """
+        Delete a stored print job from WIM storedJob.cgi
+        
+        Args:
+            printer_ip: Printer IP address
+            job_id: ID of the job to delete
+            admin_password: Optional printer-specific admin password
+            
+        Returns:
+            bool: True if deletion was successful, False otherwise
+        """
+        logger.info(f"Attempting to delete job {job_id} on printer {printer_ip}...")
+        
+        # 1. Authenticate
+        if not self._authenticate(printer_ip, admin_password):
+            logger.error(f"❌ Cannot proceed with delete_stored_job without authentication for {printer_ip}")
+            return False
+            
+        try:
+            # 2. Get the stored jobs page to grab current wimToken and other details
+            jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/storedJob.cgi"
+            headers = {
+                'Referer': f'http://{printer_ip}/web/entry/es/websys/webArch/topPage.cgi'
+            }
+            
+            response = self.session.get(jobs_url, headers=headers, timeout=self.timeout)
+            if response.status_code != 200:
+                logger.error(f"❌ Failed to fetch stored jobs page (Status {response.status_code})")
+                return False
+                
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Extract form values
+            wim_token_el = soup.find('input', {'name': 'wimToken'})
+            wim_token = wim_token_el.get('value', '') if wim_token_el else ''
+            
+            base_id_el = soup.find('input', {'name': 'baseID'})
+            base_id = base_id_el.get('value', '') if base_id_el else ''
+            
+            total_count_el = soup.find('input', {'name': 'totalCount'})
+            total_count = total_count_el.get('value', '100') if total_count_el else '100'
+            
+            size_el = soup.find('input', {'name': 'size'})
+            size_val = size_el.get('value', '10') if size_el else '10'
+            
+            display_ids = [el.get('value', '') for el in soup.find_all('input', {'name': 'display_ID'})]
+            
+            # Mask token for security
+            token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+            logger.info(f"Submitting job deletion request for ID {job_id} with token {token_preview}...")
+            
+            # 3. Construct URL-encoded payload as list of tuples
+            payload = [
+                ('wimToken', wim_token),
+                ('notDefault', '1'),
+                ('mode', '1'),
+                ('exec', '2'),
+                ('baseID', base_id),
+                ('position', ''),
+                ('size', size_val),
+                ('Copies', '0'),
+                ('totalCount', total_count),
+                ('selectedType', '-1'),
+                ('typeExisted', '1'),
+                ('typeOnly', '2'),
+                ('targetID', '-1'),
+                ('view', '0'),
+                ('selectedUserID', ''),
+                ('number', '10'),
+                ('selectedCount', '1')
+            ]
+            
+            for d_id in display_ids:
+                payload.append(('display_ID', d_id))
+                
+            payload.append(('ID', job_id))
+            
+            # 4. Post deletion request
+            post_headers = {
+                'Referer': jobs_url,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Origin': f'http://{printer_ip}'
+            }
+            
+            post_response = self.session.post(jobs_url, data=payload, headers=post_headers, timeout=self.timeout)
+            
+            if post_response.status_code == 200:
+                logger.info(f"✅ Delete request completed successfully for job {job_id}")
+                # Update cached wimToken if a new one is returned in the response
+                match = re.search(r'name="wimToken"\s+value="(\d+)"', post_response.text)
+                if match:
+                    self._wim_tokens[printer_ip] = match.group(1)
+                return True
+            else:
+                logger.error(f"❌ Failed to delete job {job_id} (Status {post_response.status_code})")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Error deleting stored job {job_id} from printer {printer_ip}: {e}")
+            return False
+
+    @with_printer_session
     def test_connection(self, printer_ip: str) -> bool:
         """
         Test if printer web interface is accessible

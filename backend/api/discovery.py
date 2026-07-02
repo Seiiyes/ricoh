@@ -293,14 +293,80 @@ async def get_user_details_endpoint(
     try:
         # Resolve printer password
         printer = PrinterRepository.get_by_ip(db, printer_ip)
-        printer_pwd = printer.admin_password if printer else None
+        # Si la impresora no tiene contraseña en DB → pasar "" (vacía) para que el scraper
+        # intente primero sin contraseña (fábrica). Si tiene contraseña → usarla primero.
+        printer_pwd = printer.admin_password if (printer and printer.admin_password) else ""
 
         ricoh_client = get_ricoh_web_client()
         # No reseteamos sesión aquí para aprovechar cookies si ya existen
         details = ricoh_client._get_user_details(printer_ip, entry_index, fast_sync=False, admin_password=printer_pwd)
         
         if not details:
-            raise HTTPException(status_code=404, detail="No se pudieron obtener los detalles del usuario")
+            # Scraper no pudo obtener datos (sin contraseña o sesión expirada).
+            # Devolvemos los permisos guardados en DB como fallback.
+            if printer and entry_index:
+                from db.models import UserPrinterAssignment, User as UserModel
+                assignment = db.query(UserPrinterAssignment).filter(
+                    UserPrinterAssignment.printer_id == printer.id,
+                    UserPrinterAssignment.entry_index == entry_index
+                ).first()
+                if assignment:
+                    permisos_db = {
+                        'copiadora': assignment.func_copier or False,
+                        'copiadora_color': assignment.func_copier_color or False,
+                        'impresora': assignment.func_printer or False,
+                        'impresora_color': assignment.func_printer_color or False,
+                        'document_server': assignment.func_document_server or False,
+                        'fax': assignment.func_fax or False,
+                        'escaner': assignment.func_scanner or False,
+                        'navegador': assignment.func_browser or False,
+                    }
+                    tiene_alguno = any(permisos_db.values())
+                    # Si tiene al menos 1 permiso en DB → el usuario está activo
+                    from db.models import User as UserModel
+                    user_obj = db.query(UserModel).filter(UserModel.id == assignment.user_id).first()
+                    if tiene_alguno and user_obj and not user_obj.is_active:
+                        user_obj.is_active = True
+                        assignment.is_active = True
+                        db.commit()
+                        logger.info(f"🔄 Usuario ID {assignment.user_id} reactivado por permisos en DB (impresora {printer_ip} sin acceso de scraper)")
+                    carpeta = user_obj.smb_path if user_obj else ''
+                    logger.warning(f"⚠️  Scraper no pudo acceder a {printer_ip} - devolviendo permisos desde DB (entry: {entry_index})")
+                    return {
+                        "success": True,
+                        "ip": printer_ip,
+                        "entry_index": entry_index,
+                        "permisos": permisos_db,
+                        "carpeta": carpeta or '',
+                        "fuente": "db_fallback"
+                    }
+            raise HTTPException(status_code=404, detail=f"No se pudieron obtener los detalles del usuario en {printer_ip}")
+            
+        # ACTUALIZACIÓN PERSISTENTE EN DB (cuando el scraper SÍ pudo):
+        if printer and entry_index and details.get('permisos'):
+            from db.models import UserPrinterAssignment
+            assignment = db.query(UserPrinterAssignment).filter(
+                UserPrinterAssignment.printer_id == printer.id,
+                UserPrinterAssignment.entry_index == entry_index
+            ).first()
+            if assignment:
+                from db.repository import AssignmentRepository
+                from db.models import User as UserModel
+                AssignmentRepository.update_assignment_state(
+                    db=db,
+                    user_id=assignment.user_id,
+                    printer_id=printer.id,
+                    permissions=details['permisos'],
+                    entry_index=entry_index
+                )
+                
+                # También actualizar carpeta SMB si viene en los detalles
+                if details.get('carpeta'):
+                    user_obj = db.query(UserModel).filter(UserModel.id == assignment.user_id).first()
+                    if user_obj:
+                        user_obj.smb_path = details['carpeta']
+                        db.commit()
+                logger.info(f"💾 Guardados permisos reales en DB + usuario reactivado. User ID: {assignment.user_id}, Printer: {printer.ip_address}")
             
         return {
             "success": True,
@@ -309,9 +375,13 @@ async def get_user_details_endpoint(
             "permisos": details.get('permisos', {}),
             "carpeta": details.get('carpeta', '')
         }
+    except HTTPException:
+        # Re-lanzar HTTPExceptions sin convertirlas en 500
+        raise
     except Exception as e:
-        logger.error(f"Error obteniendo detalles: {e}")
+        logger.error(f"Error inesperado obteniendo detalles de {printer_ip}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.post("/sync-users-from-printers", status_code=status.HTTP_200_OK)
@@ -554,3 +624,151 @@ async def sync_users_from_printers(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error sincronizando usuarios: {str(e)}"
         )
+
+
+@router.get("/printer/{printer_id}/live-diagnostics", status_code=status.HTTP_200_OK)
+async def get_printer_live_diagnostics(
+    printer_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Realiza un escaneo y diagnóstico completo en vivo de una impresora desde el servidor:
+    1. Verifica la existencia de la impresora en la base de datos.
+    2. Realiza un escaneo paralelo de puertos de red relevantes (FTP, SSH, Telnet, HTTP, etc.).
+    3. Intenta obtener los niveles de tóner en vivo vía scraping.
+    4. Intenta consultar los contadores físicos generales (Copia, Impresión, Escáner, etc.).
+    5. Intenta leer la cantidad de usuarios registrados en el equipo.
+    """
+    from datetime import datetime
+    import socket
+    from concurrent.futures import ThreadPoolExecutor
+    from db.repository import PrinterRepository
+    
+    # 1. Obtener la impresora
+    printer = PrinterRepository.get_by_id(db, printer_id)
+    if not printer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Printer with ID {printer_id} not found"
+        )
+    
+    ip = printer.ip_address
+    
+    # 2. Escaneo de puertos en paralelo
+    ports = {
+        21: "FTP",
+        22: "SSH/SFTP",
+        23: "Telnet",
+        80: "HTTP (Web Image Monitor)",
+        443: "HTTPS (Web Image Monitor SSL)",
+        445: "SMB (Direct Directory)",
+        515: "LPR (Line Printer Daemon)",
+        631: "IPP (Internet Printing Protocol)",
+        9100: "RAW (Direct Print)"
+    }
+    
+    def check_port(port_num):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.0)
+            res = s.connect_ex((ip, port_num))
+            s.close()
+            return port_num, (res == 0)
+        except Exception:
+            return port_num, False
+            
+    ports_status = {}
+    with ThreadPoolExecutor(max_workers=len(ports)) as executor:
+        futures = [executor.submit(check_port, p) for p in ports.keys()]
+        for future in futures:
+            p_num, is_open = future.result()
+            ports_status[f"port_{p_num}_{ports[p_num].split(' ')[0].replace('/', '_').lower()}"] = {
+                "port": p_num,
+                "service": ports[p_num],
+                "open": is_open
+            }
+
+    # 3. Consultar tóner en vivo
+    toner_levels = {}
+    toner_success = False
+    try:
+        from services.parsers import get_printer_toner_levels
+        toner_data = get_printer_toner_levels(ip)
+        if toner_data.get('success'):
+            toner_levels = {
+                "cyan": toner_data.get('cyan', 0),
+                "magenta": toner_data.get('magenta', 0),
+                "yellow": toner_data.get('yellow', 0),
+                "black": toner_data.get('black', 0)
+            }
+            toner_success = True
+        else:
+            toner_levels = {"error": toner_data.get('message', 'Failed to retrieve')}
+    except Exception as e:
+        toner_levels = {"error": str(e)}
+
+    # 4. Consultar contadores en vivo
+    general_counters = {}
+    counters_success = False
+    try:
+        from services.parsers import get_printer_counters
+        counters_data = get_printer_counters(ip)
+        if counters_data:
+            general_counters = {
+                "total": counters_data.get('total', 0),
+                "copier_black": counters_data.get('copiadora', {}).get('blanco_negro', 0),
+                "copier_color": counters_data.get('copiadora', {}).get('color', 0),
+                "printer_black": counters_data.get('impresora', {}).get('blanco_negro', 0),
+                "printer_color": counters_data.get('impresora', {}).get('color', 0),
+                "fax": counters_data.get('fax', {}).get('blanco_negro', 0),
+                "scanner_black": counters_data.get('envio_escaner', {}).get('blanco_negro', 0),
+                "scanner_color": counters_data.get('envio_escaner', {}).get('color', 0)
+            }
+            counters_success = True
+    except Exception as e:
+        general_counters = {"error": str(e)}
+
+    # 5. Obtener total de usuarios registrados
+    users_registered_count = None
+    users_success = False
+    try:
+        # Solo intentar si el puerto HTTP (80) está abierto
+        if ports_status["port_80_http"]["open"]:
+            from services.ricoh_web_client import get_ricoh_web_client
+            ricoh_client = get_ricoh_web_client()
+            # Reset session to avoid conflicts
+            ricoh_client.reset_session()
+            users_list = ricoh_client.read_users_from_printer(ip, fast_list=True, admin_password=printer.admin_password)
+            users_registered_count = len(users_list)
+            users_success = True
+    except Exception as e:
+        logger.warning(f"Failed to read users from printer {ip} during diagnostics: {e}")
+
+    # 6. Compilar diagnóstico
+    status_summary = "online" if ports_status["port_80_http"]["open"] else "offline"
+    if status_summary == "online" and (not toner_success or not counters_success):
+        status_summary = "limited" # HTTP responde pero falló lectura de contadores/tóners
+
+    return {
+        "success": True,
+        "printer_id": printer.id,
+        "hostname": printer.hostname,
+        "ip_address": ip,
+        "live_status": status_summary,
+        "ports_diagnostics": ports_status,
+        "toner_diagnostics": {
+            "success": toner_success,
+            "levels": toner_levels
+        },
+        "counter_diagnostics": {
+            "success": counters_success,
+            "counters": general_counters
+        },
+        "address_book_diagnostics": {
+            "success": users_success,
+            "registered_users_count": users_registered_count
+        },
+        "timestamp": datetime.now()
+    }
+

@@ -482,6 +482,50 @@ async def update_printer_capabilities(
         )
 
 
+@router.get("/jobs/consolidated", response_model=List[PrintJobResponse])
+async def get_consolidated_jobs(
+    current_user: AdminUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get active print jobs from ALL accessible printers concurrently.
+    """
+    query = db.query(Printer)
+    query = CompanyFilterService.apply_filter(query, current_user)
+    printers = query.all()
+    
+    if not printers:
+        return []
+        
+    from services.ricoh_web_client import get_ricoh_web_client
+    from concurrent.futures import ThreadPoolExecutor
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    client = get_ricoh_web_client()
+    
+    def fetch_jobs_for_printer(p):
+        try:
+            jobs_data = client.get_stored_jobs(p.ip_address, admin_password=p.admin_password)
+            for job in jobs_data:
+                job['printer_id'] = p.id
+                job['printer_ip'] = p.ip_address
+                job['printer_hostname'] = p.hostname or "Sin Hostname"
+                job['printer_serial'] = p.serial_number or "Sin Serial"
+            return jobs_data
+        except Exception as e:
+            logger.error(f"Error fetching consolidated jobs from printer {p.ip_address}: {e}")
+            return []
+
+    all_jobs = []
+    with ThreadPoolExecutor(max_workers=min(len(printers), 10)) as executor:
+        results = executor.map(fetch_jobs_for_printer, printers)
+        for res in results:
+            all_jobs.extend(res)
+            
+    return all_jobs
+
+
 @router.get("/{printer_id}/jobs", response_model=List[PrintJobResponse])
 async def get_printer_jobs(
     printer_id: int,
@@ -523,3 +567,55 @@ async def get_printer_jobs(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get print jobs: {str(e)}"
         )
+
+
+@router.delete("/{printer_id}/jobs/{job_id}", status_code=status.HTTP_200_OK)
+async def delete_printer_job(
+    printer_id: int,
+    job_id: str,
+    current_user: AdminUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a specific stored print job from a printer.
+    """
+    printer = PrinterRepository.get_by_id(db, printer_id)
+    if not printer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Printer with ID {printer_id} not found"
+        )
+    
+    # Validate company access
+    if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this printer"
+        )
+    
+    from services.ricoh_web_client import get_ricoh_web_client
+    client = get_ricoh_web_client()
+    
+    try:
+        success = client.delete_stored_job(
+            printer.ip_address,
+            job_id,
+            admin_password=printer.admin_password
+        )
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete job {job_id} from printer WIM"
+            )
+        return {"success": True, "message": f"Job {job_id} deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error deleting print job {job_id} for printer {printer_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete print job: {str(e)}"
+        )
+

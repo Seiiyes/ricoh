@@ -65,22 +65,31 @@ export async function obtenerUsuarioConEquipos(id: number): Promise<UsuarioConEq
     return {
       id: data.user_id,
       name: data.user_name,
-      codigo_de_usuario: '',
+      codigo_de_usuario: data.codigo_de_usuario || '',
       empresa: data.empresa,
       centro_costos: data.centro_costos || '',
-      network_username: '',
-      smb_server: '',
-      smb_port: 21,
+      network_username: data.network_username || '',
+      smb_server: data.smb_server || '',
+      smb_port: data.smb_port || 21,
       smb_path: data.smb_path || '',
-      func_copier: false,
-      func_printer: false,
-      func_document_server: false,
-      func_fax: false,
-      func_scanner: false,
-      func_browser: false,
+      func_copier: data.func_copier || false,
+      func_copier_color: data.func_copier_color || false,
+      func_printer: data.func_printer || false,
+      func_printer_color: data.func_printer_color || false,
+      func_document_server: data.func_document_server || false,
+      func_fax: data.func_fax || false,
+      func_scanner: data.func_scanner || false,
+      func_browser: data.func_browser || false,
       is_active: true,
       created_at: '',
       equipos: (data.printers || []).map((p: any) => ({
+        // Claves de compatibilidad para FilaUsuario
+        id: p.id,
+        hostname: p.hostname,
+        ip_address: p.ip_address,
+        status: p.status || 'online',
+        
+        // Claves para ModificarUsuario / ImpresoraUsuario
         printer_id: p.id,
         printer_name: p.hostname,
         printer_ip: p.ip_address,
@@ -88,7 +97,9 @@ export async function obtenerUsuarioConEquipos(id: number): Promise<UsuarioConEq
         entry_index: p.entry_index,
         permisos: {
           copiadora: p.permisos?.copiadora || false,
+          copiadora_color: p.permisos?.copiadora_color || false,
           impresora: p.permisos?.impresora || false,
+          impresora_color: p.permisos?.impresora_color || false,
           document_server: p.permisos?.document_server || false,
           fax: p.permisos?.fax || false,
           escaner: p.permisos?.escaner || false,
@@ -358,10 +369,13 @@ export async function actualizarFuncionesEnImpresora(
  * Lee las funciones reales desde el hardware y actualiza la base de datos
  */
 export async function sincronizarUsuariosImpresora(
-  printerIp: string
+  printerIp: string,
+  fastList: boolean = true
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await apiClient.post(`/provisioning/printers/${printerIp}/sync`);
+    const response = await apiClient.post(`/provisioning/printers/${printerIp}/sync`, null, {
+      params: { fast_list: fastList }
+    });
     return response.data;
   } catch (error: any) {
     console.error('Error al sincronizar usuarios:', error);

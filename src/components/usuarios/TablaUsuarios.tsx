@@ -6,33 +6,31 @@ import type { Usuario } from '@/types/usuario';
 interface TablaUsuariosProps {
   usuarios: Usuario[];
   onEditar: (usuario: Usuario) => void;
+  onDesactivar: (usuario: Usuario) => void;
+  campoOrden: CampoOrden | null;
+  direccionOrden: DireccionOrden;
+  onOrdenar: (campo: CampoOrden) => void;
 }
 
-type CampoOrden = 'origen' | 'nombre' | 'codigo' | 'empresa' | 'centro_costos' | 'impresoras';
-type DireccionOrden = 'asc' | 'desc' | null;
+export type CampoOrden = 'origen' | 'nombre' | 'codigo' | 'empresa' | 'centro_costos' | 'impresoras';
+export type DireccionOrden = 'asc' | 'desc' | null;
 
-export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
+export const TablaUsuarios = ({ 
+  usuarios, 
+  onEditar, 
+  onDesactivar,
+  campoOrden,
+  direccionOrden,
+  onOrdenar
+}: TablaUsuariosProps) => {
   const [usuarioExpandido, setUsuarioExpandido] = useState<number | string | null>(null);
-  const [campoOrden, setCampoOrden] = useState<CampoOrden | null>(null);
-  const [direccionOrden, setDireccionOrden] = useState<DireccionOrden>(null);
 
   const toggleExpandir = (id: number | string) => {
     setUsuarioExpandido(usuarioExpandido === id ? null : id);
   };
 
   const handleOrdenar = (campo: CampoOrden) => {
-    if (campoOrden === campo) {
-      // Ciclar: asc -> desc -> null
-      if (direccionOrden === 'asc') {
-        setDireccionOrden('desc');
-      } else if (direccionOrden === 'desc') {
-        setDireccionOrden(null);
-        setCampoOrden(null);
-      }
-    } else {
-      setCampoOrden(campo);
-      setDireccionOrden('asc');
-    }
+    onOrdenar(campo);
   };
 
   const obtenerValorOrden = (usuario: Usuario, campo: CampoOrden): any => {
@@ -155,6 +153,7 @@ export const TablaUsuarios = ({ usuarios, onEditar }: TablaUsuariosProps) => {
               expandido={usuarioExpandido === usuario.id}
               onToggleExpandir={() => toggleExpandir(usuario.id)}
               onEditar={() => onEditar(usuario)}
+              onDesactivar={onDesactivar}
             />
           ))}
         </tbody>

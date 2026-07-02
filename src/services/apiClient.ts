@@ -4,7 +4,17 @@
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // Si no está definida en build-time, detectamos el host dinámicamente.
+  // Esto evita que las compilaciones de producción en el servidor intenten conectar a localhost.
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  return `http://${hostname}:8000`;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 // Crear instancia de axios
 const apiClient = axios.create({
@@ -53,7 +63,7 @@ apiClient.interceptors.response.use(
     const isAuthRoute = originalRequest.url?.includes('/auth/');
     
     if (error.response?.status === 401 && !isAuthRoute && !originalRequest._retry) {
-      console.log('❌ 401 Unauthorized - redirigiendo a login');
+      // console.log('❌ 401 Unauthorized - redirigiendo a login');
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       window.location.href = '/login';

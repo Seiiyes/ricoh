@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Edit2, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { obtenerIconosPermisos, contarPermisosActivos } from '@/services/servicioUsuarios';
 import { obtenerUsuarioConEquipos } from '@/services/servicioUsuarios';
 import { Button, Spinner } from '@/components/ui';
@@ -11,6 +11,7 @@ interface FilaUsuarioProps {
   expandido: boolean;
   onToggleExpandir: () => void;
   onEditar: () => void;
+  onDesactivar: (usuario: Usuario) => void;
 }
 
 export const FilaUsuario = ({
@@ -18,6 +19,7 @@ export const FilaUsuario = ({
   expandido,
   onToggleExpandir,
   onEditar,
+  onDesactivar,
 }: FilaUsuarioProps) => {
   const [equipos, setEquipos] = useState<EquipoAsignado[]>([]);
   const [cargandoEquipos, setCargandoEquipos] = useState(false);
@@ -41,7 +43,7 @@ export const FilaUsuario = ({
   const cargarEquipos = async () => {
     // Verificación adicional: solo cargar si el ID es numérico
     if (typeof usuario.id !== 'number') {
-      console.log('⏭️ Saltando carga de equipos para usuario de impresora:', usuario.id);
+      // console.log('⏭️ Saltando carga de equipos para usuario de impresora:', usuario.id);
       setEquiposCargados(true);
       return;
     }
@@ -65,19 +67,26 @@ export const FilaUsuario = ({
       <tr className="hover:bg-slate-50/80 transition-all duration-300 group">
         {/* Origen */}
         <td className="px-4 py-3 text-center">
-          {usuario.en_db === false ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100" title="Solo en impresoras">
-              Solo Impresora
-            </span>
-          ) : usuario.impresoras && usuario.impresoras.length > 0 ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-100" title="En DB y en impresoras">
-              Sincronizado
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100" title="Solo en Base de Datos">
-              Base de Datos
-            </span>
-          )}
+          <div className="flex flex-col gap-1 items-center justify-center">
+            {usuario.is_active === false && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200" title="Usuario desactivado en Base de Datos">
+                Inactivo
+              </span>
+            )}
+            {usuario.en_db === false ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100" title="Solo en impresoras">
+                Solo Impresora
+              </span>
+            ) : usuario.impresoras && usuario.impresoras.length > 0 ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-100" title="En DB y en impresoras">
+                Sincronizado
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100" title="Solo en Base de Datos">
+                Base de Datos
+              </span>
+            )}
+          </div>
         </td>
 
         {/* Nombre con botón de expandir */}
@@ -158,15 +167,28 @@ export const FilaUsuario = ({
 
         {/* Acciones */}
         <td className="px-4 py-3 text-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Edit2 size={14} />}
-            onClick={onEditar}
-            className="text-ricoh-red hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
-          >
-            Editar
-          </Button>
+          <div className="flex items-center justify-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Edit2 size={14} />}
+              onClick={onEditar}
+              className="text-ricoh-red hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
+            >
+              Editar
+            </Button>
+            {usuario.en_db !== false && typeof usuario.id === 'number' && usuario.is_active !== false && (
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<Trash2 size={14} />}
+                onClick={() => onDesactivar(usuario)}
+                className="text-slate-400 hover:text-red-600 hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
+              >
+                Desactivar
+              </Button>
+            )}
+          </div>
         </td>
       </tr>
 

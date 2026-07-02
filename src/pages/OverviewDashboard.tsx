@@ -419,7 +419,7 @@ const OverviewDashboard = () => {
                   </p>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart
                     data={chartData}
                     layout="vertical"
@@ -455,7 +455,7 @@ const OverviewDashboard = () => {
                           key={row.printerId}
                           fill={
                             chartColors.categorical[
-                              (row.rank - 1) % chartColors.categorical.length
+                            (row.rank - 1) % chartColors.categorical.length
                             ]
                           }
                         />
@@ -663,8 +663,8 @@ const OverviewDashboard = () => {
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500" 
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (consumoResumenQ.data.impresora / (consumoResumenQ.data.total_paginas || 1)) * 100)}%` }}
                       />
                     </div>
@@ -679,8 +679,8 @@ const OverviewDashboard = () => {
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500" 
+                      <div
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (consumoResumenQ.data.copiadora / (consumoResumenQ.data.total_paginas || 1)) * 100)}%` }}
                       />
                     </div>
@@ -695,8 +695,8 @@ const OverviewDashboard = () => {
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500" 
+                      <div
+                        className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (consumoResumenQ.data.escaner / (consumoResumenQ.data.total_paginas || 1)) * 100)}%` }}
                       />
                     </div>

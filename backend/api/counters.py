@@ -919,7 +919,7 @@ async def obtener_suma_usuarios(cierre_id: int, db: Session = Depends(get_db), c
 @router.get("/monthly/users/all", response_model=PaginatedCierreUsuarioGlobalResponse, status_code=status.HTTP_200_OK)
 async def get_all_users_closes(
     page: int = Query(1, ge=1, description="Número de página"),
-    page_size: int = Query(50, ge=1, le=500, description="Tamaño de página"),
+    page_size: int = Query(50, ge=1, le=10000, description="Tamaño de página"),
     search: Optional[str] = Query(None, description="Búsqueda por usuario o impresora"),
     printer_id: Optional[int] = Query(None, description="Filtrar por impresora"),
     user_id: Optional[int] = Query(None, description="Filtrar por usuario"),

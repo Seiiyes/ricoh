@@ -26,22 +26,27 @@ class RicohPasswordFlow:
             timeout: Request timeout in seconds
         """
         self.session = session
-        self.timeout = timeout
+        if isinstance(timeout, (int, float)):
+            self.timeout = (3.05, float(timeout))
+        else:
+            self.timeout = timeout
     
-    def set_folder_password(self, printer_ip: str, entry_index: str, password: str = "Temporal2021") -> bool:
+    def set_folder_password(self, printer_ip: str, entry_index: str, password: str = "Temporal2021", wim_token: Optional[str] = None) -> bool:
         """
         Configura la contraseña de autenticación de carpeta siguiendo el flujo correcto de Ricoh
         
         Flujo:
-        1. GET adrsGetUser.cgi (obtener formulario del usuario)
-        2. POST adrEditPassword.cgi (abrir formulario de contraseña)
-        3. POST adrEditPassword.cgi con contraseña en Base64
-        4. POST adrsSetUser.cgi con isFolderAuthPasswordUpdated=true
+        1. GET adrsList.cgi (obtener formulario del usuario) [Se salta si se proporciona wim_token]
+        2. POST adrsGetUser.cgi (MODUSER)
+        3. POST adrEditPassword.cgi (abrir formulario de contraseña)
+        4. POST adrEditPassword.cgi con contraseña en Base64
+        5. POST adrsSetUser.cgi con isFolderAuthPasswordUpdated=true
         
         Args:
             printer_ip: IP de la impresora
             entry_index: Índice del usuario (ej: "00231")
             password: Contraseña a configurar (default: "Temporal2021")
+            wim_token: Token WIM activo para saltar el primer GET a la lista
             
         Returns:
             True si se configuró exitosamente, False en caso contrario
@@ -50,45 +55,77 @@ class RicohPasswordFlow:
             logger.info(f"🔐 Configurando contraseña de carpeta para usuario {entry_index} en {printer_ip}")
             logger.info(f"   Contraseña: {'***' if password else '(vacía)'}")
             
-            # PASO 1: Obtener wimToken desde la lista
-            list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
-            logger.debug(f"   Paso 1: Obteniendo wimToken desde {list_url}")
+            if not wim_token:
+                # PASO 1: Obtener wimToken desde la lista
+                list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
+                logger.debug(f"   Paso 1: Obteniendo wimToken desde {list_url}")
+                
+                list_response = self.session.get(list_url, timeout=self.timeout)
+                if list_response.status_code != 200:
+                    logger.error(f"❌ No se pudo acceder a la lista: {list_response.status_code}")
+                    return False
+                
+                # Extraer wimToken
+                match = re.search(r'name="wimToken"\s+value="(\d+)"', list_response.text)
+                if not match:
+                    logger.error("❌ No se encontró wimToken en la lista")
+                    return False
+                
+                wim_token = match.group(1)
+                token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+                logger.debug(f"   ✅ wimToken obtenido de la lista: {token_preview}")
+            else:
+                token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+                logger.debug(f"   ✅ Usando wimToken proporcionado: {token_preview}")
             
-            list_response = self.session.get(list_url, timeout=self.timeout)
-            if list_response.status_code != 200:
-                logger.error(f"❌ No se pudo acceder a la lista: {list_response.status_code}")
-                return False
-            
-            # Extraer wimToken
-            match = re.search(r'name="wimToken"\s+value="(\d+)"', list_response.text)
-            if not match:
-                logger.error("❌ No se encontró wimToken en la lista")
-                return False
-            
-            wim_token = match.group(1)
-            token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
-            logger.debug(f"   ✅ wimToken obtenido: {token_preview}")
-            
-            # PASO 2: Obtener formulario del usuario
+            # FIX 1: Normalizar entry_index a 5 dígitos con ceros a la izquierda.
+            # find_specific_user puede devolver '231' pero adrsGetUser.cgi requiere '00231'.
+            # Si ya tiene 5+ dígitos, dejarlo como está.
+            try:
+                entry_index = str(int(entry_index)).zfill(5)
+            except (ValueError, TypeError):
+                pass  # Si no es numérico, dejarlo como está
+            logger.info(f"   📋 entry_index normalizado: {entry_index}")
+
+            # 1.5 Cargar el batch que contiene este usuario (CRÍTICO para evitar BADFLOW/TIMEOUT en el WIM)
+            try:
+                entry_idx_numeric = int(entry_index)
+                batch = (entry_idx_numeric // 50) + 1
+                
+                ajax_url = f"http://{printer_ip}/web/entry/es/address/adrsListLoadEntry.cgi"
+                ajax_data = {
+                    'wimToken': wim_token,
+                    'listCountIn': '50',
+                    'getCountIn': str(batch)
+                }
+                ajax_headers = {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Referer': f"http://{printer_ip}/web/entry/es/address/adrsList.cgi",
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+                logger.debug(f"   📋 Cargando lote AJAX {batch} para entry_index {entry_index}...")
+                self.session.post(ajax_url, data=ajax_data, headers=ajax_headers, timeout=self.timeout)
+            except Exception as e_ajax:
+                logger.warning(f"   ⚠️  Fallo al cargar batch AJAX en flujo de contraseña: {e_ajax}")
+
+            # PASO 2: Obtener formulario del usuario (MODUSER desde la lista)
             get_user_url = f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi"
             logger.debug(f"   Paso 2: Obteniendo formulario del usuario desde {get_user_url}")
             
             get_user_data = {
                 'wimToken': wim_token,
                 'mode': 'MODUSER',
-                'kind': 'FOLDER',
-                'inputSpecifyMode': 'FIX',
-                'wayFrom': 'adrsEditPassword.cgi?inputSpecifyMode=NONE&kind=FOLDER',
-                'wayTo': 'adrsGetUser.cgi#AUTH_INFO_C?outputSpecifyModeIn=SETTINGS',
-                'pageSpecifiedIn': '',
-                'pageNumberIn': '',
-                'outputSpecifyModeIn': 'SETTINGS',
+                'outputSpecifyModeIn': 'PROGRAMMED',
                 'entryIndexIn': entry_index
             }
             
             user_form_response = self.session.post(
                 get_user_url,
                 data=get_user_data,
+                headers={
+                    'Referer': f"http://{printer_ip}/web/entry/es/address/adrsList.cgi",
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 timeout=self.timeout
             )
             
@@ -96,15 +133,42 @@ class RicohPasswordFlow:
                 logger.error(f"❌ No se pudo obtener formulario del usuario: {user_form_response.status_code}")
                 return False
             
+            # FIX 2: Detectar TIMEOUT real vs falso positivo.
+            # La página adrsList NORMAL contiene 'Tiempo de sesión agotado' en su JS de recuperación.
+            # Solo es un TIMEOUT real si la página tiene class="errorMessage" Y el returnValue=TIMEOUT.
+            is_real_timeout = (
+                'returnValue" value="TIMEOUT' in user_form_response.text and
+                'class="errorMessage"' in user_form_response.text
+            )
+            if is_real_timeout:
+                logger.error("❌ TIMEOUT real al obtener formulario MODUSER (paso 2) — WIM session expirada")
+                with open('password_step2_error.html', 'w', encoding='utf-8') as f:
+                    f.write(user_form_response.text)
+                return "TIMEOUT"
+            
+            # FIX 3: Detectar cuando MODUSER falla silenciosamente devolviendo la lista en vez del form de edición.
+            # Si el usuario no existe en entry_index dado, el printer devuelve la lista sin error visible.
+            if 'entryNameIn' not in user_form_response.text and 'userCodeIn' not in user_form_response.text:
+                logger.error(f"❌ MODUSER devolvió la página de lista (no el formulario de edición).")
+                logger.error(f"   → entry_index '{entry_index}' probablemente no existe en la impresora.")
+                with open('password_step2_error.html', 'w', encoding='utf-8') as f:
+                    f.write(user_form_response.text)
+                return False
+            
             # Extraer nuevo wimToken del formulario
             match = re.search(r'name="wimToken"\s+value="(\d+)"', user_form_response.text)
-            if match:
-                wim_token = match.group(1)
-                token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
-                logger.debug(f"   ✅ Nuevo wimToken del formulario: {token_preview}")
+            if not match:
+                logger.error("❌ No se encontró wimToken en la respuesta del formulario del usuario (paso 2)")
+                with open('password_step2_error.html', 'w', encoding='utf-8') as f:
+                    f.write(user_form_response.text)
+                return False
+            wim_token = match.group(1)
+            token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+            logger.debug(f"   ✅ Nuevo wimToken del formulario: {token_preview}")
             
             # Extraer datos del usuario del formulario
             soup = BeautifulSoup(user_form_response.text, 'html.parser')
+
             
             user_name_input = soup.find('input', {'name': 'entryNameIn'})
             user_display_name_input = soup.find('input', {'name': 'entryDisplayNameIn'})
@@ -132,7 +196,7 @@ class RicohPasswordFlow:
             logger.debug(f"   Funciones: {available_funcs}")
             
             # PASO 3: Abrir formulario de edición de contraseña
-            edit_password_url = f"http://{printer_ip}/web/entry/es/address/adrEditPassword.cgi"
+            edit_password_url = f"http://{printer_ip}/web/entry/es/address/adrsEditPassword.cgi"
             logger.debug(f"   Paso 3: Abriendo formulario de contraseña en {edit_password_url}")
             
             edit_password_open_data = {
@@ -150,6 +214,10 @@ class RicohPasswordFlow:
             password_form_response = self.session.post(
                 edit_password_url,
                 data=edit_password_open_data,
+                headers={
+                    'Referer': f"http://{printer_ip}/web/entry/es/address/adrsGetUser.cgi",
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 timeout=self.timeout
             )
             
@@ -157,12 +225,23 @@ class RicohPasswordFlow:
                 logger.error(f"❌ No se pudo abrir formulario de contraseña: {password_form_response.status_code}")
                 return False
             
+            # Detectar fallo temprano: TIMEOUT en el paso 3
+            if 'Tiempo de sesión agotado' in password_form_response.text or 'returnValue" value="TIMEOUT' in password_form_response.text:
+                logger.error("❌ TIMEOUT al abrir formulario de contraseña (paso 3) — el printer rechazó el flujo MODUSER")
+                with open('password_step3_error.html', 'w', encoding='utf-8') as f:
+                    f.write(password_form_response.text)
+                return "TIMEOUT"
+            
             # Extraer wimToken del formulario de contraseña
             match = re.search(r'name="wimToken"\s+value="(\d+)"', password_form_response.text)
-            if match:
-                wim_token = match.group(1)
-                token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
-                logger.debug(f"   ✅ wimToken del formulario de contraseña: {token_preview}")
+            if not match:
+                logger.error("❌ No se encontró wimToken en el formulario de contraseña (paso 3)")
+                with open('password_step3_error.html', 'w', encoding='utf-8') as f:
+                    f.write(password_form_response.text)
+                return False
+            wim_token = match.group(1)
+            token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
+            logger.debug(f"   ✅ wimToken del formulario de contraseña: {token_preview}")
             
             # PASO 4: Enviar contraseña codificada en Base64
             logger.debug(f"   Paso 4: Enviando contraseña codificada")
@@ -190,6 +269,10 @@ class RicohPasswordFlow:
             password_submit_response = self.session.post(
                 edit_password_url,
                 data=edit_password_submit_data,
+                headers={
+                    'Referer': f"http://{printer_ip}/web/entry/es/address/adrsEditPassword.cgi",
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 timeout=self.timeout
             )
             
@@ -197,13 +280,17 @@ class RicohPasswordFlow:
                 logger.error(f"❌ No se pudo enviar contraseña: {password_submit_response.status_code}")
                 return False
             
-            # Verificar si hay errores en la respuesta
-            if 'Error' in password_submit_response.text or 'error' in password_submit_response.text:
-                logger.error(f"❌ Error al configurar contraseña")
-                # Guardar respuesta para debug
+            # Verificar si hay errores reales de Ricoh en la respuesta (evitar falsos positivos)
+            if 'Tiempo de sesión agotado' in password_submit_response.text or 'returnValue" value="TIMEOUT' in password_submit_response.text:
+                logger.error(f"❌ TIMEOUT al enviar contraseña (paso 4)")
                 with open('password_error_response.html', 'w', encoding='utf-8') as f:
                     f.write(password_submit_response.text)
-                logger.debug(f"   Respuesta guardada en: password_error_response.html")
+                return "TIMEOUT"
+            
+            if 'class="errorMessage"' in password_submit_response.text and 'messageIconE' in password_submit_response.text:
+                logger.error(f"❌ Error al configurar contraseña (paso 4) — página de error del printer")
+                with open('password_error_response.html', 'w', encoding='utf-8') as f:
+                    f.write(password_submit_response.text)
                 return False
             
             logger.debug(f"   ✅ Contraseña enviada correctamente")
@@ -231,6 +318,10 @@ class RicohPasswordFlow:
             confirm_response = self.session.post(
                 get_user_url,
                 data=get_user_confirm_data,
+                headers={
+                    'Referer': f"http://{printer_ip}/web/entry/es/address/adrsEditPassword.cgi",
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 timeout=self.timeout
             )
             

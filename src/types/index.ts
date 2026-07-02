@@ -13,6 +13,7 @@ interface PrinterDevice {
   capabilities?: PrinterCapabilities;
   has_color?: boolean;
   has_scanner?: boolean;
+  detected_model?: string;
 }
 
 export type { PrinterDevice };

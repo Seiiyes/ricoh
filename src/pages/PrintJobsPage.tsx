@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Printer, Search, RefreshCw, AlertCircle, FileText, User, Calendar, Layers, Hash } from 'lucide-react';
-import { fetchPrinters, fetchPrinterJobs } from '../services/printerService';
+import { useState, useEffect, useMemo } from 'react';
+import { Printer, Search, RefreshCw, AlertCircle, FileText, User, Calendar, Layers, Hash, Trash2, Loader2 } from 'lucide-react';
+import { fetchPrinters, fetchPrinterJobs, fetchConsolidatedPrinterJobs, deletePrinterJob } from '../services/printerService';
 import type { PrinterDevice } from '../types';
 import { useNotification } from '../hooks/useNotification';
 import { cn } from '../lib/utils';
@@ -13,6 +13,10 @@ interface PrintJob {
   fecha: string;
   paginas: number;
   copias?: number;
+  printer_id?: number;
+  printer_ip?: string;
+  printer_hostname?: string;
+  printer_serial?: string;
 }
 
 const PrintJobsPage = () => {
@@ -23,6 +27,7 @@ const PrintJobsPage = () => {
   const [loadingPrinters, setLoadingPrinters] = useState(true);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,9 +42,9 @@ const PrintJobsPage = () => {
         const data = await fetchPrinters();
         setPrinters(data);
         
-        // Seleccionar la primera por defecto si hay
+        // Seleccionar "consolidated" por defecto si hay impresoras
         if (data.length > 0) {
-          setSelectedPrinterId(data[0].id);
+          setSelectedPrinterId('consolidated');
         }
       } catch (err) {
         console.error('Error al cargar impresoras:', err);
@@ -57,7 +62,12 @@ const PrintJobsPage = () => {
     try {
       setLoadingJobs(true);
       setError(null);
-      const data = await fetchPrinterJobs(Number(printerId));
+      let data;
+      if (printerId === 'consolidated') {
+        data = await fetchConsolidatedPrinterJobs();
+      } else {
+        data = await fetchPrinterJobs(Number(printerId));
+      }
       setJobs(data);
     } catch (err: any) {
       console.error('Error al cargar trabajos de impresión:', err);
@@ -78,9 +88,7 @@ const PrintJobsPage = () => {
     }
   }, [selectedPrinterId]);
 
-  const selectedPrinter = useMemo(() => {
-    return printers.find(p => p.id === selectedPrinterId);
-  }, [printers, selectedPrinterId]);
+
 
   // Lista de usuarios únicos que tienen trabajos activos en esta impresora
   const usersWithJobs = useMemo(() => {
@@ -114,6 +122,31 @@ const PrintJobsPage = () => {
     }
   };
 
+  const handleDeleteJob = async (jobId: string, jobPrinterId?: number) => {
+    const targetPrinterId = jobPrinterId || Number(selectedPrinterId);
+    if (!targetPrinterId || isNaN(targetPrinterId)) {
+      notify.error('Error', 'No se pudo determinar el ID de la impresora para eliminar el trabajo.');
+      return;
+    }
+    
+    const confirmDelete = window.confirm('¿Está seguro de que desea eliminar este trabajo de impresión de la impresora? Esta acción no se puede deshacer.');
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingJobId(jobId);
+      await deletePrinterJob(targetPrinterId, jobId);
+      notify.success('Trabajo eliminado', 'El trabajo de impresión ha sido cancelado y eliminado con éxito.');
+      // Refrescar lista de trabajos
+      loadJobs(selectedPrinterId);
+    } catch (err: any) {
+      console.error('Error al eliminar trabajo de impresión:', err);
+      const detail = err.response?.data?.detail || 'No se pudo eliminar el trabajo de impresión de la impresora.';
+      notify.error('Error al eliminar', typeof detail === 'string' ? detail : JSON.stringify(detail));
+    } finally {
+      setDeletingJobId(null);
+    }
+  };
+
   return (
     <div className="h-full overflow-auto bg-slate-50 animate-fade-in relative pb-12">
       <div className="container-padding container-padding-y max-w-7xl mx-auto">
@@ -140,49 +173,99 @@ const PrintJobsPage = () => {
           </button>
         </div>
 
-        {/* Panel Superior: Selección de Impresora */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100 p-6 mb-6">
+        {/* Panel Superior: Selección de Impresora (Tarjetas/Grid) */}
+        <div className="mb-6">
           <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-            Seleccionar Impresora Ricoh
+            Seleccionar Impresora Ricoh (Seleccione un equipo para ver su cola de trabajos)
           </label>
           {loadingPrinters ? (
-            <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="h-32 bg-slate-100 rounded-xl animate-pulse" />
+              <div className="h-32 bg-slate-100 rounded-xl animate-pulse" />
+              <div className="h-32 bg-slate-100 rounded-xl animate-pulse" />
+            </div>
           ) : printers.length === 0 ? (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
               No hay impresoras registradas en el sistema. Vaya a la sección de "Buscar Equipos" para agregar impresoras.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <select
-                  value={selectedPrinterId}
-                  onChange={(e) => setSelectedPrinterId(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ricoh-red focus:border-transparent transition-all shadow-sm hover:border-slate-300"
-                >
-                  {printers.map((printer) => (
-                    <option key={printer.id} value={printer.id}>
-                      {printer.hostname || 'Sin Hostname'} — {printer.ip_address} {printer.serial_number ? `(${printer.serial_number})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {selectedPrinter && (
-                <div className="flex flex-col justify-center px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400 font-semibold">IP:</span>
-                    <span className="font-mono text-slate-700 font-bold">{selectedPrinter.ip_address}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[290px] overflow-y-auto pr-1">
+              {/* Tarjeta de Consolidado */}
+              <button
+                onClick={() => setSelectedPrinterId('consolidated')}
+                className={cn(
+                  "text-left p-4 rounded-xl border-2 transition-all duration-200 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden",
+                  selectedPrinterId === 'consolidated'
+                    ? 'border-ricoh-red bg-red-50/10 ring-2 ring-red-500/5'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                )}
+              >
+                <div className="w-full">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className={cn(
+                      "text-sm font-bold flex items-center gap-1.5",
+                      selectedPrinterId === 'consolidated' ? 'text-ricoh-red' : 'text-slate-800'
+                    )}>
+                      📋 Consolidado de Trabajos
+                    </span>
+                    {selectedPrinterId === 'consolidated' && (
+                      <span className="text-[9px] bg-ricoh-red text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
+                        Activo
+                      </span>
+                    )}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400 font-semibold">Serial:</span>
-                    <span className="font-mono text-slate-700 font-bold">{selectedPrinter.serial_number || 'No especificado'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400 font-semibold">Ubicación:</span>
-                    <span className="text-slate-700 font-bold">{selectedPrinter.location || 'Sin ubicación'}</span>
-                  </div>
+                  <p className="text-[10px] text-slate-400 font-semibold">Vista de toda la flota en un solo lugar</p>
                 </div>
-              )}
+                <div className="text-[11px] text-slate-500 space-y-0.5 w-full">
+                  <p><span className="font-semibold text-slate-600">IP:</span> Varias / Flota completa</p>
+                  <p><span className="font-semibold text-slate-600">Equipos:</span> {printers.length} registrados</p>
+                  <p className="truncate"><span className="font-semibold text-slate-600">Ubicación:</span> Todas las áreas</p>
+                </div>
+              </button>
+
+              {/* Tarjetas de Impresoras */}
+              {printers.map((printer) => {
+                const isSelected = selectedPrinterId === printer.id;
+                return (
+                  <button
+                    key={printer.id}
+                    onClick={() => setSelectedPrinterId(printer.id)}
+                    className={cn(
+                      "text-left p-4 rounded-xl border-2 transition-all duration-200 shadow-sm flex flex-col justify-between h-32",
+                      isSelected
+                        ? 'border-ricoh-red bg-red-50/10 ring-2 ring-red-500/5'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                    )}
+                  >
+                    <div className="w-full">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className={cn(
+                          "font-mono text-sm font-bold truncate block max-w-[170px]",
+                          isSelected ? 'text-ricoh-red' : 'text-slate-800'
+                        )}>
+                          {printer.hostname || 'Sin Hostname'}
+                        </span>
+                        {isSelected && (
+                          <span className="text-[9px] bg-ricoh-red text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
+                            Activo
+                          </span>
+                        )}
+                      </div>
+                      {printer.detected_model && printer.detected_model.toLowerCase() !== 'desconocido' ? (
+                        <p className="text-[10px] text-slate-400 font-semibold">Modelo: {printer.detected_model}</p>
+                      ) : (
+                        <div className="h-4" />
+                      )}
+                    </div>
+                    
+                    <div className="text-[11px] text-slate-500 space-y-0.5 w-full">
+                      <p><span className="font-semibold text-slate-600">IP:</span> {printer.ip_address}</p>
+                      <p><span className="font-semibold text-slate-600">Serial:</span> {printer.serial_number || 'Sin Serial'}</p>
+                      <p className="truncate"><span className="font-semibold text-slate-600">Ubicación:</span> {printer.location || 'Sin ubicación'}</p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -304,7 +387,9 @@ const PrintJobsPage = () => {
                     <p className="text-sm font-bold text-slate-700">No se encontraron trabajos de impresión</p>
                     <p className="text-xs mt-1.5 max-w-sm mx-auto">
                       {jobs.length === 0 
-                        ? 'La impresora seleccionada no reporta trabajos en cola o almacenados en este momento.'
+                        ? (selectedPrinterId === 'consolidated' 
+                            ? 'Ninguna impresora de la flota reporta trabajos en cola o almacenados en este momento.'
+                            : 'La impresora seleccionada no reporta trabajos en cola o almacenados en este momento.')
                         : 'Ajuste los filtros de búsqueda para ver otros resultados.'}
                     </p>
                   </div>
@@ -316,6 +401,11 @@ const PrintJobsPage = () => {
                           <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[120px]">
                             ID Trabajo
                           </th>
+                          {selectedPrinterId === 'consolidated' && (
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[180px]">
+                              Impresora
+                            </th>
+                          )}
                           <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                             Documento
                           </th>
@@ -334,6 +424,9 @@ const PrintJobsPage = () => {
                           <th className="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[80px]">
                             Copias
                           </th>
+                          <th className="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[100px]">
+                            Acciones
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
@@ -345,6 +438,21 @@ const PrintJobsPage = () => {
                                 {job.job_id || `—`}
                               </div>
                             </td>
+                            {selectedPrinterId === 'consolidated' && (
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-xs text-slate-700 font-bold">
+                                  {job.printer_hostname || 'Sin Hostname'}
+                                </div>
+                                <div className="text-[10px] text-slate-500 font-mono font-semibold">
+                                  IP: {job.printer_ip}
+                                </div>
+                                {job.printer_serial && job.printer_serial !== 'Sin Serial' && (
+                                  <div className="text-[9px] text-slate-400 font-mono">
+                                    S/N: {job.printer_serial}
+                                  </div>
+                                )}
+                              </td>
+                            )}
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2 max-w-md md:max-w-lg lg:max-w-xl">
                                 <FileText size={16} className="text-slate-400 shrink-0" />
@@ -397,6 +505,29 @@ const PrintJobsPage = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-slate-600 font-mono">
                               {job.copias !== undefined && job.copias !== null ? job.copias : 1}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                              {job.job_id ? (
+                                <button
+                                  onClick={() => handleDeleteJob(job.job_id!, job.printer_id)}
+                                  disabled={deletingJobId !== null}
+                                  className={cn(
+                                    "p-1.5 rounded-lg border text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-all shadow-sm",
+                                    deletingJobId === job.job_id
+                                      ? "bg-slate-100 border-slate-200 text-slate-400"
+                                      : "bg-white border-slate-200"
+                                  )}
+                                  title="Eliminar Trabajo"
+                                >
+                                  {deletingJobId === job.job_id ? (
+                                    <Loader2 size={16} className="animate-spin text-slate-400" />
+                                  ) : (
+                                    <Trash2 size={16} />
+                                  )}
+                                </button>
+                              ) : (
+                                <span className="text-slate-300 italic text-xs">—</span>
+                              )}
                             </td>
                           </tr>
                         ))}

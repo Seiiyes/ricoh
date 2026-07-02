@@ -137,6 +137,31 @@ class User(Base):
         """Propiedad híbrida para mantener compatibilidad string hacia atrás"""
         return self.centro_costo_rel.nombre if self.centro_costo_rel else None
     
+    @property
+    def impresoras(self) -> list:
+        res = []
+        for assoc in self.printer_assignments:
+            if not assoc.is_active:
+                continue
+            res.append({
+                "printer_id": assoc.printer.id,
+                "printer_name": assoc.printer.hostname,
+                "printer_ip": assoc.printer.ip_address,
+                "printer_location": assoc.printer.location,
+                "entry_index": assoc.entry_index,
+                "permisos": {
+                    "copiadora": assoc.func_copier,
+                    "copiadora_color": assoc.func_copier_color,
+                    "impresora": assoc.func_printer,
+                    "impresora_color": assoc.func_printer_color,
+                    "document_server": assoc.func_document_server,
+                    "fax": assoc.func_fax,
+                    "escaner": assoc.func_scanner,
+                    "navegador": assoc.func_browser,
+                }
+            })
+        return res
+    
     def set_network_password(self, password: str):
         """
         Encriptar y guardar password de red

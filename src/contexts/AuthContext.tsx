@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const interval = setInterval(async () => {
       try {
         await authService.refreshToken();
-        console.log('Token renovado automáticamente');
+        // console.log('Token renovado automáticamente');
       } catch (error) {
         console.error('Error al renovar token:', error);
         // Si falla la renovación, cerrar sesión

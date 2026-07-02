@@ -37,17 +37,26 @@ def check_redis_server():
         import redis
         
         # Try to connect
+        redis_url = os.getenv("REDIS_URL")
         host = os.getenv("REDIS_HOST", "localhost")
         port = int(os.getenv("REDIS_PORT", 6379))
+        password = os.getenv("REDIS_PASSWORD", None) or None
+        db = int(os.getenv("REDIS_DB", 0))
         
-        print(f"   Intentando conectar a {host}:{port}...")
-        
-        client = redis.Redis(
-            host=host,
-            port=port,
-            socket_connect_timeout=2,
-            socket_timeout=2
-        )
+        if redis_url:
+            print(f"   Intentando conectar a Redis via URL...")
+            client = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=2, socket_timeout=2)
+        else:
+            print(f"   Intentando conectar a {host}:{port}...")
+            client = redis.Redis(
+                host=host,
+                port=port,
+                db=db,
+                password=password,
+                decode_responses=True,
+                socket_connect_timeout=2,
+                socket_timeout=2
+            )
         
         # Test connection
         response = client.ping()

@@ -1,14 +1,5 @@
 import type { PrinterDevice } from '@/types';
-import apiClient from './apiClient';
-
-/**
- * Printer Service
- * 
- * This module provides functions for interacting with the backend API.
- * Uses apiClient for authenticated requests.
- */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import apiClient, { API_BASE_URL } from './apiClient';
 
 // ============================================================================
 // Discovery API
@@ -144,6 +135,21 @@ export async function refreshPrinterSNMP(printerId: number): Promise<any> {
   }
 }
 
+/**
+ * Fetches live diagnostics for a printer
+ * 
+ * @param printerId - ID of the printer
+ */
+export async function fetchPrinterDiagnostics(printerId: number): Promise<any> {
+  try {
+    const response = await apiClient.get(`/discovery/printer/${printerId}/live-diagnostics`);
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to fetch diagnostics for printer ${printerId}:`, error);
+    throw error;
+  }
+}
+
 // ============================================================================
 // User Management API
 // ============================================================================
@@ -179,9 +185,9 @@ export async function createUser(user: {
   };
 }): Promise<any> {
   try {
-    console.log('📤 Sending user creation request:', user);
+    // console.log('📤 Sending user creation request:', user);
     const response = await apiClient.post('/users/', user);
-    console.log('✅ User created successfully:', response.data);
+    // console.log('✅ User created successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Failed to create user:', error);
@@ -273,7 +279,7 @@ export function connectWebSocket(onMessage: (event: any) => void): WebSocket {
   const ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
-    console.log('[WS] Connected to log stream (authenticated)');
+    // console.log('[WS] Connected to log stream (authenticated)');
   };
 
   ws.onmessage = (event) => {
@@ -297,7 +303,7 @@ export function connectWebSocket(onMessage: (event: any) => void): WebSocket {
     } else if (event.code === 4008) {
       console.warn('[WS] Connection rejected: too many simultaneous connections from this IP.');
     } else {
-      console.log(`[WS] Disconnected (code=${event.code})`);
+      // console.log(`[WS] Disconnected (code=${event.code})`);
     }
   };
 
@@ -323,4 +329,35 @@ export async function fetchPrinterJobs(printerId: number): Promise<any[]> {
     throw error;
   }
 }
+
+/**
+ * Fetches stored print jobs for all accessible printers consolidated
+ * 
+ * @returns Promise resolving to an array of consolidated print jobs
+ */
+export async function fetchConsolidatedPrinterJobs(): Promise<any[]> {
+  try {
+    const response = await apiClient.get('/printers/jobs/consolidated');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch consolidated print jobs:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes a stored print job for a specific printer
+ * 
+ * @param printerId - ID of the printer
+ * @param jobId - ID of the print job
+ */
+export async function deletePrinterJob(printerId: number, jobId: string): Promise<void> {
+  try {
+    await apiClient.delete(`/printers/${printerId}/jobs/${jobId}`);
+  } catch (error) {
+    console.error(`Failed to delete print job ${jobId} for printer ${printerId}:`, error);
+    throw error;
+  }
+}
+
 

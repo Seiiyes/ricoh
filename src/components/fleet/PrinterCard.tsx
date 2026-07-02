@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui";
-import { Printer, Scan, Pipette, Edit2, RefreshCw } from "lucide-react";
+import { Printer, Scan, Pipette, Edit2, RefreshCw, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrinterStore } from "@/store/usePrinterStore";
 
@@ -17,10 +17,11 @@ interface PrinterCardProps {
   toner: TonerLevels;
   onEdit?: () => void;
   onRefresh?: () => void;
+  onDiagnostics?: () => void;
   isColor?: boolean;
 }
 
-export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onRefresh, isColor = true }: PrinterCardProps) => {
+export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onRefresh, onDiagnostics, isColor = true }: PrinterCardProps) => {
   const isOnline = status === 'online';
   const { selectedPrinters, togglePrinter } = usePrinterStore();
   const isSelected = selectedPrinters.includes(id);
@@ -59,6 +60,19 @@ export const PrinterCard = ({ id, name, ip, status, location, toner, onEdit, onR
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {onDiagnostics && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Activity size={14} />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDiagnostics();
+              }}
+              className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full w-8 h-8 flex items-center justify-center p-0"
+              title="Diagnóstico en Vivo del Equipo"
+            />
+          )}
           {onRefresh && (
             <Button
               variant="ghost"

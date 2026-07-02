@@ -12,15 +12,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior"""
-    initial_delay: float = 5.0  # seconds
-    max_delay: float = 60.0  # seconds
-    max_attempts: int = 5
-    backoff_multiplier: float = 2.0
+    initial_delay: float = 2.0  # seconds
+    max_delay: float = 30.0  # seconds
+    max_attempts: int = 3
+    backoff_multiplier: float = 1.5
     
     # Error-specific configurations
     badflow_max_attempts: int = 1  # Only retry once after session reset
-    connection_max_attempts: int = 3
-    connection_delay: float = 10.0  # Fixed delay for connection errors
+    connection_max_attempts: int = 1  # No retry on connection error (printer offline)
+    connection_delay: float = 2.0  # Fixed delay for connection errors
 
 
 ErrorType = Literal['BUSY', 'BADFLOW', 'TIMEOUT', 'CONNECTION', 'OTHER']

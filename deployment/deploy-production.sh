@@ -117,7 +117,10 @@ log_info "Current branch: $CURRENT_BRANCH"
 read -p "Pull latest changes from origin/$CURRENT_BRANCH? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git pull origin "$CURRENT_BRANCH"
+    # git fetch origin
+    # git checkout "$CURRENT_BRANCH"
+    # git pull origin "$CURRENT_BRANCH"
+    echo "git pull desactivado para no sobreescribir cambios"
     log_info "Code updated"
 else
     log_warn "Skipping code update"

@@ -4,8 +4,6 @@ services:
     image: redis:7-alpine
     container_name: ricoh-redis
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass aoRJay23ZiakmfggESo5ASkYWG52ohk_lg
-    ports:
-      - "127.0.0.1:6379:6379"  # Solo accesible desde localhost
     networks:
       - ricoh-network
     healthcheck:
@@ -14,11 +12,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
 
   # PostgreSQL Database
   postgres:
@@ -27,15 +20,13 @@ services:
     environment:
       POSTGRES_DB: ricoh_fleet
       POSTGRES_USER: ricoh_admin
-      # ⚠️ TEMPORAL: Manteniendo contraseña anterior porque ya existe
-      # Para cambiar: Ver docs/resumen/CAMBIAR_PASSWORD_POSTGRES.md
       POSTGRES_PASSWORD: ricoh_secure_2024
       PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "127.0.0.1:5432:5432"  # Solo accesible desde localhost
     networks:
       - ricoh-network
     healthcheck:
@@ -44,90 +35,25 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-
-  # Database Admin UI (Adminer)
-  adminer:
-    image: adminer:latest
-    container_name: ricoh-adminer
-    ports:
-      - "127.0.0.1:8080:8080"  # Solo accesible desde localhost
-    networks:
-      - ricoh-network
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-      ADMINER_DESIGN: dracula
-    depends_on:
-      - postgres
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
 
   # FastAPI Backend
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: ricoh-backend
     ports:
-      - "8000:8000"  # Accesible en red local
+      - "8000:8000"
     environment:
-      # =============================================================================
-      # DATABASE CONFIGURATION
-      # =============================================================================
-      # ⚠️ TEMPORAL: Usando contraseña anterior porque PostgreSQL ya existe
-      # Para cambiar contraseña: Ver docs/resumen/CAMBIAR_PASSWORD_POSTGRES.md
       - DATABASE_URL=postgresql://ricoh_admin:ricoh_secure_2024@postgres:5432/ricoh_fleet
-      
-      # =============================================================================
-      # APPLICATION CONFIGURATION
-      # =============================================================================
       - ENVIRONMENT=development
       - DEMO_MODE=false
       - DEBUG=true
       - API_HOST=0.0.0.0
       - API_PORT=8000
-      - DOCS_USERNAME=admin
-      - DOCS_PASSWORD=ricoh_docs_2026
-      
-      # =============================================================================
-      # SECURITY CONFIGURATION - ENCRYPTION & JWT
-      # =============================================================================
-      # ENCRYPTION_KEY: Required for encrypting sensitive data in database
-      # ✅ ACTUALIZADA: 6 Mayo 2026 - Clave única generada para este sistema
       - ENCRYPTION_KEY=jcM2RoP9ztYz5Ffg73TeoStDUPtY9CqwHStMheQ3Bn0=
-      
-      # SECRET_KEY: Required for signing JWT tokens (must have sufficient entropy)
-      # ✅ ACTUALIZADA: 6 Mayo 2026 - Clave única generada para este sistema
       - SECRET_KEY=MHbJvvYdMZFrzuBsaW6XmjaaiRWJD8f8AUUQecUbP6s
-      
-      # =============================================================================
-      # SECURITY CONFIGURATION - CORS
-      # =============================================================================
-      # Comma-separated list of allowed origins
-      # ✅ ACTUALIZADA: 6 Mayo 2026 - Restringido a red local
-      # Permite acceso desde localhost y tu IP local
-      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.91.34:5173,http://localhost:8000,http://192.168.91.34:8000,http://192.168.91.131:5173,http://192.168.91.131:8000
-      
-      # =============================================================================
-      # SECURITY CONFIGURATION - CSRF
-      # =============================================================================
-      # CSRF Protection: Enabled by default in production, disabled in development
-      # Uncomment to force enable in development:
-      # - ENABLE_CSRF=true
-      
-      # =============================================================================
-      # SECURITY CONFIGURATION - REDIS
-      # =============================================================================
-      # Redis URL for distributed CSRF token storage and rate limiting
-      # ✅ ACTUALIZADA: 6 Mayo 2026 - Contraseña configurada
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.91.131:5173,http://192.168.91.131:8000,http://192.168.91.131,http://192.168.91.34:5173,http://192.168.91.34:8000
       - REDIS_URL=redis://:aoRJay23ZiakmfggESo5ASkYWG52ohk_lg@redis:6379/0
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -135,22 +61,13 @@ services:
       - REDIS_PASSWORD=aoRJay23ZiakmfggESo5ASkYWG52ohk_lg
       - CACHE_TTL_DASHBOARD=300
       - CACHE_TTL_ANALYTICS=3600
-      
-      # =============================================================================
-      # RICOH INTEGRATION CONFIGURATION
-      # =============================================================================
-      # Admin password for Ricoh printer web interface
-      # Required when using Ricoh printer integration (no default for security)
-      # Set this before using printer provisioning features:
-      # - RICOH_ADMIN_PASSWORD=your-secure-password-here
+      - DOCS_USERNAME=admin
+      - DOCS_PASSWORD=ricoh_docs_2026
+      - RICOH_ADMIN_PASSWORD=admin
     volumes:
       - ./backend:/app
     networks:
       - ricoh-network
-    dns:
-      - 11.0.20.10
-      - 192.168.91.1
-      - 8.8.8.8
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -160,35 +77,22 @@ services:
         condition: service_healthy
     restart: unless-stopped
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
 
-  # React Frontend (Development)
+  # React Frontend (Production Build)
   frontend:
-    image: node:20-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     container_name: ricoh-frontend
-    working_dir: /app
     ports:
-      - "5173:5173"  # Accesible en red local
+      - "80:80"
     environment:
-      - VITE_API_URL=http://192.168.91.34:8000
-    volumes:
-      - .:/app
-      - node_modules:/app/node_modules
+      - VITE_API_URL=http://192.168.91.131:8000
     networks:
       - ricoh-network
-    command: sh -c "npm install && npm run dev -- --host"
     depends_on:
       - backend
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
 
 networks:
   ricoh-network:

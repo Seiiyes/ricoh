@@ -147,6 +147,30 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class UserPrinterPermisosResponse(BaseModel):
+    copiadora: bool = False
+    copiadora_color: Optional[bool] = False
+    impresora: bool = False
+    impresora_color: Optional[bool] = False
+    document_server: bool = False
+    fax: bool = False
+    escaner: bool = False
+    navegador: bool = False
+
+    class Config:
+        from_attributes = True
+
+class UserPrinterResponse(BaseModel):
+    printer_id: int
+    printer_name: str
+    printer_ip: str
+    printer_location: Optional[str] = None
+    entry_index: Optional[str] = None
+    permisos: Optional[UserPrinterPermisosResponse] = None
+
+    class Config:
+        from_attributes = True
+
 class UserResponse(UserBase):
     """Schema for user response (excludes password)"""
     id: int
@@ -174,6 +198,9 @@ class UserResponse(UserBase):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime]
+    
+    # Active printer assignments list
+    impresoras: Optional[List[UserPrinterResponse]] = []
     
     @validator('empresa', pre=True, always=True)
     def serialize_empresa(cls, v):
@@ -297,6 +324,10 @@ class PrintJobResponse(BaseModel):
     fecha: str
     paginas: int
     copias: Optional[int] = None
+    printer_id: Optional[int] = None
+    printer_ip: Optional[str] = None
+    printer_hostname: Optional[str] = None
+    printer_serial: Optional[str] = None
 
 
 class PrinterResponse(PrinterBase):
@@ -427,8 +458,21 @@ class UserProvisioningStatus(BaseModel):
     """Schema for user provisioning status"""
     user_id: int
     user_name: str
+    codigo_de_usuario: str
     empresa: Optional[str]
-    smb_path: Optional[str]
+    centro_costos: Optional[str]
+    network_username: str
+    smb_server: str
+    smb_port: int
+    smb_path: str
+    func_copier: bool
+    func_copier_color: bool
+    func_printer: bool
+    func_printer_color: bool
+    func_document_server: bool
+    func_fax: bool
+    func_scanner: bool
+    func_browser: bool
     total_printers: int
     printers: List[dict]
 

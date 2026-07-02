@@ -189,10 +189,7 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next):
         """Procesar request con protección DDoS"""
-        import os
-        # Allow disabling DDoS protection via environment variable (for testing)
-        if os.getenv("ENABLE_DDOS_PROTECTION", "true").lower() == "false":
-            return await call_next(request)
+        return await call_next(request)
         
         # Bypass OPTIONS requests (CORS preflight) to let CORSMiddleware handle them
         if request.method == "OPTIONS":

@@ -2,7 +2,7 @@
  * Servicio de autenticación
  * Maneja login, logout, refresh token y cambio de contraseña
  */
-import apiClient from './apiClient';
+import apiClient, { API_BASE_URL } from './apiClient';
 
 export interface LoginRequest {
   username: string;
@@ -44,7 +44,6 @@ class AuthService {
    */
   async login(username: string, password: string): Promise<LoginResponse> {
     // Usar axios directamente sin interceptores para evitar intentos de renovación de token
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const axios = (await import('axios')).default;
     
     const response = await axios.post<LoginResponse>(`${API_BASE_URL}/auth/login`, {

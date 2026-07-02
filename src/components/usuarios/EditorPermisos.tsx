@@ -37,7 +37,7 @@ export const EditorPermisos = ({ permisos, onChange, modoImpresora }: EditorPerm
 
   // Sincronizar estado local cuando cambien los permisos del padre
   useEffect(() => {
-    console.log('🔄 EditorPermisos - Actualizando permisos locales:', permisos);
+    // console.log('🔄 EditorPermisos - Actualizando permisos locales:', permisos);
     setPermisosLocales(permisos);
   }, [permisos]);
 

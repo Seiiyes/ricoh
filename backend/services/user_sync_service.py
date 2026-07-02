@@ -96,6 +96,10 @@ class UserSyncService:
         ).first()
         
         if user:
+            # Si el usuario existe pero está inactivo, reactivarlo
+            if not user.is_active:
+                user.is_active = True
+                db.commit()
             # Usuario ya existe, retornar su ID
             return user.id
         
@@ -269,7 +273,8 @@ class UserSyncService:
         db: Session,
         printer_id: int,
         admin_user: str = "admin",
-        admin_password: str = ""
+        admin_password: str = "",
+        fast_list: bool = True
     ) -> Dict[str, int]:
         """
         Sincroniza usuarios desde la libreta de direcciones de una impresora.
@@ -280,6 +285,7 @@ class UserSyncService:
             printer_id: ID de la impresora
             admin_user: Usuario admin de la impresora
             admin_password: Password admin de la impresora
+            fast_list: Si es True, hace sincronización rápida sin cargar permisos individuales
         
         Returns:
             dict con estadísticas: {created: int, existing: int, updated: int, total: int}
@@ -300,11 +306,11 @@ class UserSyncService:
             import os
             resolved_password = os.getenv("RICOH_ADMIN_PASSWORD", "")
 
-        logger.info(f"Sincronizando usuarios desde libreta de direcciones de {printer.hostname} ({printer.ip_address})...")
+        logger.info(f"Sincronizando usuarios desde libreta de direcciones de {printer.hostname} ({printer.ip_address}) (fast_list={fast_list})...")
         
         # Leer usuarios desde la impresora
         client = RicohWebClient(admin_user=admin_user, admin_password=resolved_password)
-        users_from_printer = client.read_users_from_printer(printer.ip_address, fast_list=False)
+        users_from_printer = client.read_users_from_printer(printer.ip_address, fast_list=fast_list)
         
         if not users_from_printer:
             logger.warning(f"No se pudieron leer usuarios de {printer.hostname}")
@@ -362,9 +368,25 @@ class UserSyncService:
                         func_scanner=False
                     )
                     created += 1
+                    user = new_user
                     
                     codigo_info = f" (formateado: '{codigo}' → '{codigo_formateado}')" if codigo != codigo_formateado else ""
                     logger.info(f"✓ Usuario creado: {codigo_formateado} - {nombre}{codigo_info} (SMB: {new_user.smb_path})")
+                
+                # Sincronizar asignación en la base de datos
+                # Si fast_list es True, pasamos permissions=None para no sobreescribir permisos en la DB.
+                # Si fast_list es False, podemos pasar los permisos reales.
+                permisos = user_data.get('permisos') if not fast_list else None
+                entry_index = user_data.get('entry_index')
+                
+                from db.repository import AssignmentRepository
+                AssignmentRepository.update_assignment_state(
+                    db=db,
+                    user_id=user.id,
+                    printer_id=printer_id,
+                    permissions=permisos,
+                    entry_index=entry_index
+                )
                 
                 # Commit cada 50 usuarios
                 if (created + updated) % 50 == 0:

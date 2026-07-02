@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { 
-  Download, 
-  ChevronDown, 
-  FileText, 
-  TrendingUp, 
+import {
+  Download,
+  ChevronDown,
+  FileText,
+  TrendingUp,
   TrendingDown,
   DollarSign,
   Layers,
@@ -14,16 +14,16 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   Legend
 } from 'recharts';
@@ -34,14 +34,14 @@ import { exportReportToPDF, exportTableToExcel } from '../utils/exportUtils';
 import apiClient from '../services/apiClient';
 import { cn } from '../lib/utils';
 import { EmpresaAutocomplete, CentroCostosAutocomplete } from '../components/ui';
-import { 
-  useEvolucionConsumo, 
-  useComparativa, 
-  useGlobalUserConsumption, 
-  useUpdateUserConsumption, 
+import {
+  useEvolucionConsumo,
+  useComparativa,
+  useGlobalUserConsumption,
+  useUpdateUserConsumption,
   useTopUsers,
   useMonthlyCloses,
-  GlobalCierreUsuario 
+  GlobalCierreUsuario
 } from '../hooks/useAnalyticsData';
 
 const formatDate = (dateStr: string) => {
@@ -71,9 +71,9 @@ const AnalyticsPage = () => {
   // Tab 1: Overview hooks
   const { data: evolucionConsumo, isLoading: evoLoading } = useEvolucionConsumo(12);
   const { data: comparativa, isLoading: compLoading } = useComparativa(
-    dateRangeA.start, 
-    dateRangeA.end, 
-    dateRangeB.start, 
+    dateRangeA.start,
+    dateRangeA.end,
+    dateRangeB.start,
     dateRangeB.end
   );
 
@@ -90,13 +90,13 @@ const AnalyticsPage = () => {
     const impresiones = comparativa.find((r: any) => r.indicador === 'Páginas Impresas')?.periodoA || 0;
     const escaner = comparativa.find((r: any) => r.indicador === 'Páginas Escaneadas')?.periodoA || 0;
     const fax = comparativa.find((r: any) => r.indicador === 'Páginas de Fax')?.periodoA || 0;
-    
+
     const list = [];
     if (impresiones > 0) list.push({ name: 'Impresión', value: impresiones });
     if (copias > 0) list.push({ name: 'Copiado', value: copias });
     if (escaner > 0) list.push({ name: 'Escáner', value: escaner });
     if (fax > 0) list.push({ name: 'Fax', value: fax });
-    
+
     if (list.length === 0) {
       return [
         { name: 'Impresión', value: 0 },
@@ -297,7 +297,7 @@ const AnalyticsPage = () => {
       u.consumo_impresora += r.consumo_impresora || 0;
       u.consumo_escaner += r.consumo_escaner || 0;
       u.consumo_fax += r.consumo_fax || 0;
-      
+
       u.printers.push({
         id: r.id,
         cierre_mensual_id: r.cierre_mensual_id,
@@ -330,7 +330,7 @@ const AnalyticsPage = () => {
   const consolidatedHierarchy = useMemo(() => {
     // Use the dedicated area query (all records, no pagination) for correct totals
     const items = areaConsumption?.items || [];
-    
+
     // Map to group by Company -> Area -> User -> Printer
     const companyMap = new Map<string, {
       companyName: string;
@@ -595,17 +595,17 @@ const AnalyticsPage = () => {
   };
 
   const [isExportingFacturacion, setIsExportingFacturacion] = useState(false);
-  
+
   const handleExportFacturacion = async () => {
     if (!globalEmpresaId) {
       alert("Por favor seleccione una Empresa primero para generar su reporte de facturación.");
       return;
     }
-    
+
     // Use current tab's date filter or default to something sensible
     const start = filterFechaInicio || dateRangeA.start;
     const end = filterFechaFin || dateRangeA.end;
-    
+
     if (!start || !end) {
       alert("Por favor defina Fecha Inicio y Fecha Fin en los filtros.");
       return;
@@ -614,19 +614,19 @@ const AnalyticsPage = () => {
     try {
       setIsExportingFacturacion(true);
       const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/export/facturacion/${globalEmpresaId}?fecha_inicio=${start}&fecha_fin=${end}`;
-      
+
       const token = localStorage.getItem('token');
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.detail || 'Error al exportar');
       }
-      
+
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -675,7 +675,7 @@ const AnalyticsPage = () => {
         </div>
         {activeTab === 'overview' && (
           <div className="flex flex-col sm:flex-row gap-2">
-            <button 
+            <button
               onClick={handleExportFacturacion}
               disabled={isExportingFacturacion || !globalEmpresaId}
               className="bg-green-600 text-white btn-padding-sm rounded-xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 disabled:opacity-50 transition-all flex items-center gap-2 text-responsive-sm"
@@ -685,7 +685,7 @@ const AnalyticsPage = () => {
               <span className="hidden sm:inline">Exportar Facturación</span>
               <span className="sm:hidden">Excel</span>
             </button>
-            <button 
+            <button
               onClick={handleExportPDF}
               className="bg-ricoh-red text-white btn-padding-sm rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all flex items-center gap-2 text-responsive-sm"
             >
@@ -776,56 +776,56 @@ const AnalyticsPage = () => {
 
           {/* KPIs Row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-responsive mb-responsive">
-            <KPICard 
-              title="Total Páginas" 
-              value={kpiTotalPaginas.toLocaleString()} 
-              icon={<Layers size={20} />} 
-              color={chartColors.primary} 
+            <KPICard
+              title="Total Páginas"
+              value={kpiTotalPaginas.toLocaleString()}
+              icon={<Layers size={20} />}
+              color={chartColors.primary}
             />
-            <KPICard 
-              title="Promedio / Mes" 
-              value={(kpiTotalPaginas / monthsCount).toLocaleString(undefined, { maximumFractionDigits: 0 })} 
-              icon={<TrendingUp size={20} />} 
-              color={chartColors.info} 
+            <KPICard
+              title="Promedio / Mes"
+              value={(kpiTotalPaginas / monthsCount).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              icon={<TrendingUp size={20} />}
+              color={chartColors.info}
             />
-            <KPICard 
-              title="Costo Estimado" 
-              value={`$${(kpiTotalPaginas * 0.05).toLocaleString(undefined, { maximumFractionDigits: 2 })}`} 
-              icon={<DollarSign size={20} />} 
-              color={chartColors.warning} 
+            <KPICard
+              title="Costo Estimado"
+              value={`$${(kpiTotalPaginas * 0.05).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              icon={<DollarSign size={20} />}
+              color={chartColors.warning}
             />
-            <KPICard 
-              title="Variación" 
-              value={""} 
+            <KPICard
+              title="Variación"
+              value={""}
               trend={kpiVariacion}
               trendLabel={`vs ${dateRangeB.label}`}
-              icon={<TrendingUp size={20} />} 
-              color={chartColors.success} 
+              icon={<TrendingUp size={20} />}
+              color={chartColors.success}
             />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-responsive mb-responsive">
             {/* Line Chart */}
             <div className="lg:col-span-2 h-[350px] lg:h-[400px]">
-              <ChartCard title="Evolución de Consumo" onExport={() => {}}>
+              <ChartCard title="Evolución de Consumo" onExport={() => { }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={evolucionConsumo} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       formatter={(value: any) => value?.toLocaleString() || ''}
                     />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="paginas" 
+                    <Line
+                      type="monotone"
+                      dataKey="paginas"
                       name="Páginas Impresas"
-                      stroke={chartColors.primary} 
-                      strokeWidth={3} 
-                      dot={{ r: 4, strokeWidth: 2 }} 
-                      activeDot={{ r: 6, strokeWidth: 0 }} 
+                      stroke={chartColors.primary}
+                      strokeWidth={3}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -834,7 +834,7 @@ const AnalyticsPage = () => {
 
             {/* Pie Chart */}
             <div className="lg:col-span-1 h-[350px] lg:h-[400px]">
-              <ChartCard title="Distribución por Función" onExport={() => {}}>
+              <ChartCard title="Distribución por Función" onExport={() => { }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -851,7 +851,7 @@ const AnalyticsPage = () => {
                         <Cell key={`cell-${index}`} fill={chartColors.categorical[index % chartColors.categorical.length]} />
                       ))}
                     </Pie>
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: any) => value?.toLocaleString() || ''}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />
@@ -867,14 +867,14 @@ const AnalyticsPage = () => {
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 card-padding-sm flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-bold text-slate-800">Comparativa Detallada ({dateRangeA.label} vs {dateRangeB.label})</h3>
-                <button 
+                <button
                   onClick={handleExportExcel}
                   className="text-xs font-bold text-slate-500 hover:text-ricoh-red uppercase tracking-widest transition-colors flex items-center gap-1"
                 >
                   <Download size={14} /> Excel
                 </button>
               </div>
-              
+
               <div className="overflow-x-auto rounded-lg border border-slate-100">
                 <table className="w-full text-sm text-left">
                   <thead className="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-500">
@@ -897,9 +897,9 @@ const AnalyticsPage = () => {
                           <td className="px-4 py-3 text-right">
                             <span className={cn(
                               "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold",
-                              isPositive ? "bg-green-100 text-green-700" : 
-                              isNegative ? "bg-red-100 text-red-700" : 
-                              "bg-slate-100 text-slate-600"
+                              isPositive ? "bg-green-100 text-green-700" :
+                                isNegative ? "bg-red-100 text-red-700" :
+                                  "bg-slate-100 text-slate-600"
                             )}>
                               {isPositive ? <TrendingUp size={12} /> : isNegative ? <TrendingDown size={12} /> : null}
                               {isPositive ? '+' : ''}{row.variacion}%
@@ -944,14 +944,14 @@ const AnalyticsPage = () => {
                               {user.total_consumo_paginas.toLocaleString()} págs
                             </span>
                           </div>
-                          
+
                           <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-red-500 to-ricoh-red rounded-full transition-all duration-500" 
+                            <div
+                              className="h-full bg-gradient-to-r from-red-500 to-ricoh-red rounded-full transition-all duration-500"
                               style={{ width: `${percentage}%` }}
                             />
                           </div>
-                          
+
                           <div className="flex justify-between items-center text-[8px] text-slate-400 font-semibold uppercase tracking-wider">
                             <span>{user.centro_costos || 'Sin Centro de Costos'}</span>
                             <span>{user.cierres_count} {user.cierres_count === 1 ? 'cierre' : 'cierres'}</span>
@@ -991,8 +991,8 @@ const AnalyticsPage = () => {
                   onClick={() => { setViewMode('printer'); setUserPage(1); }}
                   className={cn(
                     "px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5",
-                    viewMode === 'printer' 
-                      ? "bg-white text-slate-800 shadow-sm" 
+                    viewMode === 'printer'
+                      ? "bg-white text-slate-800 shadow-sm"
                       : "text-slate-500 hover:text-slate-700"
                   )}
                 >
@@ -1004,8 +1004,8 @@ const AnalyticsPage = () => {
                   onClick={() => { setViewMode('user'); setUserPage(1); }}
                   className={cn(
                     "px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5",
-                    viewMode === 'user' 
-                      ? "bg-white text-slate-800 shadow-sm" 
+                    viewMode === 'user'
+                      ? "bg-white text-slate-800 shadow-sm"
                       : "text-slate-500 hover:text-slate-700"
                   )}
                 >
@@ -1025,8 +1025,8 @@ const AnalyticsPage = () => {
                   }}
                   className={cn(
                     "px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5",
-                    viewMode === 'area' 
-                      ? "bg-white text-slate-800 shadow-sm" 
+                    viewMode === 'area'
+                      ? "bg-white text-slate-800 shadow-sm"
                       : "text-slate-500 hover:text-slate-700"
                   )}
                 >
@@ -1035,7 +1035,7 @@ const AnalyticsPage = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 justify-end shrink-0">
               {/* Page Size Selector */}
               <div className="flex items-center gap-2">
@@ -1089,7 +1089,7 @@ const AnalyticsPage = () => {
                     const [y, m, d] = dateStr.split('-');
                     return `${d}/${m}/${y}`;
                   };
-                  const label = p.start === p.end 
+                  const label = p.start === p.end
                     ? `Cierre del ${formatDate(p.start)}`
                     : `Período del ${formatDate(p.start)} al ${formatDate(p.end)}`;
                   return (
@@ -1206,7 +1206,7 @@ const AnalyticsPage = () => {
                               </span>
                             )}
                           </div>
-                          
+
                           <div className="text-[11px] text-slate-500 font-semibold mt-1 flex flex-wrap gap-x-3 gap-y-1">
                             <span>Consumo consolidado: <strong className="text-slate-700">{u.consumo_total.toLocaleString()} págs</strong></span>
                             <span>·</span>
@@ -1215,7 +1215,7 @@ const AnalyticsPage = () => {
                             <span className="text-slate-400 font-medium">B/N: {u.total_bn.toLocaleString()} | Color: {u.total_color.toLocaleString()}</span>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 hidden sm:inline">
                             {expanded ? 'Ocultar' : 'Ver'} desglose
@@ -1289,7 +1289,7 @@ const AnalyticsPage = () => {
                           {/* Nested Sub-table of Printer Breakdown */}
                           <div className="flex flex-col gap-2">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detalle de Consumos por Impresora</span>
-                            
+
                             <div className="overflow-x-auto rounded-xl border border-slate-100">
                               <table className="w-full text-xs text-left">
                                 <thead className="bg-slate-50 text-[9px] uppercase font-black tracking-widest text-slate-500 border-b border-slate-100">
@@ -1312,8 +1312,8 @@ const AnalyticsPage = () => {
                                         </div>
                                         <div className="text-[10px] text-slate-400 font-semibold">{pRecord.printer_ip} {pRecord.printer_location ? `· ${pRecord.printer_location}` : ''}</div>
                                         <div className="text-[10px] text-slate-400 font-medium mt-0.5">
-                                          {pRecord.fecha_inicio === pRecord.fecha_fin 
-                                            ? `Cierre del ${formatDate(pRecord.fecha_fin)}` 
+                                          {pRecord.fecha_inicio === pRecord.fecha_fin
+                                            ? `Cierre del ${formatDate(pRecord.fecha_fin)}`
                                             : `Período: ${formatDate(pRecord.fecha_inicio)} al ${formatDate(pRecord.fecha_fin)}`}
                                         </div>
                                       </td>
@@ -1393,15 +1393,15 @@ const AnalyticsPage = () => {
                         <tbody className="divide-y divide-slate-200 font-sans text-slate-800">
                           {consolidatedHierarchy.map((company) => {
                             const isCompanyExpanded = expandedCompanies[company.companyName] ?? false;
-                            
+
                             // Render Company Row (Level 0)
                             const companyRow = (
                               <tr key={`company_${company.companyName}`} className="bg-slate-100/80 font-extrabold border-b border-slate-200">
                                 <td className="px-4 py-3 border-r border-slate-200 text-left font-sans">
                                   <div className="flex items-center gap-1">
-                                    <button 
+                                    <button
                                       type="button"
-                                      onClick={() => toggleCompany(company.companyName)} 
+                                      onClick={() => toggleCompany(company.companyName)}
                                       className="p-1 hover:bg-slate-200 rounded text-slate-700 font-mono text-xs focus:outline-none"
                                     >
                                       {isCompanyExpanded ? '[-] ' : '[+] '}
@@ -1419,16 +1419,16 @@ const AnalyticsPage = () => {
                             const areaRows = isCompanyExpanded ? company.areas.map((area) => {
                               const areaKey = `${company.companyName}_${area.areaName}`;
                               const isAreaExpanded = expandedAreas[areaKey] ?? false;
-                              
+
                               // Render Area Row (Level 1)
                               const areaRow = (
                                 <tr key={`area_${areaKey}`} className="hover:bg-slate-50/50 font-bold border-b border-slate-200">
                                   <td className="px-4 py-3 border-r border-slate-200"></td>
                                   <td className="px-4 py-3 border-r border-slate-200 text-left font-sans">
                                     <div className="flex items-center gap-1">
-                                      <button 
+                                      <button
                                         type="button"
-                                        onClick={() => toggleArea(company.companyName, area.areaName)} 
+                                        onClick={() => toggleArea(company.companyName, area.areaName)}
                                         className="p-1 hover:bg-slate-200 rounded text-slate-700 font-mono text-xs focus:outline-none"
                                       >
                                         {isAreaExpanded ? '[-] ' : '[+] '}
@@ -1445,16 +1445,16 @@ const AnalyticsPage = () => {
                               const userRows = isAreaExpanded ? area.users.map((user) => {
                                 const userKey = `${company.companyName}_${area.areaName}_${user.userId}`;
                                 const isUserExpanded = expandedUsers[userKey] ?? false;
-                                
+
                                 // Render User Row (Level 2) - Indented
                                 const userRow = (
                                   <tr key={`user_${userKey}`} className="hover:bg-slate-50/30 border-b border-slate-200 text-xs">
                                     <td className="px-4 py-2.5 border-r border-slate-200"></td>
                                     <td className="px-4 py-2.5 border-r border-slate-200 text-left pl-6 font-sans">
                                       <div className="flex items-center gap-1">
-                                        <button 
+                                        <button
                                           type="button"
-                                          onClick={() => toggleUser(company.companyName, area.areaName, user.userId)} 
+                                          onClick={() => toggleUser(company.companyName, area.areaName, user.userId)}
                                           className="p-1 hover:bg-slate-200 rounded text-slate-600 font-mono text-xs focus:outline-none"
                                         >
                                           {isUserExpanded ? '[-] ' : '[+] '}
@@ -1483,8 +1483,8 @@ const AnalyticsPage = () => {
                                           <span className="font-bold text-slate-700">{printer.hostname}</span>
                                           <span className="text-slate-400">({printer.ip}{printer.location ? ` - ${printer.location}` : ''})</span>
                                           <span className="text-[10px] text-slate-400 italic font-medium ml-auto">
-                                            [{printer.fecha_inicio === printer.fecha_fin 
-                                              ? formatDate(printer.fecha_fin) 
+                                            [{printer.fecha_inicio === printer.fecha_fin
+                                              ? formatDate(printer.fecha_fin)
                                               : `${formatDate(printer.fecha_inicio)} al ${formatDate(printer.fecha_fin)}`}]
                                           </span>
                                         </div>
@@ -1595,15 +1595,15 @@ const AnalyticsPage = () => {
                             <tbody className="divide-y divide-slate-100">
                               {g.users.map((record) => (
                                 <React.Fragment key={record.id}>
-                                  <tr 
+                                  <tr
                                     onClick={() => toggleUserRow(record.id)}
                                     className="hover:bg-slate-50/30 transition-colors cursor-pointer"
                                   >
                                     <td className="px-5 py-4">
                                       <div className="flex items-center gap-2">
-                                        <ChevronDown 
-                                          size={16} 
-                                          className={cn("text-slate-400 transition-transform shrink-0", expandedUserRows[record.id] ? "rotate-180" : "rotate-0")} 
+                                        <ChevronDown
+                                          size={16}
+                                          className={cn("text-slate-400 transition-transform shrink-0", expandedUserRows[record.id] ? "rotate-180" : "rotate-0")}
                                         />
                                         <div>
                                           <div className="flex items-center gap-2">
@@ -1646,7 +1646,7 @@ const AnalyticsPage = () => {
                                     <tr className="bg-slate-50/40">
                                       <td colSpan={6} className="px-5 py-4 border-t border-slate-100">
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm animate-scale-in">
-                                          
+
                                           {/* Copiadora */}
                                           <div className="flex flex-col gap-1 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Copiadora</div>
@@ -1744,26 +1744,26 @@ const AnalyticsPage = () => {
             </button>
 
             <h3 className="text-base font-black text-slate-800 mb-2">Modificar Consumo de Cierre</h3>
-            
+
             {/* Info Card */}
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6 text-xs text-slate-600 flex flex-col gap-1.5">
               <div>
-                <span className="font-bold text-slate-800">Usuario: </span> 
+                <span className="font-bold text-slate-800">Usuario: </span>
                 {editingRecord.nombre_usuario} ({editingRecord.codigo_usuario})
               </div>
               <div>
-                <span className="font-bold text-slate-800">Impresora: </span> 
+                <span className="font-bold text-slate-800">Impresora: </span>
                 {editingRecord.printer_hostname}
               </div>
               {editingRecord.printer_ip && (
                 <div>
-                  <span className="font-bold text-slate-800">Dirección IP: </span> 
+                  <span className="font-bold text-slate-800">Dirección IP: </span>
                   {editingRecord.printer_ip}
                 </div>
               )}
               {editingRecord.printer_location && (
                 <div>
-                  <span className="font-bold text-slate-800">Ubicación: </span> 
+                  <span className="font-bold text-slate-800">Ubicación: </span>
                   {editingRecord.printer_location}
                 </div>
               )}

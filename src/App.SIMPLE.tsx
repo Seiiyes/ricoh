@@ -2,7 +2,7 @@
 // Esta versión NO tiene AuthContext, NO tiene rutas, NADA que pueda causar loops
 
 function App() {
-  console.log('🚀 App.SIMPLE.tsx cargando...');
+  // console.log('🚀 App.SIMPLE.tsx cargando...');
   
   return (
     <div style={{

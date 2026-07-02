@@ -69,8 +69,10 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
     
     let filtrados = usuarios;
     
-    // Filtrar por estado
-    if (filtroEstado === 'activos') {
+    // Filtrar por estado:
+    // Si hay una búsqueda activa, incluimos usuarios inactivos para que sean encontrables.
+    // De lo contrario, respetamos el filtro de estado seleccionado.
+    if (filtroEstado === 'activos' && !busqueda.trim()) {
       filtrados = filtrados.filter((u) => u.is_active);
     } else if (filtroEstado === 'inactivos') {
       filtrados = filtrados.filter((u) => !u.is_active);
@@ -83,8 +85,6 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
         (u) =>
           u.name.toLowerCase().includes(busquedaLower) ||
           u.codigo_de_usuario.toLowerCase().includes(busquedaLower) ||
-          (u.empresa && u.empresa.toLowerCase().includes(busquedaLower)) ||
-          (u.centro_costos && u.centro_costos.toLowerCase().includes(busquedaLower)) ||
           (u.empresa && u.empresa.toLowerCase().includes(busquedaLower)) ||
           (u.centro_costos && u.centro_costos.toLowerCase().includes(busquedaLower))
       );

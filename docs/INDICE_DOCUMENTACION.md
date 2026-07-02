@@ -1,7 +1,7 @@
 # 📚 Índice General de Documentación - Ricoh Fleet Management
 
-**Última actualización**: 11 de Junio de 2026  
-**Versión**: 4.1.2 (Actualizado)
+**Última actualización**: 1 de Julio de 2026  
+**Versión**: 4.1.4 (Actualizado)
 
 ---
 
@@ -32,7 +32,7 @@ docs/
 │   ├── refactorizacion/    # Reestructuraciones de código
 │   ├── soluciones/         # Soluciones técnicas
 │   └── verificacion/       # Pruebas de verificación e integración
-├── fixes/                  # Documentación de bugs específicos corregidos
+│── fixes/                  # Documentación de bugs específicos corregidos
 ├── guias/                  # Manuales de usuario, pruebas QA e instrucciones
 ├── resumen/                # Hitos, progresos semanales e históricos
 └── seguridad/              # Políticas de seguridad, DDoS y autenticación JWT
@@ -40,9 +40,21 @@ docs/
 
 ---
 
-## 🆕 Documentación de la Sesión Reciente (Junio 2026)
+## 🆕 Documentación de la Sesión Reciente (Junio-Julio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[RESUMEN_TRABAJO_01_JULIO_2026.md](resumen/RESUMEN_TRABAJO_01_JULIO_2026.md)**
+    *   *Descripción:* Implementación de detección de deriva, bucle de reintentos por impresoras ocupadas (BUSY), restauración de live-diagnostics y remoción de console.logs en producción.
+*   **[RESUMEN_TRABAJO_23_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_23_JUNIO_2026.md)**
+    *   *Descripción:* Solución de IndentationError en el cliente web Ricoh, despliegue en caliente y optimización de tiempos de aprovisionamiento en paralelo.
+*   **[RESUMEN_TRABAJO_18_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_18_JUNIO_2026.md)**
+    *   *Descripción:* Análisis de puertos Telnet y desarrollo de la eliminación lógica de usuarios con deactivación paralela de permisos en impresoras.
+*   **[OPORTUNIDADES_APROVECHAMIENTO_PUERTOS.md](desarrollo/analisis/OPORTUNIDADES_APROVECHAMIENTO_PUERTOS.md)**
+    *   *Descripción:* Análisis de puertos y servicios abiertos de la flota Ricoh y cómo pueden ser aprovechados por el proyecto.
+*   **[OPTIMIZACION_GESTION_USUARIOS.md](desarrollo/analisis/OPTIMIZACION_GESTION_USUARIOS.md)**
+    *   *Descripción:* Diagnóstico y plan de optimización de la gestión de usuarios cruzando base de datos, backend y protocolos de impresora.
+*   **[RECONFIGURACION_SERVIDOR_131.md](deployment/RECONFIGURACION_SERVIDOR_131.md)**
+    *   *Descripción:* Reconfiguración de seguridad, desactivación de bloqueos de cuenta, retorno a HTTP plano en puertos 80 y 8000, y herramientas de sincronización local/remoto para el servidor 131.
 *   **[RESUMEN_TRABAJO_11_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_11_JUNIO_2026.md)**
     *   *Descripción:* Protección de endpoints de documentación API (/docs, /redoc, /openapi.json) con Basic Auth e informe de auditoría/sincronización de base de datos local vs. servidor.
 *   **[RESUMEN_TRABAJO_01_03_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_01_03_JUNIO_2026.md)**
@@ -95,6 +107,7 @@ docs/
 
 ### 🚀 Despliegue en Producción
 *   **[DEPLOYMENT_PRODUCTION.md](deployment/DEPLOYMENT_PRODUCTION.md):** Guía exhaustiva de despliegue paso a paso en entorno de producción.
+*   **[RECONFIGURACION_SERVIDOR_131.md](deployment/RECONFIGURACION_SERVIDOR_131.md):** Historial y pasos de reconfiguración a HTTP y sincronización para el servidor 192.168.91.131.
 *   **[DIFERENCIAS_LOCAL_VS_PRODUCCION.md](deployment/DIFERENCIAS_LOCAL_VS_PRODUCCION.md):** Checklist de diferencias de variables, puertos y políticas de seguridad entre local y prod.
 *   **[INSTALACION_SSH_REMOTA.md](deployment/INSTALACION_SSH_REMOTA.md):** Manual detallado para configuración y acceso seguro mediante túneles SSH.
 *   **[INSTRUCCIONES_DESPLIEGUE_PRODUCCION.md](deployment/INSTRUCCIONES_DESPLIEGUE_PRODUCCION.md):** Instrucciones resumidas de comandos para DevOps.
@@ -144,7 +157,11 @@ docs/
 ---
 
 ## 📊 4. Resúmenes Históricos de Trabajo
-
+ 
+*   **[RESUMEN_TRABAJO_23_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_23_JUNIO_2026.md):** Solución de IndentationError en cliente Ricoh, despliegue y pruebas concurrentes de 5 impresoras.
+*   **[RESUMEN_TRABAJO_18_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_18_JUNIO_2026.md):** Resumen de hallazgos de Telnet y de la función de eliminación de usuarios con desactivación física paralela.
+*   **[RESUMEN_TRABAJO_12_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_12_JUNIO_2026.md):** Optimización de scraping web Ricoh (fastList / lazy loading), pools de sesión y caché en Redis.
+*   **[bitacora_trabajo_sena.md](resumen/bitacora_trabajo_sena.md):** Bitácora oficial de actividades Sena (15 de Mayo a 14 de Junio de 2026) verificada según modificaciones de archivos.
 *   **[RESUMEN_TRABAJO_01_03_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_01_03_JUNIO_2026.md):** Consolidado del ciclo de trabajo de junio para suministros, dashboard y simetría de contadores.
 *   **[RESUMEN_TRABAJO_26_29_MAYO_2026.md](resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md):** Resumen de fixes de API, normalización de centros de costo y remoción de soporte CSV.
 *   **[RESPONSIVE_COMPLETADO.md](resumen/RESPONSIVE_COMPLETADO.md) / [RESUMEN_FINAL_RESPONSIVE.md](resumen/RESUMEN_FINAL_RESPONSIVE.md):** Reportes del hito de implementación y adaptabilidad responsive completa.

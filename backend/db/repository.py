@@ -357,6 +357,15 @@ class AssignmentRepository:
         assignment.func_scanner = permissions.get('escaner', False)
         assignment.func_browser = permissions.get('navegador', False)
         
+        # Reactivar asignación y usuario si estaban inactivos (deriva detectada en hardware)
+        assignment.is_active = True
+        
+        # Reactivar el usuario directamente (sin depender del lazy-load de la relación)
+        from db.models import User
+        user_obj = db.query(User).filter(User.id == user_id).first()
+        if user_obj and not user_obj.is_active:
+            user_obj.is_active = True
+        
         db.commit()
         db.refresh(assignment)
         return assignment

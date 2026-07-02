@@ -3,6 +3,7 @@ import { usePrinterStore } from "@/store/usePrinterStore";
 import { PrinterCard } from "../fleet/PrinterCard";
 import { DiscoveryModal } from "../discovery/DiscoveryModal";
 import { EditPrinterModal } from "../fleet/EditPrinterModal";
+import { PrinterDiagnosticsModal } from "../fleet/PrinterDiagnosticsModal";
 import { Button, Input, Alert, Spinner } from "@/components/ui";
 import { UserPlus, Wifi, Send } from "lucide-react";
 import { printerDeviceToCardProps } from "@/utils/printerTransform";
@@ -15,6 +16,8 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPrinter, setEditingPrinter] = useState<PrinterDevice | null>(null);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
+  const [diagnosticsPrinter, setDiagnosticsPrinter] = useState<PrinterDevice | null>(null);
   const [userName, setUserName] = useState('');
   const [userPin, setUserPin] = useState('');
   const [smbPath, setSmbPath] = useState('');
@@ -89,6 +92,11 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
   const handleEditPrinter = (printer: PrinterDevice) => {
     setEditingPrinter(printer);
     setIsEditOpen(true);
+  };
+
+  const handleDiagnosticsPrinter = (printer: PrinterDevice) => {
+    setDiagnosticsPrinter(printer);
+    setIsDiagnosticsOpen(true);
   };
 
   const handleSavePrinter = async (printerId: string, updates: any) => {
@@ -167,9 +175,9 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
         return printer ? parseInt(printer.id) : null;
       }).filter((id: number | null): id is number => id !== null);
 
-      console.log('🔍 Debug - Selected printers:', selectedPrinters);
-      console.log('🔍 Debug - Converted printer IDs:', printerIds);
-      console.log('🔍 Debug - User ID:', user.id);
+      // console.log('🔍 Debug - Selected printers:', selectedPrinters);
+      // console.log('🔍 Debug - Converted printer IDs:', printerIds);
+      // console.log('🔍 Debug - User ID:', user.id);
 
       if (printerIds.length === 0) {
         return;
@@ -473,6 +481,7 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
                   {...printerDeviceToCardProps(printer)}
                   onEdit={() => handleEditPrinter(printer)}
                   onRefresh={() => handleRefreshPrinter(printer)}
+                  onDiagnostics={() => handleDiagnosticsPrinter(printer)}
                 />
               ))
             )}
@@ -496,6 +505,16 @@ export const ProvisioningPanel = ({ showDiscoveryOnly = false }: { showDiscovery
         }}
         onSave={handleSavePrinter}
         printer={editingPrinter}
+      />
+
+      {/* Printer Diagnostics Modal */}
+      <PrinterDiagnosticsModal
+        isOpen={isDiagnosticsOpen}
+        onClose={() => {
+          setIsDiagnosticsOpen(false);
+          setDiagnosticsPrinter(null);
+        }}
+        printer={diagnosticsPrinter}
       />
     </div>
   );

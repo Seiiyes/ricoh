@@ -26,7 +26,7 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
     return date.toLocaleDateString('es-ES');
   };
 
-  console.log('ListaCierres rendered with:', { printer, year, tipoPeriodo, cierresCount: cierres.length });
+  // console.log('ListaCierres rendered with:', { printer, year, tipoPeriodo, cierresCount: cierres.length });
 
 
   if (cierres.length === 0) {

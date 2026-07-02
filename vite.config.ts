@@ -23,5 +23,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['backend']
+  },
+  esbuild: {
+    drop: ['console', 'debugger'],
   }
 })
