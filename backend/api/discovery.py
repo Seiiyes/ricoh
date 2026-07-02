@@ -10,7 +10,7 @@ from typing import Optional
 
 from db.database import get_db
 from db.repository import PrinterRepository
-from db.models import PrinterStatus, User
+from db.models import PrinterStatus, User, UserPrinterAssignment
 from services.network_scanner import NetworkScanner
 from services.snmp_client import get_snmp_client
 from middleware.auth_middleware import get_current_user
@@ -494,16 +494,50 @@ async def sync_users_from_printers(
                         ).first()
                         
                         # ACTUALIZACIÓN DE PERSISTENCIA:
-                        # Si ya existe en DB, actualizamos sus permisos reales para esta impresora
+                        # Si ya existe en DB, actualizamos sus permisos reales para esta impresora.
+                        # IMPORTANTE: En modo fast_list los permisos vienen todos en False (no se consultaron
+                        # del hardware). Solo actualizamos permisos cuando hay datos reales del hardware,
+                        # es decir cuando al menos un permiso está en True O cuando es modo specific.
                         if existing:
                             from db.repository import AssignmentRepository
-                            AssignmentRepository.update_assignment_state(
-                                db=db, 
-                                user_id=existing.id, 
-                                printer_id=printer.id, 
-                                entry_index=user.get('entry_index', ''), 
-                                permissions=user['permisos']
+                            permisos_del_usuario = user.get('permisos', {})
+                            tiene_permisos_reales = (
+                                mode == "specific" or
+                                any(permisos_del_usuario.values())
                             )
+                            if tiene_permisos_reales:
+                                # Permisos reales del hardware → actualizar en BD
+                                AssignmentRepository.update_assignment_state(
+                                    db=db, 
+                                    user_id=existing.id, 
+                                    printer_id=printer.id, 
+                                    entry_index=user.get('entry_index', ''), 
+                                    permissions=permisos_del_usuario
+                                )
+                            else:
+                                # Modo fast_list sin permisos reales → solo crear asignación si no existe,
+                                # preservando los permisos ya guardados en BD
+                                existing_assignment = db.query(UserPrinterAssignment).filter(
+                                    UserPrinterAssignment.user_id == existing.id,
+                                    UserPrinterAssignment.printer_id == printer.id
+                                ).first()
+                                if not existing_assignment:
+                                    # Crear nueva asignación con permisos en False (aún no sabemos sus permisos reales)
+                                    new_assignment = UserPrinterAssignment(
+                                        user_id=existing.id,
+                                        printer_id=printer.id,
+                                        entry_index=user.get('entry_index', ''),
+                                        is_active=True
+                                    )
+                                    db.add(new_assignment)
+                                    db.commit()
+                                    logger.info(f"   ➕ Nueva asignación creada para usuario {codigo} en impresora {printer.hostname} (permisos pendientes de consulta real)")
+                                else:
+                                    # Asignación ya existe: reactivar pero NO tocar los permisos
+                                    if not existing_assignment.is_active:
+                                        existing_assignment.is_active = True
+                                        db.commit()
+                                    logger.debug(f"   🔒 Preservando permisos existentes de {codigo} en {printer.hostname} (modo fast_list)")
 
                         users_dict[codigo] = {
                             'nombre': user['nombre'],
