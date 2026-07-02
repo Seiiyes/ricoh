@@ -66,16 +66,44 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
       console.error('usuarios no es un array:', usuarios);
       return [];
     }
-    
+
+    /**
+     * Un usuario se considera INACTIVO cuando:
+     * - Tiene al menos una impresora asignada (impresoras.length > 0), Y
+     * - En TODAS sus impresoras asignadas, TODOS los permisos están en false.
+     * 
+     * Si el usuario no tiene impresoras asignadas, se cae en el campo is_active de la BD.
+     */
+    const esInactivo = (u: Usuario): boolean => {
+      const impresoras = u.impresoras;
+      if (impresoras && impresoras.length > 0) {
+        // Revisar si TODAS las impresoras tienen TODOS los permisos en false
+        return impresoras.every((imp) => {
+          const p = imp.permisos;
+          if (!p) return true; // Sin permisos = todo desactivado
+          return (
+            !p.copiadora &&
+            !p.copiadora_color &&
+            !p.impresora &&
+            !p.impresora_color &&
+            !p.document_server &&
+            !p.fax &&
+            !p.escaner &&
+            !p.navegador
+          );
+        });
+      }
+      // Sin impresoras: usar el campo is_active de BD como fallback
+      return !u.is_active;
+    };
+
     let filtrados = usuarios;
     
-    // Filtrar por estado:
-    // Si hay una búsqueda activa, incluimos usuarios inactivos para que sean encontrables.
-    // De lo contrario, respetamos el filtro de estado seleccionado.
+    // Filtrar por estado
     if (filtroEstado === 'activos' && !busqueda.trim()) {
-      filtrados = filtrados.filter((u) => u.is_active);
+      filtrados = filtrados.filter((u) => !esInactivo(u));
     } else if (filtroEstado === 'inactivos') {
-      filtrados = filtrados.filter((u) => !u.is_active);
+      filtrados = filtrados.filter((u) => esInactivo(u));
     }
     
     // Filtrar por búsqueda
