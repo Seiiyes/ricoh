@@ -101,8 +101,10 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
     
     // Filtrar por estado
     if (filtroEstado === 'activos' && !busqueda.trim()) {
-      filtrados = filtrados.filter((u) => !esInactivo(u));
+      // Activos: campo is_active de BD (comportamiento original)
+      filtrados = filtrados.filter((u) => u.is_active);
     } else if (filtroEstado === 'inactivos') {
+      // Inactivos: usuario con TODAS las impresoras con TODOS los permisos en false
       filtrados = filtrados.filter((u) => esInactivo(u));
     }
     
