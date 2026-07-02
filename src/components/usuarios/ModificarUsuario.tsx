@@ -6,6 +6,7 @@ import { EditorPermisos } from './EditorPermisos';
 import { GestorEquipos } from './GestorEquipos';
 import { Button, Alert, Spinner, Input, EmpresaAutocomplete, CentroCostosAutocomplete } from '@/components/ui';
 import type { Usuario, ImpresoraUsuario } from '@/types/usuario';
+import { useNotification } from '@/hooks/useNotification';
 
 interface ModificarUsuarioProps {
   usuario: Usuario | null;
@@ -18,6 +19,7 @@ export const ModificarUsuario = ({
   onCerrar,
   onUsuarioGuardado,
 }: ModificarUsuarioProps) => {
+  const notify = useNotification();
   const [idLocal, setIdLocal] = useState<number | string>(usuario?.id || '');
   const [cargandoDatos, setCargandoDatos] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -462,7 +464,8 @@ export const ModificarUsuario = ({
         );
       }
 
-      // 3. Guardar cambios en el perfil general (solo si estamos en la pestaña de 'info')
+      // 3. Guardar cambios en el perfil general (si estamos en info)
+      let perfilActualizado = false;
       if (finalUsuarioId && tabActiva === 'info') {
         if (!esImportado) {
           await actualizarUsuario(finalUsuarioId, {
@@ -474,24 +477,44 @@ export const ModificarUsuario = ({
             smb_path: carpeta || undefined,
             ...permisosBase
           });
+          perfilActualizado = true;
         }
+      }
 
-        // 4. Sincronizar a TODAS las impresoras asignadas
-        if (impresorasAsignadas.length > 0) {
-          // console.log("🔄 Sincronizando cambios de perfil a todas las impresoras...");
-          setSincronizandoImpresoras(true);
-          try {
-            // Extraer las IPs de todas las impresoras asignadas
-            const printerIps = impresorasAsignadas.map(imp => imp.printer_ip);
-            const syncResult = await sincronizarUsuarioTodasImpresoras(finalUsuarioId, printerIps, sincronizarPermisosBase);
-            // console.log("✅ Resultado de sincronización:", syncResult.message);
-          } catch (syncError: any) {
-            console.error("⚠️ Error en sincronización a impresoras:", syncError);
-            // No fallar la operación completa si la sincronización falla
-            setError(`Datos guardados en DB, pero hubo problemas sincronizando con algunas impresoras: ${syncError.message}`);
-          } finally {
-            setSincronizandoImpresoras(false);
-          }
+      // 4. Sincronizar masivamente a TODAS las impresoras (si el checkbox de sincronización base está activo)
+      let sincronizacionRealizada = false;
+      if (finalUsuarioId && (tabActiva === 'info' || sincronizarPermisosBase) && impresorasAsignadas.length > 0) {
+        setSincronizandoImpresoras(true);
+        try {
+          const printerIps = impresorasAsignadas.map(imp => imp.printer_ip);
+          const syncResult = await sincronizarUsuarioTodasImpresoras(finalUsuarioId, printerIps, sincronizarPermisosBase);
+          sincronizacionRealizada = true;
+          console.log("✅ Resultado de sincronización:", syncResult.message);
+        } catch (syncError: any) {
+          console.error("⚠️ Error en sincronización a impresoras:", syncError);
+          notify.warning('Sincronización parcial', `Los datos locales se guardaron, pero hubo inconvenientes al sincronizar en vivo con algunos equipos: ${syncError.message}`);
+        } finally {
+          setSincronizandoImpresoras(false);
+        }
+      }
+
+      // 5. Lanzar notificaciones descriptivas basadas en las operaciones realizadas
+      if (tabActiva === 'permisos' && impresoraSeleccionada) {
+        notify.success(
+          'Permisos aplicados', 
+          `Los permisos se enviaron y configuraron exitosamente en vivo en el equipo "${impresoraSeleccionada.printer_location || impresoraSeleccionada.printer_name}" (${impresoraSeleccionada.printer_ip}).`
+        );
+      } else if (perfilActualizado) {
+        if (sincronizacionRealizada && sincronizarPermisosBase) {
+          notify.success(
+            'Perfil y permisos sincronizados', 
+            `El perfil del usuario "${nombre}" fue guardado y sus permisos base se aplicaron con éxito en todas las impresoras asignadas.`
+          );
+        } else {
+          notify.success(
+            'Perfil actualizado', 
+            `El perfil del usuario "${nombre}" se guardó correctamente en el sistema local.`
+          );
         }
       }
 
@@ -500,13 +523,13 @@ export const ModificarUsuario = ({
       if (finalUsuarioId) {
         await cargarEquiposYPermisos(finalUsuarioId);
       }
-      // Notificar al padre para recargar la tabla general de usuarios al instante
       onUsuarioGuardado?.();
-      // No cerrar el modal automáticamente para permitir editar otras impresoras
-      setTimeout(() => setExito(false), 3000); // Ocultar mensaje de éxito después de 3 segundos
+      setTimeout(() => setExito(false), 3000);
     } catch (e: any) {
       console.error("Error en handleGuardarTerminal:", e);
-      setError(e.message || "No se pudo completar la sincronización con el equipo");
+      const errMsg = e.response?.data?.detail || e.message || "No se pudo completar la sincronización con el equipo";
+      setError(errMsg);
+      notify.error('Error al guardar', `Ocurrió un error al aplicar los cambios: ${errMsg}`);
     } finally {
       setGuardando(false);
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { Edit2, ChevronDown, ChevronRight, Trash2, RefreshCw } from 'lucide-react';
 import { obtenerIconosPermisos, contarPermisosActivos } from '@/services/servicioUsuarios';
 import { obtenerUsuarioConEquipos } from '@/services/servicioUsuarios';
 import { Button, Spinner } from '@/components/ui';
@@ -9,6 +9,7 @@ import type { EquipoAsignado } from '@/types/usuario';
 interface FilaUsuarioProps {
   usuario: Usuario;
   expandido: boolean;
+  desactivando?: boolean;
   onToggleExpandir: () => void;
   onEditar: () => void;
   onDesactivar: (usuario: Usuario) => void;
@@ -17,6 +18,7 @@ interface FilaUsuarioProps {
 export const FilaUsuario = ({
   usuario,
   expandido,
+  desactivando = false,
   onToggleExpandir,
   onEditar,
   onDesactivar,
@@ -173,20 +175,31 @@ export const FilaUsuario = ({
               size="sm"
               icon={<Edit2 size={14} />}
               onClick={onEditar}
-              className="text-ricoh-red hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
+              disabled={desactivando}
+              className="text-ricoh-red hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100 disabled:opacity-30 disabled:pointer-events-none"
             >
               Editar
             </Button>
             {usuario.en_db !== false && typeof usuario.id === 'number' && usuario.is_active !== false && (
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<Trash2 size={14} />}
-                onClick={() => onDesactivar(usuario)}
-                className="text-slate-400 hover:text-red-600 hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
-              >
-                Desactivar
-              </Button>
+              desactivando ? (
+                <button
+                  disabled
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-red-400 text-white cursor-not-allowed shadow-sm select-none animate-pulse"
+                >
+                  <RefreshCw size={13} className="animate-spin" />
+                  Desactivando...
+                </button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Trash2 size={14} />}
+                  onClick={() => onDesactivar(usuario)}
+                  className="text-slate-400 hover:text-red-600 hover:bg-red-50/80 opacity-60 hover:opacity-100 transition-all focus:opacity-100"
+                >
+                  Desactivar
+                </Button>
+              )
             )}
           </div>
         </td>
