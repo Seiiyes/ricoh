@@ -511,11 +511,11 @@ export const ModificarUsuario = ({
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl modal-content w-full h-[90vh] sm:h-[85vh] flex overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl modal-content w-full h-[95vh] md:h-[85vh] flex flex-col md:flex-row overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
 
         {/* Sidebar de Navegación */}
-        <div className="w-48 sm:w-56 lg:w-64 bg-slate-900 flex flex-col border-r border-slate-800">
-          <div className="p-4 sm:p-5 lg:p-6">
+        <div className="w-full md:w-56 lg:w-64 bg-slate-900 flex flex-col border-b md:border-b-0 md:border-r border-slate-800 flex-shrink-0">
+          <div className="p-4 md:p-5 lg:p-6 hidden md:block">
             <h2 className="text-white font-black text-responsive-base tracking-tighter flex items-center gap-2">
               <span className="bg-ricoh-red p-1 rounded text-xs sm:text-sm">R</span> 
               <span className="hidden sm:inline">RICOH EQUIPMENT</span>
@@ -524,19 +524,19 @@ export const ModificarUsuario = ({
             <p className="text-slate-500 text-responsive-xs font-bold uppercase tracking-widest mt-1">Gestión de Perfil</p>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1">
+          <nav className="flex-row md:flex-col flex-1 px-4 py-3 md:py-0 space-x-2 md:space-x-0 space-y-0 md:space-y-1 overflow-x-auto md:overflow-x-visible md:overflow-y-auto flex items-center md:items-stretch scrollbar-none">
             <button
               onClick={() => { setTabActiva('info'); setImpresoraSeleccionada(null); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${tabActiva === 'info' ? 'bg-ricoh-red text-white shadow-lg shadow-red-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+              className={`flex-shrink-0 w-auto md:w-full flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-xs md:text-sm font-bold transition-all ${tabActiva === 'info' ? 'bg-ricoh-red text-white shadow-lg shadow-red-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
             >
               <Settings size={18} /> Perfil y SMB
             </button>
 
-            <div className="pt-4 pb-2 flex items-center justify-between px-4">
+            <div className="pt-4 pb-2 hidden md:flex items-center justify-between px-4">
               <p className="text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">Equipos Asignados</p>
             </div>
 
-            <div className="space-y-1 max-h-[300px] overflow-y-auto px-1">
+            <div className="flex flex-row md:flex-col space-x-2 md:space-x-0 space-y-0 md:space-y-1 max-h-none md:max-h-[300px] overflow-x-auto md:overflow-x-visible md:overflow-y-auto px-1 flex-1 md:flex-none scrollbar-none">
               {impresorasAsignadas.map((p, index) => {
                 const estaCargandoEsta = cargandoPermisoIds.has(p.printer_id);
                 const yaFueCargada = permisosYaCargados.has(p.printer_id);
@@ -544,36 +544,36 @@ export const ModificarUsuario = ({
                 <button
                   key={`${p.printer_id}-${p.entry_index || index}`}
                   onClick={() => { setImpresoraSeleccionada(p); setTabActiva('permisos'); }}
-                  className={`w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all group ${impresoraSeleccionada?.printer_id === p.printer_id ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
+                  className={`flex-shrink-0 w-auto md:w-full flex flex-row md:flex-col items-center md:items-start px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all group gap-2 md:gap-0 ${impresoraSeleccionada?.printer_id === p.printer_id ? 'bg-slate-800 border border-slate-700' : 'hover:bg-white/5'}`}
                 >
-                  <div className="flex items-center gap-2 w-full">
+                  <div className="flex items-center gap-2 w-full md:w-auto">
                     <Printer size={14} className={impresoraSeleccionada?.printer_id === p.printer_id ? 'text-red-400' : 'text-slate-500'} />
-                    <span className={`text-xs font-black truncate flex-1 text-left ${impresoraSeleccionada?.printer_id === p.printer_id ? 'text-white' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-black truncate text-left ${impresoraSeleccionada?.printer_id === p.printer_id ? 'text-white' : 'text-slate-400'}`}>
                       {p.printer_location || p.printer_name}
                     </span>
                     {/* Indicador de estado de carga */}
                     {estaCargandoEsta && (
-                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" title="Leyendo permisos..." />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" title="Leyendo permisos..." />
                     )}
                     {yaFueCargada && !estaCargandoEsta && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" title="Permisos cargados" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" title="Permisos cargados" />
                     )}
                   </div>
-                  <span className="text-[10px] text-slate-900 font-bold ml-5 bg-blue-100/50 px-1 rounded">{p.printer_ip}</span>
+                  <span className="text-[9px] md:text-[10px] text-slate-400 font-bold bg-white/10 px-1.5 py-0.5 rounded md:mt-1">{p.printer_ip}</span>
                 </button>
                 );
               })}
 
               <button
                 onClick={() => setTabActiva('equipos')}
-                className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border border-dashed ${tabActiva === 'equipos' ? 'bg-ricoh-red/20 text-ricoh-red border-ricoh-red/50' : 'text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-300'}`}
+                className={`flex-shrink-0 w-auto md:w-full flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all border border-dashed ${tabActiva === 'equipos' ? 'bg-ricoh-red/20 text-ricoh-red border-ricoh-red/50' : 'text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-300'}`}
               >
-                <Plus size={14} /> Agregar o Quitar Impresoras
+                <Plus size={14} /> <span className="hidden md:inline">Agregar/Quitar</span> <span className="inline md:hidden">Equipos</span>
               </button>
             </div>
           </nav>
 
-          <div className="p-6 mt-auto border-t border-slate-800">
+          <div className="p-6 mt-auto border-t border-slate-800 hidden md:block">
             <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-xl">
               <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
                 {nombre.substring(0, 2).toUpperCase()}
@@ -636,7 +636,7 @@ export const ModificarUsuario = ({
             {tabActiva === 'info' && (
               <div className="space-y-8 max-w-3xl">
                 <section className="space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Nombre Completo</label>
                       <Input
@@ -656,7 +656,7 @@ export const ModificarUsuario = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
                       <EmpresaAutocomplete
                         label="Empresa"
@@ -683,7 +683,7 @@ export const ModificarUsuario = ({
                     <Globe size={16} className="text-blue-500" />
                     <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">Configuración de Escaneo (SMB)</h4>
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Usuario Autenticación Red</label>
                       <Input
