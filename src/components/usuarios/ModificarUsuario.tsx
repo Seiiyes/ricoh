@@ -537,7 +537,7 @@ export const ModificarUsuario = ({
               <p className="text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">Equipos Asignados</p>
             </div>
 
-            <div className="flex flex-row md:flex-col space-x-2 md:space-x-0 space-y-0 md:space-y-1 max-h-none md:max-h-[300px] overflow-x-auto md:overflow-x-visible md:overflow-y-auto px-1 flex-1 md:flex-none scrollbar-none">
+            <div className="flex flex-row md:flex-col space-x-2 md:space-x-0 space-y-0 md:space-y-1 max-h-none md:max-h-none overflow-x-auto md:overflow-x-visible md:overflow-y-visible px-1 flex-1 md:flex-none scrollbar-none">
               {impresorasAsignadas.map((p, index) => {
                 const estaCargandoEsta = cargandoPermisoIds.has(p.printer_id);
                 const yaFueCargada = permisosYaCargados.has(p.printer_id);
