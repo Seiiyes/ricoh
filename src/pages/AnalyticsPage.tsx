@@ -121,9 +121,22 @@ const AnalyticsPage = () => {
   const [userSearch, setUserSearch] = useState('');
   const [filterFechaInicio, setFilterFechaInicio] = useState('');
   const [filterFechaFin, setFilterFechaFin] = useState('');
+  const [filterFechaInicioComp, setFilterFechaInicioComp] = useState('');
+  const [filterFechaFinComp, setFilterFechaFinComp] = useState('');
   const [filterCentroCostos, setFilterCentroCostos] = useState('');
 
   const { data: closures } = useMonthlyCloses();
+
+  // Hook for comparison period consumption data (loads all records for memory mapping)
+  const { data: compUserConsumptionData } = useGlobalUserConsumption({
+    page: 1,
+    pageSize: 5000,
+    search: undefined,
+    fechaInicio: filterFechaInicioComp || undefined,
+    fechaFin: filterFechaFinComp || undefined,
+    centroCostos: filterCentroCostos || undefined
+  });
+  const compUserConsumption = compUserConsumptionData as any;
 
   const uniquePeriods = useMemo(() => {
     if (!closures) return [];
@@ -230,6 +243,25 @@ const AnalyticsPage = () => {
     );
   }, [globalUserConsumption?.items]);
 
+  // Memoized maps for the comparison period values
+  const compDataMaps = useMemo(() => {
+    const userMap = new Map<number, { consumo_total: number; printers: Map<number, number> }>();
+    if (!compUserConsumption?.items) return { userMap };
+
+    for (const r of compUserConsumption.items) {
+      if (!userMap.has(r.user_id)) {
+        userMap.set(r.user_id, {
+          consumo_total: 0,
+          printers: new Map<number, number>()
+        });
+      }
+      const uComp = userMap.get(r.user_id)!;
+      uComp.consumo_total += r.consumo_total || 0;
+      uComp.printers.set(r.printer_id, (uComp.printers.get(r.printer_id) || 0) + (r.consumo_total || 0));
+    }
+    return { userMap };
+  }, [compUserConsumption?.items]);
+
   // Aggregation logic: consolidatedUsers (groups by user_id)
   const consolidatedUsers = useMemo(() => {
     const items = globalUserConsumption?.items || [];
@@ -239,6 +271,8 @@ const AnalyticsPage = () => {
       nombre_usuario: string;
       centro_costos: string | null;
       consumo_total: number;
+      consumo_comparar: number;
+      diferencia: number;
       total_paginas: number;
       total_bn: number;
       total_color: number;
@@ -254,6 +288,8 @@ const AnalyticsPage = () => {
         printer_ip: string;
         printer_location: string;
         consumo_total: number;
+        consumo_comparar: number;
+        diferencia: number;
         total_paginas: number;
         total_bn: number;
         total_color: number;
@@ -272,12 +308,16 @@ const AnalyticsPage = () => {
 
     for (const r of items) {
       if (!map.has(r.user_id)) {
+        const compInfo = compDataMaps.userMap.get(r.user_id);
+        const consumoCompararUser = compInfo ? compInfo.consumo_total : 0;
         map.set(r.user_id, {
           user_id: r.user_id,
           codigo_usuario: r.codigo_usuario,
           nombre_usuario: r.nombre_usuario,
           centro_costos: r.centro_costos || null,
           consumo_total: 0,
+          consumo_comparar: consumoCompararUser,
+          diferencia: 0, // Se calculará después de sumar el total
           total_paginas: 0,
           total_bn: 0,
           total_color: 0,
@@ -298,6 +338,9 @@ const AnalyticsPage = () => {
       u.consumo_escaner += r.consumo_escaner || 0;
       u.consumo_fax += r.consumo_fax || 0;
 
+      const compInfo = compDataMaps.userMap.get(r.user_id);
+      const consumoCompararPrinter = compInfo ? (compInfo.printers.get(r.printer_id) || 0) : 0;
+
       u.printers.push({
         id: r.id,
         cierre_mensual_id: r.cierre_mensual_id,
@@ -307,6 +350,8 @@ const AnalyticsPage = () => {
         printer_location: r.printer_location,
         printer_serial: r.printer_serial,
         consumo_total: r.consumo_total,
+        consumo_comparar: consumoCompararPrinter,
+        diferencia: r.consumo_total - consumoCompararPrinter,
         total_paginas: r.total_paginas,
         total_bn: r.total_bn,
         total_color: r.total_color,
@@ -322,10 +367,15 @@ const AnalyticsPage = () => {
       });
     }
 
+    // Calcular la diferencia consolidada final para cada usuario
+    for (const u of map.values()) {
+      u.diferencia = u.consumo_total - u.consumo_comparar;
+    }
+
     return Array.from(map.values()).sort(
       (a, b) => b.consumo_total - a.consumo_total
     );
-  }, [globalUserConsumption?.items]);
+  }, [globalUserConsumption?.items, compDataMaps]);
 
   const consolidatedHierarchy = useMemo(() => {
     // Use the dedicated area query (all records, no pagination) for correct totals
@@ -1064,9 +1114,9 @@ const AnalyticsPage = () => {
           </div>
 
           {/* Advanced Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
             <div className="flex flex-col gap-1.5 col-span-1 sm:col-span-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Período de Cierre</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Período de Cierre (Principal)</label>
               <select
                 value={filterFechaInicio && filterFechaFin ? `${filterFechaInicio}_${filterFechaFin}` : ''}
                 onChange={(e) => {
@@ -1094,13 +1144,48 @@ const AnalyticsPage = () => {
                     : `Período del ${formatDate(p.start)} al ${formatDate(p.end)}`;
                   return (
                     <option key={`${p.start}_${p.end}`} value={`${p.start}_${p.end}`}>
-                      {label}
+                       {label}
                     </option>
                   );
                 })}
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 col-span-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comparar con Período (Opcional)</label>
+              <select
+                value={filterFechaInicioComp && filterFechaFinComp ? `${filterFechaInicioComp}_${filterFechaFinComp}` : ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    const [start, end] = val.split('_');
+                    setFilterFechaInicioComp(start);
+                    setFilterFechaFinComp(end);
+                  } else {
+                    setFilterFechaInicioComp('');
+                    setFilterFechaFinComp('');
+                  }
+                  setUserPage(1);
+                }}
+                className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red font-semibold text-slate-700 transition-all shadow-sm cursor-pointer"
+              >
+                <option value="">(Sin comparar)</option>
+                {uniquePeriods.map((p) => {
+                  const formatDate = (dateStr: string) => {
+                    const [y, m, d] = dateStr.split('-');
+                    return `${d}/${m}/${y}`;
+                  };
+                  const label = p.start === p.end
+                    ? `Cierre del ${formatDate(p.start)}`
+                    : `Período del ${formatDate(p.start)} al ${formatDate(p.end)}`;
+                  return (
+                    <option key={`comp_${p.start}_${p.end}`} value={`${p.start}_${p.end}`}>
+                       {label}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5 col-span-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Centro de Costos</label>
               <CentroCostosAutocomplete
                 label=""
@@ -1208,7 +1293,19 @@ const AnalyticsPage = () => {
                           </div>
 
                           <div className="text-[11px] text-slate-500 font-semibold mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                            <span>Consumo consolidado: <strong className="text-slate-700">{u.consumo_total.toLocaleString()} págs</strong></span>
+                            {filterFechaInicioComp && filterFechaFinComp ? (
+                              <>
+                                <span>Período A: <strong className="text-slate-750 font-extrabold">{u.consumo_total.toLocaleString()} págs</strong></span>
+                                <span>·</span>
+                                <span>Período B: <strong className="text-slate-500 font-bold">{u.consumo_comparar.toLocaleString()} págs</strong></span>
+                                <span>·</span>
+                                <span>Diferencia: <strong className={u.diferencia > 0 ? "text-emerald-600 font-extrabold" : u.diferencia < 0 ? "text-red-500 font-extrabold" : "text-slate-400 font-bold"}>
+                                  {u.diferencia === 0 ? '0' : `${u.diferencia > 0 ? '+' : ''}${u.diferencia.toLocaleString()}`}
+                                </strong></span>
+                              </>
+                            ) : (
+                              <span>Consumo consolidado: <strong className="text-slate-700">{u.consumo_total.toLocaleString()} págs</strong></span>
+                            )}
                             <span>·</span>
                             <span>Equipos utilizados: <strong className="text-slate-700">{u.printers.length} {u.printers.length === 1 ? 'impresora' : 'impresoras'}</strong></span>
                             <span>·</span>
@@ -1293,14 +1390,27 @@ const AnalyticsPage = () => {
                             <div className="overflow-x-auto rounded-xl border border-slate-100">
                               <table className="w-full text-xs text-left">
                                 <thead className="bg-slate-50 text-[9px] uppercase font-black tracking-widest text-slate-500 border-b border-slate-100">
-                                  <tr>
-                                    <th className="px-4 py-3">Impresora / Ubicación</th>
-                                    <th className="px-4 py-3 text-center">Consumo del Período</th>
-                                    <th className="px-4 py-3 text-center">Total Acumulado</th>
-                                    <th className="px-4 py-3 text-center">B/N vs Color (Acumulado)</th>
-                                    <th className="px-4 py-3 text-center">Funciones (Cop/Imp/Esc)</th>
-                                    <th className="px-4 py-3 text-right">Acciones</th>
-                                  </tr>
+                                  {filterFechaInicioComp && filterFechaFinComp ? (
+                                    <tr>
+                                      <th className="px-4 py-3">Impresora / Ubicación</th>
+                                      <th className="px-4 py-3 text-center">Consumo A</th>
+                                      <th className="px-4 py-3 text-center">Consumo B</th>
+                                      <th className="px-4 py-3 text-center">Diferencia</th>
+                                      <th className="px-4 py-3 text-center">Total Acumulado</th>
+                                      <th className="px-4 py-3 text-center">B/N vs Color (Acumulado)</th>
+                                      <th className="px-4 py-3 text-center">Funciones (Cop/Imp/Esc)</th>
+                                      <th className="px-4 py-3 text-right">Acciones</th>
+                                    </tr>
+                                  ) : (
+                                    <tr>
+                                      <th className="px-4 py-3">Impresora / Ubicación</th>
+                                      <th className="px-4 py-3 text-center">Consumo del Período</th>
+                                      <th className="px-4 py-3 text-center">Total Acumulado</th>
+                                      <th className="px-4 py-3 text-center">B/N vs Color (Acumulado)</th>
+                                      <th className="px-4 py-3 text-center">Funciones (Cop/Imp/Esc)</th>
+                                      <th className="px-4 py-3 text-right">Acciones</th>
+                                    </tr>
+                                  )}
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                   {u.printers.map((pRecord) => (
@@ -1317,11 +1427,30 @@ const AnalyticsPage = () => {
                                             : `Período: ${formatDate(pRecord.fecha_inicio)} al ${formatDate(pRecord.fecha_fin)}`}
                                         </div>
                                       </td>
-                                      <td className="px-4 py-3 text-center">
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-red-50 text-ricoh-red">
-                                          {pRecord.consumo_total.toLocaleString()} págs
-                                        </span>
-                                      </td>
+                                      {filterFechaInicioComp && filterFechaFinComp ? (
+                                        <>
+                                          <td className="px-4 py-3 text-center font-bold text-slate-700">
+                                            {pRecord.consumo_total.toLocaleString()} págs
+                                          </td>
+                                          <td className="px-4 py-3 text-center text-slate-500">
+                                            {pRecord.consumo_comparar.toLocaleString()} págs
+                                          </td>
+                                          <td className="px-4 py-3 text-center">
+                                            <span className={cn(
+                                              "inline-flex items-center px-2 py-0.5 rounded-full font-bold",
+                                              pRecord.diferencia > 0 ? "bg-emerald-50 text-emerald-600" : pRecord.diferencia < 0 ? "bg-red-50 text-red-500" : "bg-slate-50 text-slate-400"
+                                            )}>
+                                              {pRecord.diferencia === 0 ? '0' : `${pRecord.diferencia > 0 ? '+' : ''}${pRecord.diferencia.toLocaleString()}`}
+                                            </span>
+                                          </td>
+                                        </>
+                                      ) : (
+                                        <td className="px-4 py-3 text-center">
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-red-50 text-ricoh-red">
+                                            {pRecord.consumo_total.toLocaleString()} págs
+                                          </span>
+                                        </td>
+                                      )}
                                       <td className="px-4 py-3 text-center font-bold text-slate-600">
                                         {pRecord.total_paginas.toLocaleString()} págs
                                       </td>
