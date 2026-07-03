@@ -78,6 +78,9 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
      *             (o no tiene impresoras asignadas).
      */
     const esInactivo = (u: Usuario): boolean => {
+      // Si el usuario está explícitamente desactivado en la BD, es inactivo
+      if (u.is_active === false) return true;
+
       const impresoras = u.impresoras;
       if (impresoras && impresoras.length > 0) {
         return impresoras.every((imp) => {
@@ -101,8 +104,8 @@ export const useUsuarioStore = create<UsuarioStore>((set, get) => ({
 
     let filtrados = usuarios;
     
-    // Filtros basados puramente en la existencia de permisos en las impresoras
-    if (filtroEstado === 'activos' && !busqueda.trim()) {
+    // Filtros basados en la existencia de permisos y el estado activo del usuario
+    if (filtroEstado === 'activos') {
       filtrados = filtrados.filter((u) => !esInactivo(u));
     } else if (filtroEstado === 'inactivos') {
       filtrados = filtrados.filter((u) => esInactivo(u));

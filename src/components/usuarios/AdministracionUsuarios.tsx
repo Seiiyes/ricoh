@@ -62,8 +62,10 @@ export const AdministracionUsuarios = () => {
         return usuario.en_db === false ? 2 : usuario.impresoras && usuario.impresoras.length > 0 ? 1 : 0;
       case 'nombre':
         return usuario.name.toLowerCase();
-      case 'codigo':
-        return usuario.codigo_de_usuario;
+      case 'codigo': {
+        const num = Number(usuario.codigo_de_usuario);
+        return isNaN(num) ? usuario.codigo_de_usuario : num;
+      }
       case 'empresa':
         return (usuario.empresa || '').toLowerCase();
       case 'centro_costos':
