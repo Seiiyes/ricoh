@@ -304,16 +304,51 @@ export async function eliminarUsuario(id: number): Promise<void> {
 export function obtenerIconosPermisos(usuario: Usuario): string[] {
   const iconos: string[] = [];
 
-  if (usuario.func_copier) {
-    iconos.push(usuario.func_copier_color ? '📄🌈' : '📄');
+  // Consolidar permisos desde las impresoras asignadas si existen
+  let tieneCopier = usuario.func_copier;
+  let tieneCopierColor = usuario.func_copier_color || false;
+  let tienePrinter = usuario.func_printer;
+  let tienePrinterColor = usuario.func_printer_color || false;
+  let tieneScanner = usuario.func_scanner;
+  let tieneFax = usuario.func_fax;
+  let tieneDocServer = usuario.func_document_server;
+  let tieneBrowser = usuario.func_browser;
+
+  if (usuario.impresoras && usuario.impresoras.length > 0) {
+    tieneCopier = false;
+    tieneCopierColor = false;
+    tienePrinter = false;
+    tienePrinterColor = false;
+    tieneScanner = false;
+    tieneFax = false;
+    tieneDocServer = false;
+    tieneBrowser = false;
+
+    usuario.impresoras.forEach((imp) => {
+      const p = imp.permisos;
+      if (p) {
+        if (p.copiadora) tieneCopier = true;
+        if (p.copiadora_color) tieneCopierColor = true;
+        if (p.impresora) tienePrinter = true;
+        if (p.impresora_color) tienePrinterColor = true;
+        if (p.escaner) tieneScanner = true;
+        if (p.fax) tieneFax = true;
+        if (p.document_server) tieneDocServer = true;
+        if (p.navegador) tieneBrowser = true;
+      }
+    });
   }
-  if (usuario.func_printer) {
-    iconos.push(usuario.func_printer_color ? '🖨️🌈' : '🖨️');
+
+  if (tieneCopier) {
+    iconos.push(tieneCopierColor ? '📄🌈' : '📄');
   }
-  if (usuario.func_scanner) iconos.push('🔍');
-  if (usuario.func_fax) iconos.push('📠');
-  if (usuario.func_document_server) iconos.push('📁');
-  if (usuario.func_browser) iconos.push('🌐');
+  if (tienePrinter) {
+    iconos.push(tienePrinterColor ? '🖨️🌈' : '🖨️');
+  }
+  if (tieneScanner) iconos.push('🔍');
+  if (tieneFax) iconos.push('📠');
+  if (tieneDocServer) iconos.push('📁');
+  if (tieneBrowser) iconos.push('🌐');
 
   return iconos;
 }
@@ -323,12 +358,42 @@ export function obtenerIconosPermisos(usuario: Usuario): string[] {
  */
 export function contarPermisosActivos(usuario: Usuario): number {
   let count = 0;
-  if (usuario.func_copier) count++;
-  if (usuario.func_printer) count++;
-  if (usuario.func_scanner) count++;
-  if (usuario.func_fax) count++;
-  if (usuario.func_document_server) count++;
-  if (usuario.func_browser) count++;
+
+  // Consolidar permisos desde las impresoras asignadas si existen
+  let tieneCopier = usuario.func_copier;
+  let tienePrinter = usuario.func_printer;
+  let tieneScanner = usuario.func_scanner;
+  let tieneFax = usuario.func_fax;
+  let tieneDocServer = usuario.func_document_server;
+  let tieneBrowser = usuario.func_browser;
+
+  if (usuario.impresoras && usuario.impresoras.length > 0) {
+    tieneCopier = false;
+    tienePrinter = false;
+    tieneScanner = false;
+    tieneFax = false;
+    tieneDocServer = false;
+    tieneBrowser = false;
+
+    usuario.impresoras.forEach((imp) => {
+      const p = imp.permisos;
+      if (p) {
+        if (p.copiadora) tieneCopier = true;
+        if (p.impresora) tienePrinter = true;
+        if (p.escaner) tieneScanner = true;
+        if (p.fax) tieneFax = true;
+        if (p.document_server) tieneDocServer = true;
+        if (p.navegador) tieneBrowser = true;
+      }
+    });
+  }
+
+  if (tieneCopier) count++;
+  if (tienePrinter) count++;
+  if (tieneScanner) count++;
+  if (tieneFax) count++;
+  if (tieneDocServer) count++;
+  if (tieneBrowser) count++;
   return count;
 }
 

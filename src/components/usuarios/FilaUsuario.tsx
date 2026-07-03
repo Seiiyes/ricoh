@@ -70,8 +70,8 @@ export const FilaUsuario = ({
         {/* Origen */}
         <td className="px-4 py-3 text-center">
           <div className="flex flex-col gap-1 items-center justify-center">
-            {usuario.is_active === false && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200" title="Usuario desactivado en Base de Datos">
+            {(usuario.is_active === false || totalPermisos === 0) && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200" title={usuario.is_active === false ? "Usuario desactivado en Base de Datos" : "Usuario sin permisos activos en equipos"}>
                 Inactivo
               </span>
             )}
