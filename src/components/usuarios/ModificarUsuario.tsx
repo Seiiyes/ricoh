@@ -340,7 +340,7 @@ export const ModificarUsuario = ({
     if (!usuario || !impresoraSeleccionada) return;
     
     const verificado = window.confirm(
-      `¿Estás seguro de que deseas quitar al usuario "${nombre}" de la impresora "${impresoraSeleccionada.printer_location || impresoraSeleccionada.printer_name}"? Se deshabilitarán todas sus funciones y se eliminará el registro en la impresora.`
+      `¿Estás seguro de que deseas desactivar al usuario "${nombre}" en la impresora "${impresoraSeleccionada.printer_location || impresoraSeleccionada.printer_name}"? Se deshabilitarán todas sus funciones de copiado e impresión en este equipo.`
     );
     if (!verificado) return;
 
@@ -841,7 +841,7 @@ export const ModificarUsuario = ({
                   onClick={handleQuitarEquipo}
                   loading={guardando}
                 >
-                  Quitar de este equipo
+                  Desactivar en este equipo
                 </Button>
               )}
             </div>

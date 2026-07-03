@@ -466,8 +466,16 @@ class ProvisioningService:
                     else:
                         logger.warning(f"⚠️ Asignación sin entry_index para usuario {user_id} en impresora {printer_id}. Solo se actualizará en DB.")
                     
-                    # 3. Eliminar físicamente la asignación de la base de datos al desasignar explícitamente
-                    thread_db.delete(assignment)
+                    # 3. Desactivar de forma lógica la asignación en la base de datos
+                    assignment.is_active = False
+                    assignment.func_copier = False
+                    assignment.func_copier_color = False
+                    assignment.func_printer = False
+                    assignment.func_printer_color = False
+                    assignment.func_document_server = False
+                    assignment.func_fax = False
+                    assignment.func_scanner = False
+                    assignment.func_browser = False
                     thread_db.commit()
                     return True
                 return False
