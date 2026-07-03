@@ -5,7 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.7.0] - 2026-07-02
+
+### 🐛 Fixed — Bugs Críticos en Módulo de Usuarios
+
+- **React Error #31 — `createPortal` bloqueaba todos los clics** — `ModificarUsuario.tsx` usaba `createPortal(JSX, document.body)` que en el bundle de producción (Vite + esbuild) generaba un crash silencioso del árbol de componentes, deshabilitando todos los event listeners de la página. Solución: retornar JSX directamente usando clases `fixed inset-0 z-50` que posicionan el modal flotante sin necesidad de portal.
+- **`window.confirm()` bloqueado por Chrome en HTTP** — El diálogo de confirmación de desactivación nunca se mostraba porque Chrome bloquea silenciosamente `window.confirm()` en páginas servidas por HTTP. Solución: reemplazado por modal de confirmación propio en React con overlay, nombre del usuario, botones Cancelar / Sí-desactivar y spinner durante el proceso.
+- **Asignaciones duplicadas en BD para usuario 7104** — Eliminados 5 registros duplicados de `user_printer_assignments` mediante `deployment/deduplicate_assignments.py`. La selección de impresoras en el modal de edición ahora se basa en el `id` único de la asignación (no en `printer_id`) para evitar colisiones entre impresoras del mismo modelo.
+
+### ✨ Added — Mejoras de UX
+
+- **Filtro de estado como toggle opcional** — Los botones "Activos" e "Inactivos" ahora son deseleccionables. Por defecto (al entrar) se muestran **todos** los usuarios. Un usuario es activo si tiene ≥1 permiso en ≥1 impresora.
+- **Estado visual de desactivación por fila** — Al desactivar un usuario, solo su fila se bloquea y el botón cambia a `🔄 Desactivando...` (rojo coral, `animate-spin`). Elimina la pantalla de carga global y previene envíos duplicados.
+- **Notificaciones flotantes en guardado** — `ModificarUsuario.tsx` ahora usa `useNotification` para emitir alertas premium con detalle de qué acción se realizó (guardar perfil, sincronizar permisos base a todas las impresoras, aplicar permisos en impresora específica, errores parciales).
+- **Interceptor JWT con refresco transparente** — `apiClient.ts` ahora encola peticiones fallidas por token expirado, refresca el JWT vía `/auth/refresh` y las reintenta de forma transparente, eliminando redirecciones abruptas al login.
+
+---
+
 ## [2.6.0] - 2026-06-01
+
 
 ### ✨ Added
 
