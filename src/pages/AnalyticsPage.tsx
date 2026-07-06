@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Download,
   ChevronDown,
@@ -61,8 +61,60 @@ const PERIOD_OPTIONS = [
 const AnalyticsPage = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview');
 
-  const [dateRangeA, setDateRangeA] = useState(PERIOD_OPTIONS[0]); // Mayo 2026
-  const [dateRangeB, setDateRangeB] = useState(PERIOD_OPTIONS[1]); // Abril 2026
+  // Load monthly closes dynamic periods first
+  const { data: closures } = useMonthlyCloses();
+
+  const uniquePeriods = useMemo(() => {
+    if (!closures) return [];
+    const periodsMap = new Map<string, { start: string; end: string }>();
+    closures.forEach((c: any) => {
+      const key = `${c.fecha_inicio}_${c.fecha_fin}`;
+      if (!periodsMap.has(key)) {
+        periodsMap.set(key, {
+          start: c.fecha_inicio,
+          end: c.fecha_fin
+        });
+      }
+    });
+    return Array.from(periodsMap.values()).sort(
+      (a, b) => new Date(b.end).getTime() - new Date(a.end).getTime()
+    );
+  }, [closures]);
+
+  // Convert real periods to structure compatible with dropdown selection, fall back to PERIOD_OPTIONS
+  const [dynamicPeriods, setDynamicPeriods] = useState<any[]>(PERIOD_OPTIONS);
+
+  const [dateRangeA, setDateRangeA] = useState(PERIOD_OPTIONS[0]);
+  const [dateRangeB, setDateRangeB] = useState(PERIOD_OPTIONS[1]);
+
+  useEffect(() => {
+    if (uniquePeriods && uniquePeriods.length > 0) {
+      const mapped = uniquePeriods.map((p, idx) => {
+        const fmt = (dateStr: string) => {
+          const [y, m, d] = dateStr.split('-');
+          return `${d}/${m}/${y}`;
+        };
+        const label = p.start === p.end
+          ? `Cierre del ${fmt(p.start)}`
+          : `Período del ${fmt(p.start)} al ${fmt(p.end)}`;
+        return {
+          id: `dynamic_${idx}`,
+          label,
+          start: p.start,
+          end: p.end
+        };
+      });
+      setDynamicPeriods(mapped);
+      
+      // Default selections to first two real periods if they haven't been selected yet
+      setDateRangeA(mapped[0]);
+      if (mapped.length > 1) {
+        setDateRangeB(mapped[1]);
+      } else {
+        setDateRangeB(mapped[0]);
+      }
+    }
+  }, [uniquePeriods]);
 
   // Global filters
   const [globalEmpresaId, setGlobalEmpresaId] = useState<number | undefined>(undefined);
@@ -125,8 +177,6 @@ const AnalyticsPage = () => {
   const [filterFechaFinComp, setFilterFechaFinComp] = useState('');
   const [filterCentroCostos, setFilterCentroCostos] = useState('');
 
-  const { data: closures } = useMonthlyCloses();
-
   // Hook for comparison period consumption data (loads all records for memory mapping)
   const { data: compUserConsumptionData } = useGlobalUserConsumption({
     page: 1,
@@ -137,23 +187,6 @@ const AnalyticsPage = () => {
     centroCostos: filterCentroCostos || undefined
   });
   const compUserConsumption = compUserConsumptionData as any;
-
-  const uniquePeriods = useMemo(() => {
-    if (!closures) return [];
-    const periodsMap = new Map<string, { start: string; end: string }>();
-    closures.forEach((c: any) => {
-      const key = `${c.fecha_inicio}_${c.fecha_fin}`;
-      if (!periodsMap.has(key)) {
-        periodsMap.set(key, {
-          start: c.fecha_inicio,
-          end: c.fecha_fin
-        });
-      }
-    });
-    return Array.from(periodsMap.values()).sort(
-      (a, b) => new Date(b.end).getTime() - new Date(a.end).getTime()
-    );
-  }, [closures]);
 
   const [editingRecord, setEditingRecord] = useState<GlobalCierreUsuario | null>(null);
   const [editTotal, setEditTotal] = useState<number>(0);
@@ -793,14 +826,16 @@ const AnalyticsPage = () => {
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Período Principal:</span>
               <select
-                value={PERIOD_OPTIONS.findIndex(p => p.start === dateRangeA.start && p.end === dateRangeA.end)}
+                value={dynamicPeriods.findIndex(p => p.start === dateRangeA.start && p.end === dateRangeA.end)}
                 onChange={(e) => {
                   const idx = parseInt(e.target.value);
-                  setDateRangeA(PERIOD_OPTIONS[idx]);
+                  if (dynamicPeriods[idx]) {
+                    setDateRangeA(dynamicPeriods[idx]);
+                  }
                 }}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red cursor-pointer transition-all shadow-sm"
               >
-                {PERIOD_OPTIONS.map((p, idx) => (
+                {dynamicPeriods.map((p, idx) => (
                   <option key={p.id} value={idx}>{p.label}</option>
                 ))}
               </select>
@@ -810,14 +845,16 @@ const AnalyticsPage = () => {
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Comparar con:</span>
               <select
-                value={PERIOD_OPTIONS.findIndex(p => p.start === dateRangeB.start && p.end === dateRangeB.end)}
+                value={dynamicPeriods.findIndex(p => p.start === dateRangeB.start && p.end === dateRangeB.end)}
                 onChange={(e) => {
                   const idx = parseInt(e.target.value);
-                  setDateRangeB(PERIOD_OPTIONS[idx]);
+                  if (dynamicPeriods[idx]) {
+                    setDateRangeB(dynamicPeriods[idx]);
+                  }
                 }}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red cursor-pointer transition-all shadow-sm"
               >
-                {PERIOD_OPTIONS.map((p, idx) => (
+                {dynamicPeriods.map((p, idx) => (
                   <option key={p.id} value={idx}>{p.label}</option>
                 ))}
               </select>
