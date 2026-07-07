@@ -77,6 +77,8 @@ class ProvisioningService:
         
         # Decrypt password for provisioning
         network_password = EncryptionService.decrypt(user.network_password_encrypted)
+        if not network_password:
+            network_password = "Temporal2021"
         
         # Build Ricoh payload
         ricoh_payload = {

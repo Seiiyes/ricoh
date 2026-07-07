@@ -449,7 +449,7 @@ class RicohWebClient:
                 password_result = password_flow.set_folder_password(
                     printer_ip=printer_ip,
                     entry_index=entry_index,
-                    password=user_config.get('contrasena_inicio_sesion', 'Temporal2021'),
+                    password=user_config.get('contrasena_inicio_sesion') or 'Temporal2021',
                     wim_token=next_wim_token
                 )
                 
@@ -682,7 +682,7 @@ class RicohWebClient:
             password_result = password_flow.set_folder_password(
                 printer_ip=printer_ip,
                 entry_index=entry_index,
-                password=user_config.get('contrasena_inicio_sesion', 'Temporal2021'),
+                password=user_config.get('contrasena_inicio_sesion') or 'Temporal2021',
                 wim_token=next_wim_token
             )
             

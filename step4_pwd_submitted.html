@@ -1,0 +1,109 @@
+<html lang="es">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <script language="JavaScript" src="/scripts/common.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/reload.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/arrowimg.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/base64.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/isNumericInput.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/jquery.1.4.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/jquery.ui.core.1.4.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/jquery.ui.widget.1.4.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/jquery.ui.mouse.1.4.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/jquery.ui.draggable.1.4.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/scripts/jquery.ui.droppable.1.4.js" type="text/javascript"></script>
+    <script language="JavaScript" src="adrsBase.xjs" type="text/javascript"></script>
+    <script language="JavaScript" src="adrsPage.xjs" type="text/javascript"></script>
+    <link href="/css/common.css" type="text/css" rel="stylesheet">
+    <script language="JavaScript" type="text/javascript">var cmdChange= new Array();cmdChange[0]= new Image();cmdChange[0].src = "/images/cmdChange.gif";cmdChange[1]= new Image();cmdChange[1].src = "/images/cmdChange-r.gif";var cmdAddUser= new Array();cmdAddUser[0]= new Image();cmdAddUser[0].src = "/images/cmdAddUser.gif";cmdAddUser[1]= new Image();cmdAddUser[1].src = "/images/cmdAddUser-r.gif";var cmdAddGroup= new Array();cmdAddGroup[0]= new Image();cmdAddGroup[0].src = "/images/cmdAddGroup.gif";cmdAddGroup[1]= new Image();cmdAddGroup[1].src = "/images/cmdAddGroup-r.gif";var cmdDelete= new Array();cmdDelete[0]= new Image();cmdDelete[0].src = "/images/cmdDelete.gif";cmdDelete[1]= new Image();cmdDelete[1].src = "/images/cmdDelete-r.gif";var btnReload= new Array();btnReload[0]= new Image();btnReload[0].src = "/images/btnReload.gif";btnReload[1]= new Image();btnReload[1].src = "/images/btnReload-r.gif";var cmdImEx= new Array();cmdImEx[0]= new Image();cmdImEx[0].src = "/images/cmdImEx.gif";cmdImEx[1]= new Image();cmdImEx[1].src = "/images/cmdImEx-r.gif";var cmdMaintenance= new Array();cmdMaintenance[0]= new Image();cmdMaintenance[0].src = "/images/cmdMaintenance.gif";cmdMaintenance[1]= new Image();cmdMaintenance[1].src = "/images/cmdMaintenance-r.gif";var cmdImEx= new Array();cmdImEx[0]= new Image();cmdImEx[0].src = "/images/cmdImEx.gif";cmdImEx[1]= new Image();cmdImEx[1].src = "/images/cmdImEx-r.gif";var cmdTemplate= new Array();cmdTemplate[0]= new Image();cmdTemplate[0].src = "/images/cmdTemplate.gif";cmdTemplate[1]= new Image();cmdTemplate[1].src = "/images/cmdTemplate-r.gif";</script>
+    <style type="text/css">
+		table.defaultTableButton {
+			font-size:12px;
+			border-style: solid;
+			border-width: 1px;
+			border-color: #8D8D8D;
+			cursor:pointer;
+		}
+		table.defaultTableButton td.defaultTableButton {
+			padding: 0px 8px 0px 8px;
+			vertical-align: middle;
+			background-color: #808080;
+			background-image: URL(/images/buttonBGwhite.gif);
+			background-repeat: repeat-x;
+			text-align: center;
+			overflow: hidden;
+		}
+		table.defaultTableButtonSelected {
+			font-size:12px;
+			border-style: solid;
+			border-width: 1px;
+			border-color: #8D8D8D;
+			cursor:pointer;
+		}
+		table.defaultTableButtonSelected td.defaultTableButtonSelected {
+			padding: 0px 8px 0px 8px;
+			vertical-align: middle;
+			background-color: #F7EEB2;
+			text-align: center;
+			overflow: hidden;
+		}
+		table.defaultTableButton a.defaultTableButton {
+			text-decoration: none;
+			color: black;
+			white-space: nowrap;
+		}
+		table.defaultTableButtonSelected a.defaultTableButton {
+			text-decoration: none;
+			color: black;
+			white-space: nowrap;
+		}
+		table.defaultTableButton a.defaultTableCommandButton {
+			text-decoration: none;
+			font-weight: bold;
+			color: black;
+			white-space: nowrap;
+		}
+		table.defaultTableButtonSelected a.defaultTableCommandButton {
+			text-decoration: none;
+			font-weight: bold;
+			color: black;
+			white-space: nowrap;
+		}
+	</style>
+    <script xmlns:axsl="http://localhost" language="JavaScript" type="text/javascript">
+		function openTopPage() {
+			var location_base=parent.window.location.pathname.split("/es/");
+			location = "".concat(location_base[0]).concat("/es/websys/webArch/topPage.cgi");
+		}
+	</script>
+    <script xmlns:axsl="http://localhost" language="JavaScript" type="text/javascript">
+		function openConfigListPage() {
+			var location_base=parent.window.location.pathname.split("/es/");
+			location = "".concat(location_base[0]).concat("/es/websys/webArch/configList.cgi");
+		}
+	</script>
+    <title>Cambiar contraseña de autenticación de carpeta</title>
+  </head>
+  <body onLoad="javascript:baseInit();javascript:adrsScriptRecover();javascript:pageSkip();">
+    <a name="TOP"></a>
+    <form name="mainForm" onSubmit="return false;">
+      <input type="hidden" name="wimToken" value="1958660272">
+      <input type="hidden" name="mode" value="MODUSER">
+      <input type="hidden" name="kind" value="FOLDER">
+      <input type="hidden" name="inputSpecifyMode" value="FIX">
+      <input type="hidden" name="wayFrom" value="adrsEditPassword.cgi?inputSpecifyMode=NONE&amp;kind=FOLDER">
+      <input type="hidden" name="wayTo" value="adrsGetUser.cgi#AUTH_INFO_C?outputSpecifyModeIn=SETTINGS">
+      <input type="hidden" name="pageSpecifiedIn" value="">
+      <input type="hidden" name="pageNumberIn" value="">
+      <input type="hidden" name="outputSpecifyModeIn" value="">
+    </form>
+    <form name="basicForm" onSubmit="return false;">
+      <input type="hidden" name="wimToken" value="1958660272">
+      <input type="hidden" name="mode" value="MODUSER">
+      <input type="hidden" name="returnValue" value="SUCCESS">
+      <input type="hidden" name="methodName" value="adrsEditPassword">
+    </form>
+  </body>
+</html>
