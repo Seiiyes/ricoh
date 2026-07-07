@@ -94,6 +94,16 @@ services:
       # RICOH INTEGRATION CONFIGURATION
       # =============================================================================
       - RICOH_ADMIN_PASSWORD=${RICOH_ADMIN_PASSWORD}
+      
+      # =============================================================================
+      # SECURITY AUDIT CONFIGURATION
+      # =============================================================================
+      - AUDIT_USERS=${AUDIT_USERS}
+    ports:
+      - "8088:8088"
+    command: >
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 &
+             uvicorn audit_microservice:app --host 0.0.0.0 --port 8088"
     volumes:
       - ./backend:/app
       - backend_logs:/app/logs

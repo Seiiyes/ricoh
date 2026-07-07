@@ -256,6 +256,15 @@ async def lifespan(app: FastAPI):
         raise last_error
     
     print("✅ Database initialized")
+    
+    # Inicializar Base de Datos SQLite de logs de seguridad
+    try:
+        from db.audit_db import init_audit_db
+        init_audit_db()
+        print("✅ SQLite Audit Database initialized")
+    except Exception as audit_db_err:
+        logger.error(f"❌ No se pudo inicializar la base de datos SQLite de logs: {audit_db_err}")
+        
     print(f"🔧 Demo Mode: {os.getenv('DEMO_MODE', 'true')}")
     
     # Start background cleanup job

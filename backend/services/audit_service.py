@@ -20,6 +20,47 @@ class AuditService:
     VALID_RESULTADOS = [RESULTADO_EXITO, RESULTADO_ERROR, RESULTADO_DENEGADO]
     
     @classmethod
+    def log_security_event(
+        cls,
+        usuario: Optional[str],
+        accion: str,
+        resultado: str,
+        detalles: Optional[Dict[str, Any]] = None,
+        ip_address: Optional[str] = None
+    ) -> None:
+        """
+        Registra un evento de seguridad de forma asíncrona en la base de datos SQLite
+        """
+        import threading
+        
+        def _write_log():
+            try:
+                from db.audit_db import SessionLocal, SecurityAuditLog
+                db = SessionLocal()
+                try:
+                    log_entry = SecurityAuditLog(
+                        usuario=usuario,
+                        accion=accion,
+                        resultado=resultado,
+                        detalles=detalles or {},
+                        ip_address=ip_address,
+                        timestamp=datetime.now(timezone.utc)
+                    )
+                    db.add(log_entry)
+                    db.commit()
+                except Exception as e:
+                    import sys
+                    print(f"Error database operation writing security log to SQLite: {e}", file=sys.stderr)
+                finally:
+                    db.close()
+            except Exception as outer_e:
+                import sys
+                print(f"Outer error initializing writing thread to SQLite: {outer_e}", file=sys.stderr)
+                
+        # Iniciar la escritura en un hilo independiente para evitar demoras/bloqueos en el backend principal
+        threading.Thread(target=_write_log).start()
+
+    @classmethod
     def log_action(
         cls,
         db: Session,

@@ -49,7 +49,13 @@ files_to_upload = [
     "src/services/apiClient.ts",
     "src/services/authService.ts",
     "src/services/printerService.ts",
-    "deployment/nginx/conf.d/ricoh.conf"
+    "deployment/nginx/conf.d/ricoh.conf",
+    "backend/db/audit_db.py",
+    "backend/services/audit_service.py",
+    "backend/audit_microservice.py",
+    "backend/templates/audit_portal.html",
+    "docker-compose.yml",
+    "deployment/generate_bcrypt_hash.py"
 ]
 
 print("="*60)
@@ -67,6 +73,23 @@ for rel_path in files_to_upload:
     local_path = LOCAL_DIR / rel_path
     remote_path = f"{REMOTE_DIR}/{rel_path}"
     print(f"Uploading {rel_path} -> {remote_path}")
+    
+    # Crear directorios padres de forma remota recursivamente si no existen
+    remote_parent = str(Path(remote_path).parent).replace('\\', '/')
+    parts = remote_parent.split('/')
+    current = ""
+    for part in parts:
+        if not part:
+            continue
+        if current == "" and remote_parent.startswith('/'):
+            current = "/" + part
+        else:
+            current += "/" + part
+        try:
+            sftp.mkdir(current)
+        except IOError:
+            pass
+            
     sftp.put(str(local_path), remote_path)
 
 sftp.close()

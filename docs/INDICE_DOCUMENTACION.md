@@ -43,6 +43,8 @@ docs/
 ## 🆕 Documentación de la Sesión Reciente (Junio-Julio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[PORTAL_AUDITORIA_SEGURIDAD_INDEPENDIENTE_JULIO_2026.md](seguridad/PORTAL_AUDITORIA_SEGURIDAD_INDEPENDIENTE_JULIO_2026.md)**
+    *   *Descripción:* Documentación técnica y guía de uso del Portal de Auditoría de Seguridad independiente que corre en el puerto `8088` con base de datos SQLite y autenticación bcrypt.
 *   **[REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md](desarrollo/pruebas/REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md)**
     *   *Descripción:* Informe de control de calidad (QA) sobre el comportamiento responsivo, el desborde horizontal de la tabla y la sincronización de la doble paginación en vivo en producción.
 *   **[FIX_UX_RESPONSIVO_Y_SPACING_TRABAJOS_IMPRESION_07_JULIO_2026.md](fixes/FIX_UX_RESPONSIVO_Y_SPACING_TRABAJOS_IMPRESION_07_JULIO_2026.md)**

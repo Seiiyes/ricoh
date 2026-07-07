@@ -107,6 +107,13 @@ class AuthService:
                 ip_address=ip_address,
                 user_agent=user_agent
             )
+            AuditService.log_security_event(
+                usuario=username,
+                accion="login",
+                resultado=AuditService.RESULTADO_ERROR,
+                detalles={"error": "user_not_found"},
+                ip_address=ip_address
+            )
             raise InvalidCredentialsError("Invalid credentials")
         
         # Check if account is disabled
@@ -121,6 +128,13 @@ class AuthService:
                 ip_address=ip_address,
                 user_agent=user_agent
             )
+            AuditService.log_security_event(
+                usuario=user.username,
+                accion="login",
+                resultado=AuditService.RESULTADO_ERROR,
+                detalles={"error": "account_disabled"},
+                ip_address=ip_address
+            )
             raise AccountDisabledError("Account is disabled")
         
         # Check if account is locked
@@ -134,6 +148,13 @@ class AuthService:
                 detalles={"error": "account_locked", "locked_until": user.locked_until.isoformat()},
                 ip_address=ip_address,
                 user_agent=user_agent
+            )
+            AuditService.log_security_event(
+                usuario=user.username,
+                accion="login",
+                resultado=AuditService.RESULTADO_ERROR,
+                detalles={"error": "account_locked", "locked_until": user.locked_until.isoformat()},
+                ip_address=ip_address
             )
             raise AccountLockedError(user.locked_until)
         
@@ -164,6 +185,17 @@ class AuthService:
                     ip_address=ip_address,
                     user_agent=user_agent
                 )
+                AuditService.log_security_event(
+                    usuario=user.username,
+                    accion="login",
+                    resultado=AuditService.RESULTADO_ERROR,
+                    detalles={
+                        "error": "invalid_password",
+                        "failed_attempts": user.failed_login_attempts,
+                        "account_locked": True
+                    },
+                    ip_address=ip_address
+                )
                 
                 raise AccountLockedError(user.locked_until)
             
@@ -181,6 +213,16 @@ class AuthService:
                 },
                 ip_address=ip_address,
                 user_agent=user_agent
+            )
+            AuditService.log_security_event(
+                usuario=user.username,
+                accion="login",
+                resultado=AuditService.RESULTADO_ERROR,
+                detalles={
+                    "error": "invalid_password",
+                    "failed_attempts": user.failed_login_attempts
+                },
+                ip_address=ip_address
             )
             
             raise InvalidCredentialsError("Invalid credentials")
@@ -229,6 +271,13 @@ class AuthService:
             detalles={"login_method": "password"},
             ip_address=ip_address,
             user_agent=user_agent
+        )
+        AuditService.log_security_event(
+            usuario=user.username,
+            accion="login",
+            resultado=AuditService.RESULTADO_EXITO,
+            detalles={"login_method": "password"},
+            ip_address=ip_address
         )
         
         return LoginResponse(
@@ -279,6 +328,12 @@ class AuthService:
                     resultado=AuditService.RESULTADO_EXITO,
                     ip_address=ip_address,
                     user_agent=user_agent
+                )
+                AuditService.log_security_event(
+                    usuario=user.username,
+                    accion="logout",
+                    resultado=AuditService.RESULTADO_EXITO,
+                    ip_address=ip_address
                 )
     
     @classmethod
@@ -347,6 +402,14 @@ class AuthService:
         session.last_activity = datetime.now(timezone.utc)
         
         db.commit()
+        
+        # Log token refresh in security logs
+        AuditService.log_security_event(
+            usuario=user.username,
+            accion="refresh_token",
+            resultado=AuditService.RESULTADO_EXITO,
+            ip_address=session.ip_address
+        )
         
         return RefreshResponse(
             access_token=new_access_token,

@@ -44,6 +44,7 @@ services:
     container_name: ricoh-backend
     ports:
       - "8000:8000"
+      - "8088:8088"
     environment:
       - DATABASE_URL=postgresql://ricoh_admin:ricoh_secure_2024@postgres:5432/ricoh_fleet
       - ENVIRONMENT=development
@@ -64,8 +65,10 @@ services:
       - DOCS_USERNAME=admin
       - DOCS_PASSWORD=ricoh_docs_2026
       - RICOH_ADMIN_PASSWORD=admin
+      - AUDIT_USERS=${AUDIT_USERS}
     volumes:
       - ./backend:/app
+      - backend_logs:/app/logs
     networks:
       - ricoh-network
     extra_hosts:
@@ -76,7 +79,9 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
+             uvicorn audit_microservice:app --host 0.0.0.0 --port 8088"
 
   # React Frontend (Production Build)
   frontend:
@@ -104,3 +109,5 @@ volumes:
     name: ricoh-postgres-data
   node_modules:
     name: ricoh-node-modules
+  backend_logs:
+    name: ricoh-backend-logs
