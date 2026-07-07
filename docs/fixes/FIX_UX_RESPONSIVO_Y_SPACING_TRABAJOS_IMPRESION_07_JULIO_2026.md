@@ -42,10 +42,22 @@ La barra de scroll horizontal y la distribución apretada se debían a una suma 
   * **Páginas / Copias**: Reducidas de `80px` a `70px`.
   * **Acciones**: Reducida de `100px` a `80px`.
 
+### D. Sistema de Paginación Interactivo
+*   **Antes**: Todos los trabajos de impresión en cola se cargaban a la vez en una única lista vertical gigante. Si la impresora o el consolidado reportaba decenas de trabajos, la tabla crecía de forma desmedida, forzando un scroll vertical largo y afectando el rendimiento del renderizado en el navegador.
+*   **Ahora**:
+    1.  Se implementó un estado de paginación reactivo (`currentPage` e `itemsPerPage`).
+    2.  Se añadió una barra de controles premium al pie de la tabla que incluye:
+        *   Un **selector dinámico** para cambiar los elementos mostrados por página (`10`, `25`, `50`, `100` registros).
+        *   Contadores interactivos de la porción actual: `"Mostrando X-Y de Z (T en total)"`.
+        *   Botones de navegación de **Anterior** (`← Anterior`) y **Siguiente** (`Siguiente →`) con deshabilitación condicional.
+    3.  Al aplicar búsquedas o filtros de usuario, la página actual se restablece de forma automática a `1` para garantizar la consistencia en la visualización.
+
 ---
 
 ## 4. Verificación Realizada
 1. **Compilación Local Exitosa**: Ejecutado `npm run build` en local de forma satisfactoria (0 errores de compilación).
 2. **Pruebas en Vivo (Navegador en Producción)**: 
    * Se redesplegaron los contenedores en el servidor `192.168.91.131`.
-   * Verificado con navegación directa a resolución de escritorio `1920x945` que la tabla encaja perfectamente en el ancho completo, la columna de Impresora se muestra al 100% visible desde su primer caracter, y **se eliminó definitivamente toda barra de scroll horizontal**.
+   * Verificado con navegación directa a resolución de escritorio `1920x945` que la tabla encaja perfectamente en el ancho completo, eliminando scroll horizontal.
+   * Se comprobó la interactividad del paginador: el paso a la página 2 carga los siguientes registros y cambia los contadores; modificar el selector de cantidad de registros a 25 reestructura la paginación al instante de 1/4 a 1/2 páginas correctamente.
+

@@ -34,6 +34,10 @@ const PrintJobsPage = () => {
   const [selectedUserFilter, setSelectedUserFilter] = useState<string | null>(null);
   const [showOnlyWithUser, setShowOnlyWithUser] = useState(false);
 
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   // Cargar impresoras al montar el componente
   useEffect(() => {
     const loadPrinters = async () => {
@@ -85,8 +89,14 @@ const PrintJobsPage = () => {
       // Resetear filtros al cambiar de impresora
       setSearchTerm('');
       setSelectedUserFilter(null);
+      setCurrentPage(1);
     }
   }, [selectedPrinterId]);
+
+  // Resetear página al cambiar filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedUserFilter, showOnlyWithUser]);
 
 
 
@@ -115,6 +125,22 @@ const PrintJobsPage = () => {
       return matchSearch && matchUser && matchHasUser;
     });
   }, [jobs, searchTerm, selectedUserFilter, showOnlyWithUser]);
+
+  // Total de páginas
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredJobs.length / itemsPerPage));
+  }, [filteredJobs.length, itemsPerPage]);
+
+  // Trabajos paginados para mostrar en la vista
+  const paginatedJobs = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return filteredJobs.slice(startIdx, startIdx + itemsPerPage);
+  }, [filteredJobs, currentPage, itemsPerPage]);
+
+  // Índice inicial de fila para el contador
+  const startIndex = useMemo(() => {
+    return (currentPage - 1) * itemsPerPage;
+  }, [currentPage, itemsPerPage]);
 
   const handleRefresh = () => {
     if (selectedPrinterId) {
@@ -427,7 +453,7 @@ const PrintJobsPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
-                        {filteredJobs.map((job, idx) => (
+                        {paginatedJobs.map((job, idx) => (
                           <tr key={job.job_id || idx} className="hover:bg-slate-50/80 transition-colors group">
                             {selectedPrinterId === 'consolidated' && (
                               <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
@@ -558,13 +584,64 @@ const PrintJobsPage = () => {
                   </div>
                 )}
                 
-                {/* Totalizador al pie */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs font-semibold text-slate-500">
-                  <div>
-                    Mostrando <span className="text-slate-800 font-bold">{filteredJobs.length}</span> de <span className="text-slate-800 font-bold">{jobs.length}</span> trabajos activos
+                {/* Paginador y Totalizador al pie */}
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <span>Mostrar</span>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-ricoh-red focus:border-transparent transition-all shadow-sm cursor-pointer"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                      <span>registros</span>
+                    </div>
+                    
+                    <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+                    
+                    <div>
+                      Mostrando <span className="text-slate-800 font-bold">{filteredJobs.length > 0 ? startIndex + 1 : 0}</span>-
+                      <span className="text-slate-800 font-bold">{Math.min(startIndex + itemsPerPage, filteredJobs.length)}</span> de 
+                      <span className="text-slate-800 font-bold"> {filteredJobs.length}</span> ({jobs.length} en total)
+                    </div>
                   </div>
-                  <div>
-                    Total Páginas en Cola: <span className="text-ricoh-red font-black text-sm font-mono">{filteredJobs.reduce((acc, job) => acc + (job.paginas || 0) * (job.copias || 1), 0)}</span>
+
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="text-right">
+                      Total Páginas en Cola: <span className="text-ricoh-red font-black text-sm font-mono">{filteredJobs.reduce((acc, job) => acc + (job.paginas || 0) * (job.copias || 1), 0)}</span>
+                    </div>
+
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm font-bold flex items-center gap-1"
+                          aria-label="Página anterior"
+                        >
+                          ← Anterior
+                        </button>
+                        <span className="px-3 py-1.5 text-slate-700 bg-white border border-slate-100 rounded-lg shadow-sm font-bold font-mono">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm font-bold flex items-center gap-1"
+                          aria-label="Página siguiente"
+                        >
+                          Siguiente →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
