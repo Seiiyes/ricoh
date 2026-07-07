@@ -355,27 +355,18 @@ class AuthService:
         )
     
     @classmethod
-    def validate_token(cls, db: Session, token: str) -> AdminUser:
+    def validate_token(
+        cls, 
+        db: Session, 
+        token: str, 
+        client_ip: str, 
+        client_ua: str
+    ) -> AdminUser:
         """
-        Validate JWT and return user
+        Validate JWT and return user with Device Binding and Redis caching
+        """
+        from services.redis_service import redis_service
         
-        Args:
-            db: Database session
-            token: Access token
-            
-        Returns:
-            AdminUser object
-            
-        Raises:
-            InvalidTokenError: If token is invalid
-            ExpiredTokenError: If token is expired
-            AccountDisabledError: If account is disabled
-            
-        Example:
-            >>> user = AuthService.validate_token(db, access_token)
-            >>> user.username
-            'admin'
-        """
         # Decode token
         try:
             payload = JWTService.decode_token(token)
@@ -384,31 +375,64 @@ class AuthService:
         except InvalidTokenError:
             raise
         
-        # Get user from payload
         user_id = payload.get("user_id")
         if not user_id:
             raise InvalidTokenError("Invalid token payload")
+            
+        # 1. Cache HIT en Redis
+        session_key = f"session:{token}"
+        session_data = redis_service.get(session_key)
         
-        # Find user
+        if session_data:
+            saved_ip = session_data.get("ip_address")
+            saved_ua = session_data.get("user_agent")
+        else:
+            # Cache MISS - Fallback a PostgreSQL
+            session = db.query(AdminSession).filter(AdminSession.token == token).first()
+            if not session:
+                raise InvalidTokenError("Session not found")
+                
+            if session.expires_at < datetime.now(timezone.utc):
+                raise ExpiredTokenError("Session expired")
+                
+            saved_ip = session.ip_address
+            saved_ua = session.user_agent
+            
+            # Registrar en Redis
+            ttl = int((session.expires_at - datetime.now(timezone.utc)).total_seconds())
+            if ttl > 0:
+                redis_service.set(session_key, {
+                    "user_id": user_id,
+                    "ip_address": saved_ip,
+                    "user_agent": saved_ua
+                }, ttl=ttl)
+
+        # 2. Control de Huella Digital (Device Binding)
+        if saved_ip != client_ip:
+            redis_service.delete(session_key)
+            db.query(AdminSession).filter(AdminSession.token == token).delete()
+            db.commit()
+            raise InvalidTokenError("Device binding violation: IP mismatch")
+            
+        if saved_ua != client_ua:
+            redis_service.delete(session_key)
+            db.query(AdminSession).filter(AdminSession.token == token).delete()
+            db.commit()
+            raise InvalidTokenError("Device binding violation: User-Agent mismatch")
+
+        # 3. Obtener Usuario
         user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
-        
         if not user:
             raise InvalidTokenError("User not found")
-        
-        # Check if user is active
         if not user.is_active:
             raise AccountDisabledError("Account is disabled")
-        
-        # Check if session exists
+            
+        # Actualizar last_activity en DB relacional
         session = db.query(AdminSession).filter(AdminSession.token == token).first()
-        
-        if not session:
-            raise InvalidTokenError("Session not found")
-        
-        # Update last activity
-        session.last_activity = datetime.now(timezone.utc)
-        db.commit()
-        
+        if session:
+            session.last_activity = datetime.now(timezone.utc)
+            db.commit()
+            
         return user
     
     @classmethod

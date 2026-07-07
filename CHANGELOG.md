@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.8.0] - 2026-07-06
+
+### 🔧 Fixed — Consistencia de Estados y Contadores en Gestión de Usuarios
+
+- **Inconsistencia de conteo de impresoras en FilaUsuario** — El contador azul de impresoras asignadas en la fila principal mostraba inicialmente `0` para usuarios inactivos o desactivados de sus equipos debido al filtrado de asignaciones inactivas en el backend. Al expandir el acordeón, la API de aprovisionamiento `/provisioning/user` traía las asignaciones inactivas y actualizaba el contador en caliente (saltando de `0` a `1` o `2`). Solución: la propiedad `User.impresoras` en el backend ahora retorna todas las asignaciones incluyendo `is_active` en el esquema.
+- **Conteo Reactivo Unificado de Impresoras Activas/Inactivas** — El componente `FilaUsuario.tsx` ahora clasifica las asignaciones. Si tiene impresoras activas, muestra el círculo azul brillante. Si todas las asignaciones están inactivas, muestra de forma inmediata un `0` en un círculo gris atenuado, sin obligar al usuario a expandir el desglose.
+- **Atenuación y Badge de Desactivado en Tarjetas** — Al expandir el detalle de un usuario, las tarjetas de impresoras inactivas se renderizan con opacidad reducida (`opacity-60 bg-slate-100/70`) y con un badge rojo de `Desactivado` al lado de su nombre para dar visibilidad histórica clara del registro del usuario en la flota Ricoh.
+
+---
+
 ## [2.7.0] - 2026-07-02
 
 ### 🐛 Fixed — Bugs Críticos en Módulo de Usuarios

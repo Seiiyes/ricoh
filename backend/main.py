@@ -545,7 +545,8 @@ async def websocket_logs(
     # ----------------------------------------------------------------
     db = SessionLocal()
     try:
-        authenticated_user = AuthService.validate_token(db, token)
+        client_ua = websocket.headers.get("user-agent", "unknown")
+        authenticated_user = AuthService.validate_token(db, token, client_ip, client_ua)
         user_id = authenticated_user.id
         username = authenticated_user.username
         rol = authenticated_user.rol

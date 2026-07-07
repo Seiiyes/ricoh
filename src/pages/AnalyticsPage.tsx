@@ -87,6 +87,10 @@ const AnalyticsPage = () => {
   const [dateRangeA, setDateRangeA] = useState(PERIOD_OPTIONS[0]);
   const [dateRangeB, setDateRangeB] = useState(PERIOD_OPTIONS[1]);
 
+  // Track whether user has manually changed the period selectors
+  const [userChangedA, setUserChangedA] = useState(false);
+  const [userChangedB, setUserChangedB] = useState(false);
+
   useEffect(() => {
     if (uniquePeriods && uniquePeriods.length > 0) {
       const mapped = uniquePeriods.map((p, idx) => {
@@ -105,13 +109,17 @@ const AnalyticsPage = () => {
         };
       });
       setDynamicPeriods(mapped);
-      
-      // Default selections to first two real periods if they haven't been selected yet
-      setDateRangeA(mapped[0]);
-      if (mapped.length > 1) {
-        setDateRangeB(mapped[1]);
-      } else {
-        setDateRangeB(mapped[0]);
+
+      // Only default if the user hasn't made a manual selection yet
+      if (!userChangedA) {
+        setDateRangeA(mapped[0]);
+      }
+      if (!userChangedB) {
+        if (mapped.length > 1) {
+          setDateRangeB(mapped[1]);
+        } else {
+          setDateRangeB(mapped[0]);
+        }
       }
     }
   }, [uniquePeriods]);
@@ -160,14 +168,6 @@ const AnalyticsPage = () => {
     return list;
   }, [comparativa]);
 
-  const monthsCount = useMemo(() => {
-    const start = new Date(dateRangeA.start);
-    const end = new Date(dateRangeA.end);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 45 ? 3 : 1;
-  }, [dateRangeA]);
-
   // Tab 2: User Consumption hooks and states
   const [userPage, setUserPage] = useState(1);
   const [userSearch, setUserSearch] = useState('');
@@ -184,7 +184,8 @@ const AnalyticsPage = () => {
     search: undefined,
     fechaInicio: filterFechaInicioComp || undefined,
     fechaFin: filterFechaFinComp || undefined,
-    centroCostos: filterCentroCostos || undefined
+    centroCostos: filterCentroCostos || undefined,
+    enabled: activeTab === 'users'
   });
   const compUserConsumption = compUserConsumptionData as any;
 
@@ -215,7 +216,8 @@ const AnalyticsPage = () => {
     search: userSearch || undefined,
     fechaInicio: filterFechaInicio || undefined,
     fechaFin: filterFechaFin || undefined,
-    centroCostos: filterCentroCostos || undefined
+    centroCostos: filterCentroCostos || undefined,
+    enabled: activeTab === 'users'
   });
   const globalUserConsumption = globalUserConsumptionData as any;
 
@@ -226,7 +228,8 @@ const AnalyticsPage = () => {
     search: undefined,  // No search filter for consolidated view — shows everything
     fechaInicio: filterFechaInicio || undefined,
     fechaFin: filterFechaFin || undefined,
-    centroCostos: filterCentroCostos || undefined
+    centroCostos: filterCentroCostos || undefined,
+    enabled: activeTab === 'users' && viewMode === 'area'
   });
   const areaConsumption = areaConsumptionData as any;
 
@@ -680,11 +683,6 @@ const AnalyticsPage = () => {
   const [isExportingFacturacion, setIsExportingFacturacion] = useState(false);
 
   const handleExportFacturacion = async () => {
-    if (!globalEmpresaId) {
-      alert("Por favor seleccione una Empresa primero para generar su reporte de facturación.");
-      return;
-    }
-
     // Use current tab's date filter or default to something sensible
     const start = filterFechaInicio || dateRangeA.start;
     const end = filterFechaFin || dateRangeA.end;
@@ -696,7 +694,8 @@ const AnalyticsPage = () => {
 
     try {
       setIsExportingFacturacion(true);
-      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/export/facturacion/${globalEmpresaId}?fecha_inicio=${start}&fecha_fin=${end}`;
+      const empId = globalEmpresaId || 0;
+      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/export/facturacion/${empId}?fecha_inicio=${start}&fecha_fin=${end}`;
 
       const token = localStorage.getItem('token');
       const response = await fetch(url, {
@@ -715,7 +714,9 @@ const AnalyticsPage = () => {
       const a = document.createElement('a');
       a.href = downloadUrl;
       const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `Reporte_Facturacion_${globalEmpresaName}.xlsx`;
+      let filename = empId === 0 
+        ? "Reporte_Facturacion_Consolidado.xlsx" 
+        : `Reporte_Facturacion_${globalEmpresaName}.xlsx`;
       if (contentDisposition && contentDisposition.includes('filename=')) {
         filename = contentDisposition.split('filename=')[1].replace(/"/g, '');
       }
@@ -746,7 +747,11 @@ const AnalyticsPage = () => {
   // Nota: la comparativa actual retorna 1 fila; evitar depender del texto del indicador
   // (puede venir con problemas de encoding según configuración de DB).
   const kpiTotalPaginas = comparativa?.[0]?.periodoA || 0;
+  const kpiTotalPaginasB = comparativa?.[0]?.periodoB || 0;
+  const diferenciaNeta = kpiTotalPaginas - kpiTotalPaginasB;
   const kpiVariacion = comparativa?.[0]?.variacion || 0;
+  const costoA = kpiTotalPaginas * 0.05;
+  const diferenciaCosto = diferenciaNeta * 0.05;
 
   return (
     <div className="flex flex-col h-full animate-fade-in custom-scrollbar overflow-y-auto pb-10">
@@ -760,9 +765,9 @@ const AnalyticsPage = () => {
           <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleExportFacturacion}
-              disabled={isExportingFacturacion || !globalEmpresaId}
+              disabled={isExportingFacturacion}
               className="bg-green-600 text-white btn-padding-sm rounded-xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 disabled:opacity-50 transition-all flex items-center gap-2 text-responsive-sm"
-              title={!globalEmpresaId ? "Seleccione una empresa primero" : "Exportar Facturación Jerárquica"}
+              title={!globalEmpresaId ? "Exportar Facturación Jerárquica Consolidada (Todas las Empresas)" : "Exportar Facturación Jerárquica"}
             >
               {isExportingFacturacion ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
               <span className="hidden sm:inline">Exportar Facturación</span>
@@ -824,70 +829,81 @@ const AnalyticsPage = () => {
 
             {/* Selector de Período Principal (A) */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Período Principal:</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Período a Comparar (Final - Más Reciente):</span>
               <select
-                value={dynamicPeriods.findIndex(p => p.start === dateRangeA.start && p.end === dateRangeA.end)}
+                value={`${dateRangeA.start}_${dateRangeA.end}`}
                 onChange={(e) => {
-                  const idx = parseInt(e.target.value);
-                  if (dynamicPeriods[idx]) {
-                    setDateRangeA(dynamicPeriods[idx]);
+                  const [start, end] = e.target.value.split('_');
+                  const found = dynamicPeriods.find(p => p.start === start && p.end === end);
+                  if (found) {
+                    setDateRangeA(found);
+                    setUserChangedA(true);
                   }
                 }}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red cursor-pointer transition-all shadow-sm"
               >
-                {dynamicPeriods.map((p, idx) => (
-                  <option key={p.id} value={idx}>{p.label}</option>
+                {dynamicPeriods.map((p) => (
+                  <option key={p.id} value={`${p.start}_${p.end}`}>{p.label}</option>
                 ))}
               </select>
             </div>
 
             {/* Selector de Período Comparativo (B) */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Comparar con:</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Período Base (Inicial - Más Antiguo):</span>
               <select
-                value={dynamicPeriods.findIndex(p => p.start === dateRangeB.start && p.end === dateRangeB.end)}
+                value={`${dateRangeB.start}_${dateRangeB.end}`}
                 onChange={(e) => {
-                  const idx = parseInt(e.target.value);
-                  if (dynamicPeriods[idx]) {
-                    setDateRangeB(dynamicPeriods[idx]);
+                  const [start, end] = e.target.value.split('_');
+                  const found = dynamicPeriods.find(p => p.start === start && p.end === end);
+                  if (found) {
+                    setDateRangeB(found);
+                    setUserChangedB(true);
                   }
                 }}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-ricoh-red/20 focus:border-ricoh-red cursor-pointer transition-all shadow-sm"
               >
-                {dynamicPeriods.map((p, idx) => (
-                  <option key={p.id} value={idx}>{p.label}</option>
+                {dynamicPeriods.map((p) => (
+                  <option key={p.id} value={`${p.start}_${p.end}`}>{p.label}</option>
                 ))}
               </select>
             </div>
           </div>
 
           {/* KPIs Row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-responsive mb-responsive">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-responsive mb-responsive">
             <KPICard
-              title="Total Páginas"
+              title={`Consumo Reciente (${dateRangeA.label.replace('Cierre del ', '').replace('Período del ', '')})`}
               value={kpiTotalPaginas.toLocaleString()}
               icon={<Layers size={20} />}
               color={chartColors.primary}
             />
             <KPICard
-              title="Promedio / Mes"
-              value={(kpiTotalPaginas / monthsCount).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              icon={<TrendingUp size={20} />}
+              title={`Consumo Base (${dateRangeB.label.replace('Cierre del ', '').replace('Período del ', '')})`}
+              value={kpiTotalPaginasB.toLocaleString()}
+              icon={<Layers size={20} />}
               color={chartColors.info}
             />
             <KPICard
-              title="Costo Estimado"
-              value={`$${(kpiTotalPaginas * 0.05).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              title={`Costo Estimado (${dateRangeA.label.replace('Cierre del ', '').replace('Período del ', '')})`}
+              value={`$${costoA.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
               icon={<DollarSign size={20} />}
               color={chartColors.warning}
+            />
+            <KPICard
+              title="Diferencia de Gasto"
+              value={(diferenciaCosto > 0 ? '+' : '') + `$${diferenciaCosto.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              icon={<DollarSign size={20} />}
+              color={diferenciaCosto > 0 ? '#ef4444' : '#10b981'}
             />
             <KPICard
               title="Variación"
               value={""}
               trend={kpiVariacion}
-              trendLabel={`vs ${dateRangeB.label}`}
+              trendLabel={`vs ${dateRangeB.label.replace('Cierre del ', '').replace('Período del ', '')}`}
               icon={<TrendingUp size={20} />}
-              color={chartColors.success}
+              color={kpiVariacion > 0 ? '#ef4444' : '#10b981'}
+              invertTrendColor={true}
             />
           </div>
 
@@ -1153,7 +1169,7 @@ const AnalyticsPage = () => {
           {/* Advanced Filters */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
             <div className="flex flex-col gap-1.5 col-span-1 sm:col-span-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Período de Cierre (Principal)</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Período a Comparar (Final - Más Reciente)</label>
               <select
                 value={filterFechaInicio && filterFechaFin ? `${filterFechaInicio}_${filterFechaFin}` : ''}
                 onChange={(e) => {
@@ -1188,7 +1204,7 @@ const AnalyticsPage = () => {
               </select>
             </div>
             <div className="flex flex-col gap-1.5 col-span-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comparar con Período (Opcional)</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Período Base (Inicial - Más Antiguo)</label>
               <select
                 value={filterFechaInicioComp && filterFechaFinComp ? `${filterFechaInicioComp}_${filterFechaFinComp}` : ''}
                 onChange={(e) => {
@@ -1332,11 +1348,11 @@ const AnalyticsPage = () => {
                           <div className="text-[11px] text-slate-500 font-semibold mt-1 flex flex-wrap gap-x-3 gap-y-1">
                             {filterFechaInicioComp && filterFechaFinComp ? (
                               <>
-                                <span>Período A: <strong className="text-slate-750 font-extrabold">{u.consumo_total.toLocaleString()} págs</strong></span>
+                                <span>Período a Comparar (Reciente): <strong className="text-slate-750 font-extrabold">{u.consumo_total.toLocaleString()} págs</strong></span>
                                 <span>·</span>
-                                <span>Período B: <strong className="text-slate-500 font-bold">{u.consumo_comparar.toLocaleString()} págs</strong></span>
+                                <span>Período Base (Antiguo): <strong className="text-slate-500 font-bold">{u.consumo_comparar.toLocaleString()} págs</strong></span>
                                 <span>·</span>
-                                <span>Diferencia: <strong className={u.diferencia > 0 ? "text-emerald-600 font-extrabold" : u.diferencia < 0 ? "text-red-500 font-extrabold" : "text-slate-400 font-bold"}>
+                                <span>Diferencia: <strong className={u.diferencia > 0 ? "text-red-500 font-extrabold" : u.diferencia < 0 ? "text-emerald-600 font-extrabold" : "text-slate-400 font-bold"}>
                                   {u.diferencia === 0 ? '0' : `${u.diferencia > 0 ? '+' : ''}${u.diferencia.toLocaleString()}`}
                                 </strong></span>
                               </>
@@ -1430,8 +1446,8 @@ const AnalyticsPage = () => {
                                   {filterFechaInicioComp && filterFechaFinComp ? (
                                     <tr>
                                       <th className="px-4 py-3">Impresora / Ubicación</th>
-                                      <th className="px-4 py-3 text-center">Consumo A</th>
-                                      <th className="px-4 py-3 text-center">Consumo B</th>
+                                      <th className="px-4 py-3 text-center">Consumo A (Reciente)</th>
+                                      <th className="px-4 py-3 text-center">Consumo B (Base)</th>
                                       <th className="px-4 py-3 text-center">Diferencia</th>
                                       <th className="px-4 py-3 text-center">Total Acumulado</th>
                                       <th className="px-4 py-3 text-center">B/N vs Color (Acumulado)</th>
@@ -1475,7 +1491,7 @@ const AnalyticsPage = () => {
                                           <td className="px-4 py-3 text-center">
                                             <span className={cn(
                                               "inline-flex items-center px-2 py-0.5 rounded-full font-bold",
-                                              pRecord.diferencia > 0 ? "bg-emerald-50 text-emerald-600" : pRecord.diferencia < 0 ? "bg-red-50 text-red-500" : "bg-slate-50 text-slate-400"
+                                              pRecord.diferencia > 0 ? "bg-red-50 text-red-500" : pRecord.diferencia < 0 ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
                                             )}>
                                               {pRecord.diferencia === 0 ? '0' : `${pRecord.diferencia > 0 ? '+' : ''}${pRecord.diferencia.toLocaleString()}`}
                                             </span>

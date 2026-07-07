@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Printer, Search, RefreshCw, AlertCircle, FileText, User, Calendar, Layers, Hash, Trash2, Loader2 } from 'lucide-react';
+import { Printer, Search, RefreshCw, AlertCircle, FileText, User, Calendar, Layers, Trash2, Loader2 } from 'lucide-react';
 import { fetchPrinters, fetchPrinterJobs, fetchConsolidatedPrinterJobs, deletePrinterJob } from '../services/printerService';
 import type { PrinterDevice } from '../types';
 import { useNotification } from '../hooks/useNotification';
@@ -149,7 +149,7 @@ const PrintJobsPage = () => {
 
   return (
     <div className="h-full overflow-auto bg-slate-50 animate-fade-in relative pb-12">
-      <div className="container-padding container-padding-y max-w-7xl mx-auto">
+      <div className="container-padding container-padding-y w-full">
         
         {/* Cabecera Premium */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -398,33 +398,30 @@ const PrintJobsPage = () => {
                     <table className="w-full">
                       <thead className="bg-slate-50 border-b border-slate-100">
                         <tr>
-                          <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[120px]">
-                            ID Trabajo
-                          </th>
                           {selectedPrinterId === 'consolidated' && (
-                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[180px]">
+                            <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[150px] hidden md:table-cell">
                               Impresora
                             </th>
                           )}
-                          <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                          <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                             Documento
                           </th>
-                          <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[150px]">
+                          <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[120px]">
                             Usuario
                           </th>
-                          <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[130px]">
+                          <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[120px] hidden sm:table-cell">
                             Tipo
                           </th>
-                          <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[180px]">
+                          <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[160px] hidden md:table-cell">
                             Fecha / Hora
                           </th>
-                          <th className="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[80px]">
+                          <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[70px]">
                             Páginas
                           </th>
-                          <th className="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[80px]">
+                          <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[70px] hidden sm:table-cell">
                             Copias
                           </th>
-                          <th className="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[100px]">
+                          <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[80px]">
                             Acciones
                           </th>
                         </tr>
@@ -432,14 +429,8 @@ const PrintJobsPage = () => {
                       <tbody className="bg-white divide-y divide-slate-100">
                         {filteredJobs.map((job, idx) => (
                           <tr key={job.job_id || idx} className="hover:bg-slate-50/80 transition-colors group">
-                            <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-500">
-                              <div className="flex items-center gap-1.5">
-                                <Hash size={12} className="text-slate-400" />
-                                {job.job_id || `—`}
-                              </div>
-                            </td>
                             {selectedPrinterId === 'consolidated' && (
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                                 <div className="text-xs text-slate-700 font-bold">
                                   {job.printer_hostname || 'Sin Hostname'}
                                 </div>
@@ -453,15 +444,46 @@ const PrintJobsPage = () => {
                                 )}
                               </td>
                             )}
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2 max-w-md md:max-w-lg lg:max-w-xl">
-                                <FileText size={16} className="text-slate-400 shrink-0" />
-                                <div className="text-sm font-semibold text-slate-800 truncate" title={job.documento}>
-                                  {job.documento || 'Documento sin nombre'}
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-2 max-w-xs sm:max-w-md md:max-w-[400px]">
+                                  <FileText size={16} className="text-slate-400 shrink-0" />
+                                  <div className="text-sm font-semibold text-slate-800 truncate" title={job.documento}>
+                                    {job.documento || 'Documento sin nombre'}
+                                  </div>
+                                </div>
+                                
+                                {/* Info secundaria responsiva bajo el documento */}
+                                <div className="flex flex-col gap-0.5 mt-1">
+                                  {/* Hostname e IP de Impresora (vista consolidada) en móviles/tablets */}
+                                  {selectedPrinterId === 'consolidated' && (
+                                    <div className="md:hidden text-[10px] text-slate-500 font-medium">
+                                      <span className="font-bold text-slate-600">{job.printer_hostname || 'Sin Hostname'}</span>
+                                      <span className="font-mono ml-1">({job.printer_ip})</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Tipo, fecha/hora y copias en pantallas pequeñas */}
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                    {/* Tipo de trabajo (oculto en sm:table-cell) */}
+                                    <span className="sm:hidden inline-flex items-center gap-0.5 px-1 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                      {job.tipo || 'Impresión'}
+                                    </span>
+                                    
+                                    {/* Copias (oculto en sm:table-cell) */}
+                                    <span className="sm:hidden text-[10px] text-slate-500 font-medium font-mono">
+                                      {job.copias !== undefined && job.copias !== null ? job.copias : 1} {job.copias === 1 ? 'copia' : 'copias'}
+                                    </span>
+                                    
+                                    {/* Fecha/Hora (oculto en md:table-cell) */}
+                                    <span className="md:hidden text-[10px] text-slate-400 font-medium font-mono">
+                                      {job.fecha || 'Desconocida'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 <div className={cn(
                                   "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black uppercase shadow-sm",
@@ -481,7 +503,7 @@ const PrintJobsPage = () => {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                               <span className={cn(
                                 "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border shadow-sm",
                                 job.tipo?.toLowerCase().includes('color')
@@ -494,19 +516,19 @@ const PrintJobsPage = () => {
                                 {job.tipo || 'Impresión'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-600 font-medium">
+                            <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-600 font-medium hidden md:table-cell">
                               <div className="flex items-center gap-1.5">
                                 <Calendar size={12} className="text-slate-400" />
                                 {job.fecha || 'Desconocida'}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-black text-slate-800 font-mono">
+                            <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-black text-slate-800 font-mono">
                               {job.paginas}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-slate-600 font-mono">
+                            <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-bold text-slate-600 font-mono hidden sm:table-cell">
                               {job.copias !== undefined && job.copias !== null ? job.copias : 1}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                            <td className="px-4 py-4 whitespace-nowrap text-center text-sm">
                               {job.job_id ? (
                                 <button
                                   onClick={() => handleDeleteJob(job.job_id!, job.printer_id)}

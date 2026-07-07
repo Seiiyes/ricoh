@@ -31,28 +31,12 @@ AUTHZ_INSUFFICIENT_PERMISSIONS = "AUTHZ_INSUFFICIENT_PERMISSIONS"
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> AdminUser:
     """
-    Dependency to get current authenticated user
-    
-    Extracts token from Authorization header, validates it, and returns user.
-    
-    Args:
-        credentials: HTTP Bearer credentials from header
-        db: Database session
-        
-    Returns:
-        AdminUser object
-        
-    Raises:
-        HTTPException: If authentication fails
-        
-    Usage:
-        @app.get("/protected")
-        async def protected_route(current_user: AdminUser = Depends(get_current_user)):
-            return {"user": current_user.username}
+    Dependency to get current authenticated user with Device Binding
     """
     print("[AUTH] ===== INICIO DE AUTENTICACIÓN =====")
     
@@ -82,7 +66,9 @@ async def get_current_user(
     try:
         print("[AUTH] Validando token...")
         logger.info("🔍 Validando token...")
-        user = AuthService.validate_token(db, token)
+        client_ip = get_client_ip(request)
+        client_ua = get_user_agent(request)
+        user = AuthService.validate_token(db, token, client_ip, client_ua)
         print(f"[AUTH] Usuario validado: {user.username} (rol: {user.rol}, activo: {user.is_active})")
         logger.info(f"✅ Usuario validado: {user.username} (rol: {user.rol}, activo: {user.is_active})")
         return user

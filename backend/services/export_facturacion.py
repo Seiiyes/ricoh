@@ -15,35 +15,29 @@ def exportar_facturacion_excel(
     fecha_fin: str
 ) -> io.BytesIO:
     """
-    Genera un reporte jerárquico de facturación para una empresa.
+    Genera un reporte jerárquico de facturación para una empresa o para todo el grupo consolidado (si es 0).
     """
-    # 1. Obtener la empresa
-    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
-    if not empresa:
-        raise ValueError("Empresa no encontrada")
-
-    # 2. Consultar cierres de esa empresa en el rango
-    # Nos unimos con Printer, User y CentroCosto para agrupar.
-    query = (
-        db.query(
-            CentroCosto.nombre.label("centro_costo"),
-            User.id.label("user_id"),
-            User.name.label("user_name"),
-            User.codigo_de_usuario.label("codigo"),
-            Printer.id.label("printer_id"),
-            Printer.hostname.label("printer_name"),
-            func.sum(CierreMensualUsuario.total_bn - CierreMensualUsuario.copiadora_bn).label("consumo_bn"), # Ajuste simple: El frontend usa total_bn y total_color. Si hay `consumo_total` pero no desglose del mes, usaremos totales o la diferencia.
-            # Wait, the DB model CierreMensualUsuario has `total_bn`, but does it have `consumo_bn` for the month? 
-            # I'll check model definition or just fetch all records and do it in python.
+    # 1. Obtener la empresa (o crear empresa virtual para consolidado)
+    if empresa_id == 0:
+        empresa = Empresa(
+            id=0,
+            razon_social="GRUPO DE EMPRESAS CONSOLIDADO",
+            nombre="CONSOLIDADO"
         )
-    )
-    
-    # Actually, let's just fetch the raw data and process it in Python to avoid complex SQL grouping issues if fields are missing.
+    else:
+        empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+        if not empresa:
+            raise ValueError("Empresa no encontrada")
+
     return _generar_excel_python(db, empresa, fecha_inicio, fecha_fin)
 
 def _generar_excel_python(db: Session, empresa: Empresa, fecha_inicio: str, fecha_fin: str) -> io.BytesIO:
-    # Obtener todas las impresoras de la empresa
-    printers = db.query(Printer).filter(Printer.empresa_id == empresa.id).all()
+    # Obtener impresoras (todas si es consolidado, o solo de la empresa correspondiente)
+    if empresa.id == 0:
+        printers = db.query(Printer).all()
+    else:
+        printers = db.query(Printer).filter(Printer.empresa_id == empresa.id).all()
+    
     printer_ids = [p.id for p in printers]
     
     # Obtener todos los cierres de esas impresoras en el rango
@@ -62,7 +56,7 @@ def _generar_excel_python(db: Session, empresa: Empresa, fecha_inicio: str, fech
     # Obtener diccionarios de ayuda
     users_dict = {u.id: u for u in db.query(User).all()}
     centros_dict = {c.id: c.nombre for c in db.query(CentroCosto).all()}
-    printers_dict = {p.id: p for p in printers}
+    printers_dict = {p.id: p for p in db.query(Printer).all()}
     
     # Estructura de datos:
     # {

@@ -40,6 +40,7 @@ export interface GlobalUserConsumptionFilter {
   fechaInicio?: string;
   fechaFin?: string;
   centroCostos?: string;
+  enabled?: boolean;
 }
 
 export interface GlobalCierreUsuario {
@@ -93,24 +94,26 @@ export interface PaginatedGlobalUserConsumption {
 }
 
 export const useGlobalUserConsumption = (filters: GlobalUserConsumptionFilter) => {
+  const { enabled, ...queryFilters } = filters;
   return useQuery<PaginatedGlobalUserConsumption>({
-    queryKey: ['analytics', 'global-user-consumption', filters],
+    queryKey: ['analytics', 'global-user-consumption', queryFilters],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.page) params.append('page', filters.page.toString());
-      if (filters.pageSize) params.append('page_size', filters.pageSize.toString());
-      if (filters.search) params.append('search', filters.search);
-      if (filters.printerId) params.append('printer_id', filters.printerId.toString());
-      if (filters.userId) params.append('user_id', filters.userId.toString());
-      if (filters.fechaInicio) params.append('fecha_inicio', filters.fechaInicio);
-      if (filters.fechaFin) params.append('fecha_fin', filters.fechaFin);
-      if (filters.centroCostos) params.append('centro_costos', filters.centroCostos);
+      if (queryFilters.page) params.append('page', queryFilters.page.toString());
+      if (queryFilters.pageSize) params.append('page_size', queryFilters.pageSize.toString());
+      if (queryFilters.search) params.append('search', queryFilters.search);
+      if (queryFilters.printerId) params.append('printer_id', queryFilters.printerId.toString());
+      if (queryFilters.userId) params.append('user_id', queryFilters.userId.toString());
+      if (queryFilters.fechaInicio) params.append('fecha_inicio', queryFilters.fechaInicio);
+      if (queryFilters.fechaFin) params.append('fecha_fin', queryFilters.fechaFin);
+      if (queryFilters.centroCostos) params.append('centro_costos', queryFilters.centroCostos);
 
       const { data } = await apiClient.get(`/api/counters/monthly/users/all?${params.toString()}`);
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
     placeholderData: (prev) => prev,
+    enabled: enabled !== false,
   });
 };
 

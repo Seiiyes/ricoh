@@ -10,6 +10,7 @@ interface KPICardProps {
   trendLabel?: string;
   color?: string;
   className?: string;
+  invertTrendColor?: boolean;
 }
 
 export const KPICard: React.FC<KPICardProps> = ({ 
@@ -19,10 +20,21 @@ export const KPICard: React.FC<KPICardProps> = ({
   trend, 
   trendLabel,
   color = chartColors.primary, 
-  className 
+  className,
+  invertTrendColor = false
 }) => {
   const isPositive = trend !== undefined && trend > 0;
   const isNegative = trend !== undefined && trend < 0;
+
+  // Lógica de colores de la tendencia (normal o invertida)
+  let trendBgClass = "bg-slate-100 text-slate-700";
+  if (trend !== undefined) {
+    if (invertTrendColor) {
+      trendBgClass = isPositive ? "bg-red-100 text-red-700" : isNegative ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700";
+    } else {
+      trendBgClass = isPositive ? "bg-green-100 text-green-700" : isNegative ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-700";
+    }
+  }
 
   return (
     <div className={cn("bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col relative overflow-hidden", className)}>
@@ -41,9 +53,7 @@ export const KPICard: React.FC<KPICardProps> = ({
           <div className="flex items-center gap-2 mt-2">
             <span className={cn(
               "text-xs font-bold px-1.5 py-0.5 rounded-md",
-              isPositive ? "bg-green-100 text-green-700" : 
-              isNegative ? "bg-red-100 text-red-700" : 
-              "bg-slate-100 text-slate-700"
+              trendBgClass
             )}>
               {isPositive ? '+' : ''}{trend}%
             </span>

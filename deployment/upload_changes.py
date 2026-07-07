@@ -37,6 +37,7 @@ files_to_upload = [
     "src/pages/OverviewDashboard.tsx",
     "src/pages/AnalyticsPage.tsx",
     "src/pages/Dashboard.tsx",
+    "src/pages/PrintJobsPage.tsx",
     "src/index.css",
     "src/components/usuarios/AdministracionUsuarios.tsx",
     "src/components/usuarios/ModificarUsuario.tsx",

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import List, Optional
 from datetime import datetime, date
@@ -934,8 +934,10 @@ async def get_all_users_closes(
     Enfuerza multi-tenancy filtrando por la empresa asignada al usuario no-superadmin.
     """
 
-    # Query base con joins para obtener datos de impresora y del cierre
-    query = db.query(CierreMensualUsuario).join(
+    # Query base con joins y joinedload para evitar N+1 diferidas
+    query = db.query(CierreMensualUsuario).options(
+        joinedload(CierreMensualUsuario.cierre).joinedload(CierreMensual.printer).joinedload(Printer.empresa)
+    ).join(
         CierreMensual, CierreMensual.id == CierreMensualUsuario.cierre_mensual_id
     ).join(
         Printer, Printer.id == CierreMensual.printer_id
@@ -1006,14 +1008,22 @@ async def get_all_users_closes(
 
     # Serializar resultados
     serialized_items = []
+    
+    # Batch load de usuarios para evitar N+1 queries
+    user_ids = {snapshot.user_id for snapshot in items if snapshot.user_id}
+    user_map = {}
+    if user_ids:
+        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        user_map = {u.id: u for u in users}
+
     for snapshot in items:
-        # Cierre e Impresora asociados
+        # Cierre e Impresora asociados (ya precargados con joinedload)
         cierre = snapshot.cierre
         printer = cierre.printer
-        # Usuario asociado
-        user = db.query(User).filter(User.id == snapshot.user_id).first()
+        # Usuario asociado desde el mapa en memoria
+        user = user_map.get(snapshot.user_id)
         
-        # Empresa asociada
+        # Empresa asociada (ya precargada con joinedload)
         empresa_nombre = printer.empresa.nombre_comercial.upper() if (printer.empresa and printer.empresa.nombre_comercial) else "SIN EMPRESA"
         
         # Calcular consumo_bn y consumo_color periódicos del mes

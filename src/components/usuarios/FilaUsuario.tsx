@@ -130,16 +130,54 @@ export const FilaUsuario = ({
         {/* Impresoras */}
         <td className="px-4 py-3 text-center">
           {usuario.impresoras && usuario.impresoras.length > 0 ? (
-            <div className="flex items-center justify-center gap-1">
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
-                {usuario.impresoras.length}
-              </span>
-              <span className="text-xs text-slate-500">🖨️</span>
-            </div>
+            (() => {
+              const activas = usuario.is_active === false
+                ? 0
+                : usuario.impresoras.filter(p => p.is_active !== false).length;
+              const inactivas = usuario.is_active === false
+                ? usuario.impresoras.length
+                : usuario.impresoras.filter(p => p.is_active === false).length;
+              return (
+                <div className="flex items-center justify-center gap-1.5" title={`${activas} activas, ${inactivas} desactivadas`}>
+                  {activas > 0 ? (
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold shadow-sm">
+                      {activas}
+                    </span>
+                  ) : inactivas > 0 ? (
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-400 text-xs font-bold border border-slate-200" title="Asignaciones desactivadas">
+                      0
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">-</span>
+                  )}
+                  <span className="text-xs text-slate-500">🖨️</span>
+                </div>
+              );
+            })()
           ) : usuario.origen === 'db' ? (
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
-              {equipos.length}
-            </span>
+            (() => {
+              // Si se cargaron equipos perezosamente, contar cuántos tienen permisos activos
+              const activas = usuario.is_active === false
+                ? 0
+                : equipos.filter(eq => eq.permisos && Object.values(eq.permisos).some(v => v === true)).length;
+              const inactivas = equipos.length - activas;
+              return (
+                <div className="flex items-center justify-center gap-1.5" title={`${activas} activas, ${inactivas} desactivadas`}>
+                  {activas > 0 ? (
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold shadow-sm">
+                      {activas}
+                    </span>
+                  ) : equipos.length > 0 ? (
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-400 text-xs font-bold border border-slate-200" title="Asignaciones desactivadas">
+                      0
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">-</span>
+                  )}
+                  <span className="text-xs text-slate-500">🖨️</span>
+                </div>
+              );
+            })()
           ) : (
             <span className="text-xs text-slate-400 italic">-</span>
           )}
@@ -219,13 +257,24 @@ export const FilaUsuario = ({
                 {usuario.impresoras.map((impresora, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-4 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className={`flex items-start gap-4 backdrop-blur-sm border rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 ${
+                      (usuario.is_active === false || impresora.is_active === false)
+                        ? 'bg-slate-100/70 border-slate-200 opacity-60'
+                        : 'bg-white border-slate-200/60'
+                    }`}
                   >
                     <span className="text-2xl">🖨️</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900 truncate">
-                        {impresora.printer_name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                          {impresora.printer_name}
+                        </p>
+                        {(usuario.is_active === false || impresora.is_active === false) && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200">
+                            Desactivado
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-500 font-mono">
                         {impresora.printer_ip}
                       </p>
@@ -269,19 +318,32 @@ export const FilaUsuario = ({
                   {equipos.map((equipo) => (
                     <div
                       key={equipo.id}
-                      className="flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow"
+                      className={`flex items-center gap-3 backdrop-blur-sm border rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ${
+                        usuario.is_active === false
+                          ? 'bg-slate-100/70 border-slate-200 opacity-60'
+                          : 'bg-white border-slate-200/60'
+                      }`}
                     >
                       <div
                         className={`w-2 h-2 rounded-full ${
-                          equipo.status === 'online'
+                          usuario.is_active === false
+                            ? 'bg-slate-400'
+                            : equipo.status === 'online'
                             ? 'bg-green-500'
                             : 'bg-red-500'
                         }`}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">
-                          {equipo.hostname}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-slate-900 truncate">
+                            {equipo.hostname}
+                          </p>
+                          {usuario.is_active === false && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200">
+                              Desactivado
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-500 font-mono">
                           {equipo.ip_address}
                         </p>

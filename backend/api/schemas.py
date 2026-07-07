@@ -166,6 +166,7 @@ class UserPrinterResponse(BaseModel):
     printer_ip: str
     printer_location: Optional[str] = None
     entry_index: Optional[str] = None
+    is_active: Optional[bool] = None
     permisos: Optional[UserPrinterPermisosResponse] = None
 
     class Config:

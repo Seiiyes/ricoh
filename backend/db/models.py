@@ -141,14 +141,13 @@ class User(Base):
     def impresoras(self) -> list:
         res = []
         for assoc in self.printer_assignments:
-            if not assoc.is_active:
-                continue
             res.append({
                 "printer_id": assoc.printer.id,
                 "printer_name": assoc.printer.hostname,
                 "printer_ip": assoc.printer.ip_address,
                 "printer_location": assoc.printer.location,
                 "entry_index": assoc.entry_index,
+                "is_active": assoc.is_active,
                 "permisos": {
                     "copiadora": assoc.func_copier,
                     "copiadora_color": assoc.func_copier_color,

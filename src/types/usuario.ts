@@ -8,6 +8,7 @@ export interface ImpresoraUsuario {
   printer_location?: string;
   carpeta?: string;
   entry_index?: string;
+  is_active?: boolean;
   permisos?: {
     copiadora: boolean;
     copiadora_color?: boolean;
@@ -67,6 +68,16 @@ export interface EquipoAsignado {
   hostname: string;
   ip_address: string;
   status: string;
+  permisos?: {
+    copiadora: boolean;
+    copiadora_color?: boolean;
+    impresora: boolean;
+    impresora_color?: boolean;
+    document_server: boolean;
+    fax: boolean;
+    escaner: boolean;
+    navegador: boolean;
+  };
 }
 
 export interface UsuarioConEquipos extends Usuario {

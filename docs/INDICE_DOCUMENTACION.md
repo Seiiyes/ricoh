@@ -1,7 +1,7 @@
 # 📚 Índice General de Documentación - Ricoh Fleet Management
 
-**Última actualización**: 1 de Julio de 2026  
-**Versión**: 4.1.4 (Actualizado)
+**Última actualización**: 6 de Julio de 2026  
+**Versión**: 4.1.5 (Actualizado)
 
 ---
 
@@ -43,6 +43,10 @@ docs/
 ## 🆕 Documentación de la Sesión Reciente (Junio-Julio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[FIX_UX_RESPONSIVO_Y_SPACING_TRABAJOS_IMPRESION_07_JULIO_2026.md](fixes/FIX_UX_RESPONSIVO_Y_SPACING_TRABAJOS_IMPRESION_07_JULIO_2026.md)**
+    *   *Descripción:* Solución al subaprovechamiento horizontal en escritorio, remoción de ID Trabajo irrelevante y erradicación del scroll horizontal mediante reajuste de paddings y max-widths.
+*   **[FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md](fixes/FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md)**
+    *   *Descripción:* Solución a la inconsistencia visual de cantidad de impresoras en fila principal para usuarios con asignaciones inactivas en base de datos.
 *   **[RESUMEN_TRABAJO_01_JULIO_2026.md](resumen/RESUMEN_TRABAJO_01_JULIO_2026.md)**
     *   *Descripción:* Implementación de detección de deriva, bucle de reintentos por impresoras ocupadas (BUSY), restauración de live-diagnostics y remoción de console.logs en producción.
 *   **[RESUMEN_TRABAJO_23_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_23_JUNIO_2026.md)**
@@ -145,6 +149,7 @@ docs/
 *   **[INSTRUCCIONES_VISUALES.md](guias/INSTRUCCIONES_VISUALES.md):** Manual visual para verificar la adaptación y responsive en laptops y móviles.
 
 ### 🔧 Fixes y Soluciones de Bugs Importantes
+*   **[FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md](fixes/FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md):** Solución a la inconsistencia visual de cantidad de impresoras en fila principal para usuarios con asignaciones inactivas.
 *   **[FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md](fixes/FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md):** Corrección de coincidencia parcial en el filtro por Centro de Costos, evitando que 'TIC' coincida dentro de 'LOGISTICA'.
 *   **[FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md](fixes/FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md):** Validación de credenciales en RicohWebClient y habilitación/deshabilitación del DDoS middleware via variables de entorno.
 *   **[FIX_SUITE_TESTS_COMPLETA_JUNIO_2026.md](fixes/FIX_SUITE_TESTS_COMPLETA_JUNIO_2026.md):** Corrección y estabilización de la suite completa de pytest (19 fallos corregidos a 0).

@@ -7,6 +7,7 @@ interface TablaUsuariosProps {
   usuarios: Usuario[];
   onEditar: (usuario: Usuario) => void;
   onDesactivar: (usuario: Usuario) => void;
+  desactivandoUsuarioId: number | null;
   campoOrden: CampoOrden | null;
   direccionOrden: DireccionOrden;
   onOrdenar: (campo: CampoOrden) => void;
@@ -19,6 +20,7 @@ export const TablaUsuarios = ({
   usuarios, 
   onEditar, 
   onDesactivar,
+  desactivandoUsuarioId,
   campoOrden,
   direccionOrden,
   onOrdenar
@@ -151,6 +153,7 @@ export const TablaUsuarios = ({
               key={usuario.id}
               usuario={usuario}
               expandido={usuarioExpandido === usuario.id}
+              desactivando={typeof usuario.id === 'number' && desactivandoUsuarioId === usuario.id}
               onToggleExpandir={() => toggleExpandir(usuario.id)}
               onEditar={() => onEditar(usuario)}
               onDesactivar={onDesactivar}
