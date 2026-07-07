@@ -42,15 +42,16 @@ La barra de scroll horizontal y la distribución apretada se debían a una suma 
   * **Páginas / Copias**: Reducidas de `80px` a `70px`.
   * **Acciones**: Reducida de `100px` a `80px`.
 
-### D. Sistema de Paginación Interactivo
-*   **Antes**: Todos los trabajos de impresión en cola se cargaban a la vez en una única lista vertical gigante. Si la impresora o el consolidado reportaba decenas de trabajos, la tabla crecía de forma desmedida, forzando un scroll vertical largo y afectando el rendimiento del renderizado en el navegador.
+### D. Sistema de Paginación Interactivo (Duplicado Superior/Inferior)
+*   **Antes**: Todos los trabajos de impresión en cola se cargaban a la vez en una única lista vertical gigante. Si la impresora o el consolidado reportaba decenas de trabajos, la tabla crecía de forma desmedida, forzando al usuario a realizar scroll vertical para ver el totalizador y para cambiar de página en el pie de la tabla.
 *   **Ahora**:
     1.  Se implementó un estado de paginación reactivo (`currentPage` e `itemsPerPage`).
-    2.  Se añadió una barra de controles premium al pie de la tabla que incluye:
+    2.  Se añadieron **dos barras de controles de paginación sincronizadas**: una en la parte superior (dentro de la tarjeta de filtros y búsqueda) y otra en el pie de página de la tabla. Ambas barras contienen:
         *   Un **selector dinámico** para cambiar los elementos mostrados por página (`10`, `25`, `50`, `100` registros).
         *   Contadores interactivos de la porción actual: `"Mostrando X-Y de Z (T en total)"`.
         *   Botones de navegación de **Anterior** (`← Anterior`) y **Siguiente** (`Siguiente →`) con deshabilitación condicional.
-    3.  Al aplicar búsquedas o filtros de usuario, la página actual se restablece de forma automática a `1` para garantizar la consistencia en la visualización.
+    3.  Tener los controles arriba y abajo evita que el usuario tenga que desplazarse verticalmente hasta el final de la lista para cambiar de página o aumentar el límite de visualización.
+    4.  Al aplicar búsquedas o filtros de usuario, la página actual se restablece de forma automática a `1` en ambos paneles para garantizar la consistencia en la visualización.
 
 ---
 
