@@ -22,7 +22,7 @@ interface PrintJob {
 const PrintJobsPage = () => {
   const notify = useNotification();
   const [printers, setPrinters] = useState<PrinterDevice[]>([]);
-  const [selectedPrinterId, setSelectedPrinterId] = useState<string>('');
+  const [selectedPrinterIds, setSelectedPrinterIds] = useState<(string | number)[]>([]);
   const [jobs, setJobs] = useState<PrintJob[]>([]);
   const [loadingPrinters, setLoadingPrinters] = useState(true);
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -38,6 +38,11 @@ const PrintJobsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Derivados
+  const showPrinterColumn = useMemo(() => {
+    return selectedPrinterIds.includes('consolidated') || selectedPrinterIds.length > 1;
+  }, [selectedPrinterIds]);
+
   // Cargar impresoras al montar el componente
   useEffect(() => {
     const loadPrinters = async () => {
@@ -48,7 +53,7 @@ const PrintJobsPage = () => {
         
         // Seleccionar "consolidated" por defecto si hay impresoras
         if (data.length > 0) {
-          setSelectedPrinterId('consolidated');
+          setSelectedPrinterIds(['consolidated']);
         }
       } catch (err) {
         console.error('Error al cargar impresoras:', err);
@@ -60,38 +65,54 @@ const PrintJobsPage = () => {
     loadPrinters();
   }, []);
 
-  // Cargar trabajos de impresión al cambiar de impresora
-  const loadJobs = async (printerId: string) => {
-    if (!printerId) return;
+  // Cargar trabajos de impresión para los equipos seleccionados
+  const loadJobs = async (printerIds: (string | number)[]) => {
+    if (!printerIds || printerIds.length === 0) return;
     try {
       setLoadingJobs(true);
       setError(null);
       let data;
-      if (printerId === 'consolidated') {
+      if (printerIds.includes('consolidated')) {
         data = await fetchConsolidatedPrinterJobs();
       } else {
-        data = await fetchPrinterJobs(Number(printerId));
+        // Consultar de forma concurrente solo las impresoras seleccionadas
+        const promises = printerIds.map(async (id) => {
+          const printerObj = printers.find(p => p.id === id);
+          const jobsData = await fetchPrinterJobs(Number(id));
+          // Inyectamos metadatos de la impresora en cada registro para homogeneizar columnas
+          return jobsData.map(job => ({
+            ...job,
+            printer_id: Number(id),
+            printer_ip: printerObj?.ip_address,
+            printer_hostname: printerObj?.hostname || "Sin Hostname",
+            printer_serial: printerObj?.serial_number || "Sin Serial"
+          }));
+        });
+        const results = await Promise.all(promises);
+        data = results.flat();
       }
       setJobs(data);
     } catch (err: any) {
       console.error('Error al cargar trabajos de impresión:', err);
-      const detail = err.response?.data?.detail || 'No se pudo conectar con la impresora o verificar sus trabajos activos.';
+      const detail = err.response?.data?.detail || 'No se pudo conectar con alguna de las impresoras seleccionadas para verificar sus trabajos activos.';
       setError(typeof detail === 'string' ? detail : JSON.stringify(detail));
-      notify.error('Error', 'No se pudieron recuperar los trabajos de la impresora.');
+      notify.error('Error', 'No se pudieron recuperar los trabajos de las impresoras seleccionadas.');
     } finally {
       setLoadingJobs(false);
     }
   };
 
+  const selectedPrinterIdsStr = selectedPrinterIds.join(',');
+
   useEffect(() => {
-    if (selectedPrinterId) {
-      loadJobs(selectedPrinterId);
+    if (selectedPrinterIds.length > 0) {
+      loadJobs(selectedPrinterIds);
       // Resetear filtros al cambiar de impresora
       setSearchTerm('');
       setSelectedUserFilter(null);
       setCurrentPage(1);
     }
-  }, [selectedPrinterId]);
+  }, [selectedPrinterIdsStr]);
 
   // Resetear página al cambiar filtros
   useEffect(() => {
@@ -143,13 +164,14 @@ const PrintJobsPage = () => {
   }, [currentPage, itemsPerPage]);
 
   const handleRefresh = () => {
-    if (selectedPrinterId) {
-      loadJobs(selectedPrinterId);
+    if (selectedPrinterIds.length > 0) {
+      loadJobs(selectedPrinterIds);
     }
   };
 
   const handleDeleteJob = async (jobId: string, jobPrinterId?: number) => {
-    const targetPrinterId = jobPrinterId || Number(selectedPrinterId);
+    const firstSelectedPrinterId = selectedPrinterIds.find(id => id !== 'consolidated');
+    const targetPrinterId = jobPrinterId || Number(firstSelectedPrinterId);
     if (!targetPrinterId || isNaN(targetPrinterId)) {
       notify.error('Error', 'No se pudo determinar el ID de la impresora para eliminar el trabajo.');
       return;
@@ -163,7 +185,7 @@ const PrintJobsPage = () => {
       await deletePrinterJob(targetPrinterId, jobId);
       notify.success('Trabajo eliminado', 'El trabajo de impresión ha sido cancelado y eliminado con éxito.');
       // Refrescar lista de trabajos
-      loadJobs(selectedPrinterId);
+      loadJobs(selectedPrinterIds);
     } catch (err: any) {
       console.error('Error al eliminar trabajo de impresión:', err);
       const detail = err.response?.data?.detail || 'No se pudo eliminar el trabajo de impresión de la impresora.';
@@ -191,7 +213,7 @@ const PrintJobsPage = () => {
           
           <button
             onClick={handleRefresh}
-            disabled={loadingJobs || !selectedPrinterId}
+            disabled={loadingJobs || selectedPrinterIds.length === 0}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 font-semibold text-sm rounded-xl text-slate-700 shadow-sm hover:shadow transition-all disabled:opacity-50"
           >
             <RefreshCw size={16} className={cn(loadingJobs && 'animate-spin')} />
@@ -218,10 +240,10 @@ const PrintJobsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[290px] overflow-y-auto pr-1">
               {/* Tarjeta de Consolidado */}
               <button
-                onClick={() => setSelectedPrinterId('consolidated')}
+                onClick={() => setSelectedPrinterIds(['consolidated'])}
                 className={cn(
                   "text-left p-4 rounded-xl border-2 transition-all duration-200 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden",
-                  selectedPrinterId === 'consolidated'
+                  selectedPrinterIds.includes('consolidated')
                     ? 'border-ricoh-red bg-red-50/10 ring-2 ring-red-500/5'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                 )}
@@ -230,11 +252,11 @@ const PrintJobsPage = () => {
                   <div className="flex justify-between items-start mb-1">
                     <span className={cn(
                       "text-sm font-bold flex items-center gap-1.5",
-                      selectedPrinterId === 'consolidated' ? 'text-ricoh-red' : 'text-slate-800'
+                      selectedPrinterIds.includes('consolidated') ? 'text-ricoh-red' : 'text-slate-800'
                     )}>
                       📋 Consolidado de Trabajos
                     </span>
-                    {selectedPrinterId === 'consolidated' && (
+                    {selectedPrinterIds.includes('consolidated') && (
                       <span className="text-[9px] bg-ricoh-red text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
                         Activo
                       </span>
@@ -251,13 +273,24 @@ const PrintJobsPage = () => {
 
               {/* Tarjetas de Impresoras */}
               {printers.map((printer) => {
-                const isSelected = selectedPrinterId === printer.id;
+                const isSelected = selectedPrinterIds.includes(printer.id);
                 return (
                   <button
                     key={printer.id}
-                    onClick={() => setSelectedPrinterId(printer.id)}
+                    onClick={() => {
+                      setSelectedPrinterIds(prev => {
+                        if (prev.includes('consolidated')) {
+                          return [printer.id];
+                        }
+                        if (prev.includes(printer.id)) {
+                          const next = prev.filter(id => id !== printer.id);
+                          return next.length === 0 ? ['consolidated'] : next;
+                        }
+                        return [...prev, printer.id];
+                      });
+                    }}
                     className={cn(
-                      "text-left p-4 rounded-xl border-2 transition-all duration-200 shadow-sm flex flex-col justify-between h-32",
+                      "text-left p-4 rounded-xl border-2 transition-all duration-200 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden",
                       isSelected
                         ? 'border-ricoh-red bg-red-50/10 ring-2 ring-red-500/5'
                         : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
@@ -297,7 +330,7 @@ const PrintJobsPage = () => {
         </div>
 
         {/* Panel Principal de Trabajos */}
-        {selectedPrinterId && (
+        {selectedPrinterIds.length > 0 && (
           <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
             
             {/* Barra de Filtros y Búsqueda */}
@@ -476,9 +509,9 @@ const PrintJobsPage = () => {
                     <p className="text-sm font-bold text-slate-700">No se encontraron trabajos de impresión</p>
                     <p className="text-xs mt-1.5 max-w-sm mx-auto">
                       {jobs.length === 0 
-                        ? (selectedPrinterId === 'consolidated' 
+                        ? (selectedPrinterIds.includes('consolidated') 
                             ? 'Ninguna impresora de la flota reporta trabajos en cola o almacenados en este momento.'
-                            : 'La impresora seleccionada no reporta trabajos en cola o almacenados en este momento.')
+                            : 'Ninguna de las impresoras seleccionadas reporta trabajos en cola o almacenados en este momento.')
                         : 'Ajuste los filtros de búsqueda para ver otros resultados.'}
                     </p>
                   </div>
@@ -487,7 +520,7 @@ const PrintJobsPage = () => {
                     <table className="w-full">
                       <thead className="bg-slate-50 border-b border-slate-100">
                         <tr>
-                          {selectedPrinterId === 'consolidated' && (
+                          {showPrinterColumn && (
                             <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap w-[150px] hidden md:table-cell">
                               Impresora
                             </th>
@@ -518,7 +551,7 @@ const PrintJobsPage = () => {
                       <tbody className="bg-white divide-y divide-slate-100">
                         {paginatedJobs.map((job, idx) => (
                           <tr key={job.job_id || idx} className="hover:bg-slate-50/80 transition-colors group">
-                            {selectedPrinterId === 'consolidated' && (
+                            {showPrinterColumn && (
                               <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                                 <div className="text-xs text-slate-700 font-bold">
                                   {job.printer_hostname || 'Sin Hostname'}
@@ -545,7 +578,7 @@ const PrintJobsPage = () => {
                                 {/* Info secundaria responsiva bajo el documento */}
                                 <div className="flex flex-col gap-0.5 mt-1">
                                   {/* Hostname e IP de Impresora (vista consolidada) en móviles/tablets */}
-                                  {selectedPrinterId === 'consolidated' && (
+                                  {showPrinterColumn && (
                                     <div className="md:hidden text-[10px] text-slate-500 font-medium">
                                       <span className="font-bold text-slate-600">{job.printer_hostname || 'Sin Hostname'}</span>
                                       <span className="font-mono ml-1">({job.printer_ip})</span>

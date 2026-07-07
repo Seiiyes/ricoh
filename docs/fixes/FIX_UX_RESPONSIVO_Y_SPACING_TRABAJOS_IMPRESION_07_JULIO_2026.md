@@ -53,12 +53,25 @@ La barra de scroll horizontal y la distribución apretada se debían a una suma 
     3.  Tener los controles arriba y abajo evita que el usuario tenga que desplazarse verticalmente hasta el final de la lista para cambiar de página o aumentar el límite de visualización.
     4.  Al aplicar búsquedas o filtros de usuario, la página actual se restablece de forma automática a `1` en ambos paneles para garantizar la consistencia en la visualización.
 
+
+### E. Selección Múltiple de Impresoras (Multiselección Dinámica)
+*   **Antes**: El usuario solo podía hacer clic en "Consolidado de Trabajos" (flota completa) o en una sola impresora individual. No había manera de comparar o revisar únicamente un grupo de 2 o 3 impresoras de interés sin traer toda la flota de red en masa.
+*   **Ahora**:
+    1.  Se implementó un estado de selección múltiple basado en un array reactivo (`selectedPrinterIds`).
+    2.  **Comportamiento del Clic**:
+        *   Al hacer clic en **"Consolidado de Trabajos"**, se seleccionan todas las impresoras (se limpia el array y se activa Consolidado).
+        *   Al hacer clic en una **impresora individual**: si "Consolidado" estaba activo, se desactiva y se selecciona solo este equipo. Si ya había otros equipos seleccionados, se añade o se quita de la selección de forma acumulativa y dinámica.
+        *   Si se desmarcan todas las impresoras individuales, la UI vuelve a activar automáticamente "Consolidado de Trabajos" para que la tabla nunca quede vacía.
+    3.  **Consultas Concurrentes Optimizadas**: En lugar de consultar el consolidado del backend (que interroga a toda la flota e introduce demoras), cuando el usuario selecciona múltiples impresoras específicas, el frontend realiza llamadas HTTP concurrentes (`Promise.all`) **únicamente** a los endpoints individuales de las impresoras seleccionadas. Esto minimiza el consumo de red y el tiempo de respuesta.
+    4.  **Columna Impresora Inteligente**: La columna "Impresora" en la tabla de trabajos solo se renderiza si el consolidado está activo o si el usuario seleccionó más de una impresora. Si solo hay una impresora seleccionada, la columna se oculta para ahorrar espacio visual.
+
 ---
 
 ## 4. Verificación Realizada
 1. **Compilación Local Exitosa**: Ejecutado `npm run build` en local de forma satisfactoria (0 errores de compilación).
 2. **Pruebas en Vivo (Navegador en Producción)**: 
    * Se redesplegaron los contenedores en el servidor `192.168.91.131`.
-   * Verificado con navegación directa a resolución de escritorio `1920x945` que la tabla encaja perfectamente en el ancho completo, eliminando scroll horizontal.
-   * Se comprobó la interactividad del paginador: el paso a la página 2 carga los siguientes registros y cambia los contadores; modificar el selector de cantidad de registros a 25 reestructura la paginación al instante de 1/4 a 1/2 páginas correctamente.
+   * **QA de Multiselección**: Verificado en el navegador real que al hacer clic en la impresora A y la impresora B, ambas tarjetas se iluminan con borde rojo y badge "Activo". Los trabajos de ambas impresoras se cargan en la tabla mostrando de forma clara la columna "Impresora". Al hacer clic de vuelta en Consolidado, las selecciones individuales se limpian y se retorna a la visualización global correctamente.
+   * Se comprobó la interactividad del paginador sincronizado en modo multiselección.
+
 
