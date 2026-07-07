@@ -43,6 +43,8 @@ docs/
 ## 🆕 Documentación de la Sesión Reciente (Junio-Julio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md](desarrollo/pruebas/REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md)**
+    *   *Descripción:* Informe de control de calidad (QA) sobre el comportamiento responsivo, el desborde horizontal de la tabla y la sincronización de la doble paginación en vivo en producción.
 *   **[FIX_UX_RESPONSIVO_Y_SPACING_TRABAJOS_IMPRESION_07_JULIO_2026.md](fixes/FIX_UX_RESPONSIVO_Y_SPACING_TRABAJOS_IMPRESION_07_JULIO_2026.md)**
     *   *Descripción:* Solución al subaprovechamiento horizontal en escritorio, remoción de ID Trabajo irrelevante y erradicación del scroll horizontal mediante reajuste de paddings y max-widths.
 *   **[FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md](fixes/FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md)**
@@ -79,6 +81,8 @@ docs/
     *   *Descripción:* Corrección de coincidencia parcial en el filtro por Centro de Costos, rediseño de filtros usando dropdown de períodos de cierre y formato dinámico de subtítulos.
 
 ### 🧪 Planificación de Calidad y Continuidad
+*   **[REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md](desarrollo/pruebas/REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md)**
+    *   *Descripción:* Informe de control de calidad (QA) sobre la responsividad y la doble paginación del consolidado de trabajos.
 *   **[VERIFICACION_SUITE_TESTS_JUNIO_2026.md](desarrollo/verificacion/VERIFICACION_SUITE_TESTS_JUNIO_2026.md)**
     *   *Descripción:* Informe de verificación y ejecución de la suite completa de pruebas de frontend (Vitest) y backend (Pytest) (Actualizado al 11 de Junio de 2026).
 *   **[PLAN_QA_SIGUIENTE_SESION.md](guias/PLAN_QA_SIGUIENTE_SESION.md)**
