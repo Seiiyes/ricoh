@@ -1958,6 +1958,28 @@ class RicohWebClient:
                     except Exception as e_tok:
                         logger.warning(f"⚠️  No se pudo refrescar wimToken de la lista post-update: {e_tok}")
                     
+                    # Configurar contraseña de carpeta usando el flujo correcto
+                    logger.info(f"🔐 Configurando contraseña de carpeta para usuario actualizado...")
+                    from services.ricoh_password_flow import RicohPasswordFlow
+                    password_flow = RicohPasswordFlow(self.session, self.timeout)
+                    
+                    next_wim_token = self._wim_tokens.get(printer_ip)
+                    pwd_to_set = user_data.get('contrasena_inicio_sesion') or 'Temporal2021'
+                    
+                    password_result = password_flow.set_folder_password(
+                        printer_ip=printer_ip,
+                        entry_index=entry_index,
+                        password=pwd_to_set,
+                        wim_token=next_wim_token
+                    )
+                    
+                    if password_result is True:
+                        logger.info(f"✅ Actualización de contraseña exitosa para usuario {entry_index}")
+                    elif password_result in ["BUSY", "TIMEOUT"]:
+                        return password_result
+                    else:
+                        logger.warning(f"⚠️  No se pudo configurar la contraseña de carpeta en {printer_ip}")
+                    
                     logger.info(f"   ✅ Usuario actualizado correctamente en {printer_ip}")
                     return True
                 else:
