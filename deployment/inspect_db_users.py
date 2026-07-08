@@ -23,12 +23,12 @@ def main():
         
         py_code = (
             "from db.database import SessionLocal; "
-            "from db.models import User; "
-            "from services.encryption_service import EncryptionService; "
+            "from db.models import Printer; "
             "db = SessionLocal(); "
-            "users = db.query(User).filter(User.network_password_encrypted != None, User.network_password_encrypted != '').all(); "
-            "print(f'Usuarios con contrasena: {len(users)}'); "
-            "[print(u.id, u.name, u.codigo_de_usuario, u.network_username, EncryptionService.decrypt(u.network_password_encrypted)) for u in users[:10]]"
+            "p = db.query(Printer).filter(Printer.ip_address == '192.168.91.251').first(); "
+            "print(f'Printer ID: {p.id}, Hostname: {p.hostname}, IP: {p.ip_address}'); "
+            "print(f'Location: {p.location}'); "
+            "print(f'Admin Password: {p.admin_password}')"
         )
         cmd = f"docker exec -i ricoh-backend python -c \"{py_code}\""
         
@@ -38,7 +38,7 @@ def main():
         
         # Filtrar prompts
         lines = [l for l in out.split('\n') if '[sudo]' not in l and 'password for' not in l.lower()]
-        print("\n--- DECRYPTED USER CREDENTIALS ---")
+        print("\n--- PRINTER DETAILS ---")
         print('\n'.join(lines))
         if err:
             print("\n--- STDERR ---")

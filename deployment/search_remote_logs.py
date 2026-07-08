@@ -22,18 +22,18 @@ def main():
         client.connect(HOST, username=USER, password=PASS, timeout=15, allow_agent=False, look_for_keys=False)
         print("[OK] SSH Connection established.")
         
-        # Buscar en logs activos e históricos
-        cmd = "docker exec ricoh-backend grep -i '192.168.91.251' /app/logs/ricoh_api.log | tail -n 100"
+        # Buscar en docker logs históricos
+        cmd = "docker logs ricoh-backend 2>&1 | grep -E '192.168.91.251|7104' | tail -n 150"
         stdin, stdout, stderr = client.exec_command(f"echo '{PASS}' | sudo -S {cmd}")
         out = stdout.read().decode('utf-8', errors='replace').strip()
         
         # Filtrar prompts de sudo
         lines = [l for l in out.split('\n') if '[sudo]' not in l and 'password for' not in l.lower()]
-        print("\n--- LOGS RECIENTES DE LA IMPRESORA 192.168.91.251 ---")
+        print("\n--- DOCKER LOGS RECIENTES (192.168.91.251 / 7104) ---")
         if lines and lines[0]:
             print('\n'.join(lines))
         else:
-            print("No se encontraron logs específicos en ricoh_api.log.")
+            print("No se encontraron logs específicos en la última ventana de 15 minutos.")
             
         client.close()
     except Exception as e:

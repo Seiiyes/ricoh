@@ -333,14 +333,14 @@ def deactivate_user_printers_task(user_id: int, printers_to_deactivate: List[dic
     """
     from db.database import SessionLocal
     from db.models import UserPrinterAssignment
-    from services.ricoh_web_client import get_ricoh_web_client
+    from services.ricoh_web_client import create_ricoh_web_client
     from concurrent.futures import ThreadPoolExecutor
     import time
     
     logger.info(f"🚀 [BACKGROUND TASK] Starting physical deactivation for user ID {user_id} on {len(printers_to_deactivate)} printers...")
     
     def deactivate_printer_worker(p_data):
-        client = get_ricoh_web_client()
+        client = create_ricoh_web_client()
         printer_ip = p_data['printer_ip']
         entry_index = p_data['entry_index']
         admin_password = p_data['admin_password']

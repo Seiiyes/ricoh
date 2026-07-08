@@ -59,8 +59,8 @@ def main():
             },
             "carpeta_smb": {
                 "protocolo": "SMB",
-                "servidor": "TIC0264",
-                "ruta": "\\\\TIC0264\\Escaner"
+                "servidor": "192.168.91.66",
+                "ruta": "\\\\192.168.91.66\\Escaner"
             }
         }
         res = client.provision_user(printer_ip, user_config, logout=False)
@@ -221,7 +221,7 @@ def main():
             ('isCertificateExist', 'false'),
             ('isEncryptAlways', 'false'),
             ('folderProtocolIn', 'SMB_O'),
-            ('folderPathNameIn', "\\\\TIC0264\\Escaner"),
+            ('folderPathNameIn', "\\\\192.168.91.66\\Escaner"),
         ]
         final_resp = client.session.post(set_user_url, data=set_user_data, timeout=30)
         with open("step6_final_save.html", "w", encoding="utf-8") as f:

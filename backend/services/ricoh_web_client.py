@@ -2205,6 +2205,18 @@ class RicohWebClient:
 _ricoh_web_client: Optional[RicohWebClient] = None
 
 
+def create_ricoh_web_client() -> RicohWebClient:
+    """
+    Crea una nueva instancia aislada de RicohWebClient (segura para usar en hilos).
+    """
+    admin_user = os.getenv('RICOH_ADMIN_USER', 'admin')
+    admin_password = os.getenv('RICOH_ADMIN_PASSWORD', '')
+    return RicohWebClient(
+        admin_user=admin_user,
+        admin_password=admin_password
+    )
+
+
 def get_ricoh_web_client() -> RicohWebClient:
     """
     Get or create singleton Ricoh web client instance

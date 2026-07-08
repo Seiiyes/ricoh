@@ -571,7 +571,8 @@ async def sync_user_to_all_printers(
         # 3. Definir la función worker que ejecutará los llamadas de red lentas
         # Esta función corre en hilos separados y NO debe hacer escrituras en la DB usando la sesión compartida
         def sync_printer_worker(p_data):
-            client = get_ricoh_web_client()
+            from services.ricoh_web_client import create_ricoh_web_client
+            client = create_ricoh_web_client()
             printer_ip = p_data['printer_ip']
             entry_index = p_data['entry_index']
             admin_password = p_data['admin_password']

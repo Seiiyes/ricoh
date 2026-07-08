@@ -108,13 +108,14 @@ class ProvisioningService:
         from concurrent.futures import ThreadPoolExecutor
         from db.database import SessionLocal
         
-        ricoh_client = get_ricoh_web_client()
         results = []
         busy_printers = []  # Lista de impresoras que están ocupadas
         
         logger.info(f"Starting parallel provisioning to {len(printers)} printer(s)...")
         
         def provision_worker(p):
+            from services.ricoh_web_client import create_ricoh_web_client
+            local_ricoh_client = create_ricoh_web_client()
             thread_db = SessionLocal()
             try:
                 # Query fresh instances in this thread's session context
@@ -136,7 +137,7 @@ class ProvisioningService:
                     user=thread_user,
                     printer=thread_printer,
                     ricoh_payload=ricoh_payload,
-                    ricoh_client=ricoh_client,
+                    ricoh_client=local_ricoh_client,
                     retry_strategy=retry_strategy
                 )
             finally:
@@ -436,12 +437,13 @@ class ProvisioningService:
         from db.database import SessionLocal
         
         removed_count = 0
-        ricoh_client = get_ricoh_web_client()
         
         # Permisos para deshabilitar (Todo en False)
         disabled_permissions = {k: False for k in ['copiadora', 'copiadora_color', 'escaner', 'impresora', 'impresora_color', 'document_server', 'fax', 'navegador']}
 
         def remove_worker(printer_id):
+            from services.ricoh_web_client import create_ricoh_web_client
+            local_ricoh_client = create_ricoh_web_client()
             thread_db = SessionLocal()
             try:
                 # 1. Obtener la asignación para tener el entry_index
@@ -458,7 +460,7 @@ class ProvisioningService:
                         printer = PrinterRepository.get_by_id(thread_db, printer_id)
                         if printer:
                             logger.info(f"🚫 Deshabilitando permisos físicamente para usuario {user_id} en impresora {printer.ip_address} (entry_index={assignment.entry_index})...")
-                            ricoh_client.set_user_functions(
+                            local_ricoh_client.set_user_functions(
                                 printer.ip_address, 
                                 assignment.entry_index, 
                                 disabled_permissions, 
