@@ -1851,9 +1851,9 @@ class RicohWebClient:
                 
                 # Mapeo basado en valores reales de Ricoh
                 if 'COPY' in val:
-                    if any(x in val for x in ['FC', 'FULL', 'COLOR']):
+                    if any(x in val for x in ['FC', 'FULL', 'COLOR', 'TC', 'MC']):
                         if permisos.get('copiadora_color'): is_needed = True
-                    elif any(x in val for x in ['BW', 'TC', 'MC']):
+                    elif 'BW' in val:
                         if permisos.get('copiadora'): is_needed = True
                     elif val == 'COPY':  # Formato simple (.252)
                         if permisos.get('copiadora'): is_needed = True

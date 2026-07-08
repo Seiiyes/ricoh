@@ -23,12 +23,13 @@ def main():
         
         py_code = (
             "from db.database import SessionLocal; "
-            "from db.models import Printer; "
+            "from db.models import User; "
             "db = SessionLocal(); "
-            "p = db.query(Printer).filter(Printer.ip_address == '192.168.91.251').first(); "
-            "print(f'Printer ID: {p.id}, Hostname: {p.hostname}, IP: {p.ip_address}'); "
-            "print(f'Location: {p.location}'); "
-            "print(f'Admin Password: {p.admin_password}')"
+            "u = db.query(User).filter(User.codigo_de_usuario == '7104').first(); "
+            "print(f'User: {u.name}, ID: {u.id}, Code: {u.codigo_de_usuario}'); "
+            "print(f'Copier: {u.func_copier}, Copier Color: {u.func_copier_color}'); "
+            "print(f'Printer: {u.func_printer}, Printer Color: {u.func_printer_color}'); "
+            "print(f'Scanner: {u.func_scanner}')"
         )
         cmd = f"docker exec -i ricoh-backend python -c \"{py_code}\""
         
