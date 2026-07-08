@@ -43,6 +43,8 @@ docs/
 ## 🆕 Documentación de la Sesión Reciente (Junio-Julio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[FIX_RESOLUCION_COMPATIBILIDAD_CONTRASENA_ESCANER_Y_PERMISOS_COLOR_08_JULIO_2026.md](fixes/FIX_RESOLUCION_COMPATIBILIDAD_CONTRASENA_ESCANER_Y_PERMISOS_COLOR_08_JULIO_2026.md)**
+    *   *Descripción:* Resolución definitiva de errores de autenticación SMB en escáner WIM para impresoras nuevas y mapeo correcto de permisos de color TC y MC.
 *   **[PORTAL_AUDITORIA_SEGURIDAD_INDEPENDIENTE_JULIO_2026.md](seguridad/PORTAL_AUDITORIA_SEGURIDAD_INDEPENDIENTE_JULIO_2026.md)**
     *   *Descripción:* Documentación técnica y guía de uso del Portal de Auditoría de Seguridad independiente que corre en el puerto `8088` con base de datos SQLite y autenticación bcrypt.
 *   **[REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md](desarrollo/pruebas/REPORTE_QA_UX_Y_PAGINACION_TRABAJOS_IMPRESION_07_JULIO_2026.md)**
@@ -155,6 +157,7 @@ docs/
 *   **[INSTRUCCIONES_VISUALES.md](guias/INSTRUCCIONES_VISUALES.md):** Manual visual para verificar la adaptación y responsive en laptops y móviles.
 
 ### 🔧 Fixes y Soluciones de Bugs Importantes
+*   **[FIX_RESOLUCION_COMPATIBILIDAD_CONTRASENA_ESCANER_Y_PERMISOS_COLOR_08_JULIO_2026.md](fixes/FIX_RESOLUCION_COMPATIBILIDAD_CONTRASENA_ESCANER_Y_PERMISOS_COLOR_08_JULIO_2026.md):** Corrección fina de variables múltiples de contraseña y parámetros de consolidación temporal en WIM para evitar el borrado silencioso de clave.
 *   **[FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md](fixes/FIX_CONTADOR_IMPRESORAS_Y_RENDER_DESACTIVACION_06_JULIO_2026.md):** Solución a la inconsistencia visual de cantidad de impresoras en fila principal para usuarios con asignaciones inactivas.
 *   **[FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md](fixes/FIX_FILTRO_CENTRO_COSTOS_SUBSTRING_MISMATCH.md):** Corrección de coincidencia parcial en el filtro por Centro de Costos, evitando que 'TIC' coincida dentro de 'LOGISTICA'.
 *   **[FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md](fixes/FIX_SEGURIDAD_RICOH_CLIENT_DDOS_MIDDLEWARE.md):** Validación de credenciales en RicohWebClient y habilitación/deshabilitación del DDoS middleware via variables de entorno.

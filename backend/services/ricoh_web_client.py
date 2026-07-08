@@ -1983,7 +1983,8 @@ class RicohWebClient:
                     elif password_result in ["BUSY", "TIMEOUT"]:
                         return password_result
                     else:
-                        logger.warning(f"⚠️  No se pudo configurar la contraseña de carpeta en {printer_ip}")
+                        logger.error(f"❌ No se pudo configurar la contraseña de carpeta en {printer_ip}")
+                        return False
                     
                     logger.info(f"   ✅ Usuario actualizado correctamente en {printer_ip}")
                     return True

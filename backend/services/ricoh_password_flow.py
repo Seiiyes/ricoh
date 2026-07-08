@@ -241,14 +241,14 @@ class RicohPasswordFlow:
                 return False
             wim_token = match.group(1)
             token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
-            logger.debug(f"   ✅ wimToken del formulario de contraseña: {token_preview}")
+            logger.info(f"   ✅ wimToken del formulario de contraseña: {token_preview}")
             
             # PASO 4: Enviar contraseña codificada en Base64
-            logger.debug(f"   Paso 4: Enviando contraseña codificada")
+            logger.info(f"   Paso 4: Enviando contraseña codificada")
             
             # Codificar contraseña en Base64
             password_b64 = base64.b64encode(password.encode()).decode()
-            logger.debug(f"   Contraseña en Base64: {password_b64}")
+            logger.info(f"   Contraseña en Base64 (codificada)")
             
             edit_password_submit_data = {
                 'wimToken': wim_token,
@@ -296,10 +296,10 @@ class RicohPasswordFlow:
                     f.write(password_submit_response.text)
                 return False
             
-            logger.debug(f"   ✅ Contraseña enviada correctamente")
+            logger.info(f"   ✅ Contraseña enviada correctamente")
             
             # PASO 5: Volver a adrsGetUser.cgi para confirmar
-            logger.debug(f"   Paso 5: Volviendo a formulario del usuario")
+            logger.info(f"   Paso 5: Volviendo a formulario del usuario")
             
             # Extraer wimToken de la respuesta anterior
             match = re.search(r'name="wimToken"\s+value="(\d+)"', password_submit_response.text)
@@ -337,10 +337,10 @@ class RicohPasswordFlow:
             if match:
                 wim_token = match.group(1)
                 token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
-                logger.debug(f"   ✅ wimToken final: {token_preview}")
+                logger.info(f"   ✅ wimToken final: {token_preview}")
             
             # PASO 6: Guardar usuario con isFolderAuthPasswordUpdated=true
-            logger.debug(f"   Paso 6: Guardando usuario con contraseña actualizada")
+            logger.info(f"   Paso 6: Guardando usuario con contraseña actualizada")
             
             set_user_url = f"http://{printer_ip}/web/entry/es/address/adrsSetUser.cgi"
             
