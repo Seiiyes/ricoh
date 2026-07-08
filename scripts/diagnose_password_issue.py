@@ -22,13 +22,13 @@ from services.ricoh_password_flow import RicohPasswordFlow
 
 def main():
     print("="*60)
-    print(" DIAGNOSTICANDO CONFIGURACION DE CONTRASEÑA EN 192.168.91.251")
+    print(" DIAGNOSTICANDO CONFIGURACION DE CONTRASEÑA EN 192.168.91.253")
     print("="*60)
     
     # 1. Crear sesión autenticada
     client = RicohWebClient(admin_password="admin")
     
-    printer_ip = "192.168.91.251"
+    printer_ip = "192.168.91.253"
     print(f"1. Autenticando con la impresora {printer_ip}...")
     auth_success = client._authenticate(printer_ip)
     if not auth_success:
@@ -59,8 +59,8 @@ def main():
             },
             "carpeta_smb": {
                 "protocolo": "SMB",
-                "servidor": "192.168.91.66",
-                "ruta": "\\\\192.168.91.66\\Escaner"
+                "servidor": "TIC0264",
+                "ruta": "\\\\TIC0264\\Escaner"
             }
         }
         res = client.provision_user(printer_ip, user_config, logout=False)
@@ -221,7 +221,7 @@ def main():
             ('isCertificateExist', 'false'),
             ('isEncryptAlways', 'false'),
             ('folderProtocolIn', 'SMB_O'),
-            ('folderPathNameIn', "\\\\192.168.91.66\\Escaner"),
+            ('folderPathNameIn', "\\\\TIC0264\\Escaner"),
         ]
         final_resp = client.session.post(set_user_url, data=set_user_data, timeout=30)
         with open("step6_final_save.html", "w", encoding="utf-8") as f:

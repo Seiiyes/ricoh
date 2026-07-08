@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Inspecciona los usuarios con permisos de escáner en la base de datos de producción.
+Actualiza la ruta SMB del usuario JUAN LIZARAZO en la base de datos de producción
+para usar la IP directa de su máquina local.
 """
-import paramiko
 import sys
 import io
+import paramiko
 from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / "../deployment"))
 from ssh_config import load_ssh_config
 HOST, USER, PASS = load_ssh_config()
 
@@ -26,22 +27,18 @@ def main():
             "from db.models import User; "
             "db = SessionLocal(); "
             "u = db.query(User).filter(User.codigo_de_usuario == '7104').first(); "
-            "print(f'User: {u.name}, Code: {u.codigo_de_usuario}'); "
-            "print(f'SMB Path: {u.smb_path}')"
+            "u.smb_path = chr(92)*2 + 'TIC0264' + chr(92) + 'Escaner'; "
+            "db.commit(); "
+            "print('UPDATED:', u.smb_path)"
         )
-        cmd = f"docker exec -i ricoh-backend python -c \"{py_code}\""
         
+        cmd = f"docker exec -i ricoh-backend python -c \"{py_code}\""
         stdin, stdout, stderr = client.exec_command(f"echo '{PASS}' | sudo -S {cmd}")
         out = stdout.read().decode('utf-8', errors='replace').strip()
-        err = stderr.read().decode('utf-8', errors='replace').strip()
         
         # Filtrar prompts
         lines = [l for l in out.split('\n') if '[sudo]' not in l and 'password for' not in l.lower()]
-        print("\n--- PRINTER DETAILS ---")
         print('\n'.join(lines))
-        if err:
-            print("\n--- STDERR ---")
-            print(err)
         
         client.close()
     except Exception as e:

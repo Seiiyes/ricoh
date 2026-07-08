@@ -260,9 +260,12 @@ class RicohPasswordFlow:
                 'pageSpecifiedIn': '',
                 'pageNumberIn': '',
                 'outputSpecifyModeIn': '',
-                'passwordIn': '',
+                # Enviar en ambas variantes de campos para compatibilidad universal
+                'passwordIn': password_b64,
+                'passwordInwk': password_b64,
                 'wkpasswordIn': password_b64,
-                'passwordConfirmIn': '',
+                'passwordConfirmIn': password_b64,
+                'passwordConfirmInwk': password_b64,
                 'wkpasswordConfirmIn': password_b64
             }
             

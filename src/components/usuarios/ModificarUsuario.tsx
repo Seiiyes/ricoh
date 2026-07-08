@@ -500,14 +500,14 @@ export const ModificarUsuario = ({
       // 5. Lanzar notificaciones descriptivas basadas en las operaciones realizadas
       if (tabActiva === 'permisos' && impresoraSeleccionada) {
         notify.success(
-          'Permisos aplicados', 
-          `Los permisos se enviaron y configuraron exitosamente en vivo en el equipo "${impresoraSeleccionada.printer_location || impresoraSeleccionada.printer_name}" (${impresoraSeleccionada.printer_ip}).`
+          'Permisos y contraseña aplicados', 
+          `Los permisos y la contraseña de la carpeta de escaneo se enviaron y configuraron exitosamente en vivo en el equipo "${impresoraSeleccionada.printer_location || impresoraSeleccionada.printer_name}" (${impresoraSeleccionada.printer_ip}).`
         );
       } else if (perfilActualizado) {
         if (sincronizacionRealizada && sincronizarPermisosBase) {
           notify.success(
-            'Perfil y permisos sincronizados', 
-            `El perfil del usuario "${nombre}" fue guardado y sus permisos base se aplicaron con éxito en todas las impresoras asignadas.`
+            'Perfil, permisos y contraseña sincronizados', 
+            `El perfil del usuario "${nombre}" fue guardado y sus permisos base junto con la contraseña del escáner se aplicaron con éxito en todas las impresoras asignadas.`
           );
         } else {
           notify.success(

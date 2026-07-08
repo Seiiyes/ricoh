@@ -86,8 +86,26 @@
 		}
 	</script>
     <title>Cambiar usuario</title>
+    <script language="JavaScript" type="text/javascript">
+				function onLoadPage(){
+					initializeDiscardFolderPassword(false);
+				}
+				function clickOK(){
+					if(checkDiscardFolderPasswordEditEntry() == false){
+						return;
+					}
+					Apply();
+				}
+				function clickContinue(){
+					if(checkDiscardFolderPasswordEditEntry() == false){
+						return;
+					}
+					Continue();
+				}
+			</script>
   </head>
-  <body onLoad="javascript:baseInit();javascript:adrsScriptRecover();javascript:pageRefresh();">
+  <body onLoad="javascript:baseInit();javascript:adrsScriptRecover();javascript:pageRefresh();javascript:onLoadPage();">
+    <input type="hidden" id="CONFIRM_FOLDER_PASSWORD_G" value="La contraseña de acceso previamente establecida para la autenticación de la carpeta se eliminará porque se cambió [Protocolo], [N.º de puerto], [Nombre de servidor] o [Ruta]. ¿Seguro que quiere que se elimine?">
     <a name="TOP"></a>
     <table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
       <tr>
@@ -122,7 +140,7 @@
       <tr>
         <td></td>
         <td>
-          <table width="100%" border="0" cellspacing="0" cellpadding="0" class="settingFlatContsDivision">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:url(/images/settingFlatContsDivision.gif) repeat-x bottom;">
             <tr>
               <td><img src="/images/settingFlatContsDivision.gif" alt="" title=""></td>
             </tr>
@@ -136,10 +154,10 @@
     </table>
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
-        <td nowrap height="1" width="12" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="12" height="1" border="0"></td>
+        <td nowrap height="1" width="8" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="8" height="1" border="0"></td>
         <td width="100%">
           <form name="commandForm" onSubmit="return false;">
-            <input type="hidden" name="wimToken" value="1280853104">
+            <input type="hidden" name="wimToken" value="1333782130">
             <table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
                 <td nowrap height="8"></td>
@@ -157,8 +175,8 @@
                                   <td>
                                     <table width="100%" class="defaultTableButton" cellspacing="0">
                                       <tr>
-                                        <td class="defaultTableButton" onclick="javascript:Apply(); return false;" height="20">
-                                          <a href="javascript:Apply()" class="defaultTableCommandButton">Aceptar</a>
+                                        <td class="defaultTableButton" onclick="javascript:clickOK(); return false;" height="20">
+                                          <a href="javascript:clickOK()" class="defaultTableCommandButton">Aceptar</a>
                                         </td>
                                       </tr>
                                     </table>
@@ -181,8 +199,8 @@
                                   <td>
                                     <table width="100%" class="defaultTableButton" cellspacing="0">
                                       <tr>
-                                        <td class="defaultTableButton" onclick="javascript:Continue(); return false;" height="20">
-                                          <a href="javascript:Continue()" class="defaultTableCommandButton">Guardar y añadir otro</a>
+                                        <td class="defaultTableButton" onclick="javascript:clickContinue(); return false;" height="20">
+                                          <a href="javascript:clickContinue()" class="defaultTableCommandButton">Guardar y añadir otro</a>
                                         </td>
                                       </tr>
                                     </table>
@@ -225,7 +243,7 @@
                   <table width="100%" border="0" cellspacing="0" cellpadding="2">
                     <tr>
                       <td height="8">
-                        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="settingDivision">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:url(/images/settingDivision.gif) repeat-x bottom;">
                           <tr>
                             <td><img src="/images/settingDivision.gif" alt=""></td>
                           </tr>
@@ -236,6 +254,7 @@
                 </td>
                 <td align="right"></td>
                 <script language="javascript" type="text/javascript">adrsScriptStop()</script>
+                <td nowrap height="1" width="8" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="8" height="1" border="0"></td>
               </tr>
             </table>
           </form>
@@ -244,19 +263,22 @@
     </table>
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
-        <td nowrap height="1" width="12" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="12" height="1" border="0"></td>
+        <td nowrap height="1" width="8" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="8" height="1" border="0"></td>
         <td>
           <form name="mainForm" onSubmit="return false;">
-            <input type="hidden" name="wimToken" value="1280853104">
+            <input type="hidden" name="wimToken" value="1333782130">
             <input type="hidden" name="mode" value="MODUSER">
             <input type="hidden" name="pageSpecifiedIn" value="">
             <input type="hidden" name="pageNumberIn" value="">
+            <input type="hidden" name="searchSpecifyModeIn" value="">
             <input type="hidden" name="outputSpecifyModeIn" value="">
             <input type="hidden" name="inputSpecifyModeIn" value="">
             <input type="hidden" name="wayFrom" value="">
             <input type="hidden" name="wayTo" value="">
             <table width="100%" border="0" cellspacing="2" cellpadding="0">
               <input type="hidden" name="isSelfPasswordEditMode" value="false">
+              <input type="hidden" name="isLocalAuthPasswordUpdated" value="false">
+              <input type="hidden" name="isFolderAuthPasswordUpdated" value="true">
               <tr>
                 <td colspan="4"><img src="/images/spacer.gif" alt="" width="600" height="1"></td>
                 <td width="100%"><img src="/images/spacer.gif"></td>
@@ -270,7 +292,7 @@
                 <td nowrap align="">Nº de registro</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <input type="text" name="entryIndexIn" value="00256" maxLength="5" onChange="" onKeyup="" onBlur="" size="20">
+                  <input type="text" name="entryIndexIn" value="00195" maxLength="5" onChange="" onKeyup="" onBlur="" size="20">
                 </td>
               </tr>
               <tr class="standard">
@@ -288,24 +310,6 @@
                 <td nowrap>
                   <input type="text" name="entryDisplayNameIn" value="JUAN LIZARAZO" maxLength="16" onChange="" onKeyup="" onBlur="" size="40">
                 </td>
-              </tr>
-              <tr class="standard">
-                <td nowrap><img src="/images/settingBullet.gif" alt="" title=""></td>
-                <td nowrap align="">Prioridad visualización</td>
-                <td nowrap>:</td>
-                <td nowrap>
-                  <select name="priorityIn" onchange="">
-                    <option value="1">Prioridad1</option>
-                    <option value="2">Prioridad2</option>
-                    <option value="3">Prioridad3</option>
-                    <option value="4">Prioridad4</option>
-                    <option value="5" selected>Prioridad5</option>
-                    <option value="6">Prioridad6</option>
-                    <option value="7">Prioridad7</option>
-                    <option value="8">Prioridad8</option>
-                    <option value="9">Prioridad9</option>
-                    <option value="10">Prioridad10</option>
-                  </select>&nbsp;1: Prioridad alta - 10: Prioridad baja</td>
               </tr>
               <tr>
                 <td><img src="/images/spacer.gif" alt="" height="2"></td>
@@ -477,7 +481,7 @@
                 <td nowrap align="right" style="padding-left:12px;">Contraseña de inicio de sesión</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000"></font>
+                  <font color=""></font>
                   <input type="button" onclick="javascript:inputPassword('SMTP')" name="buttonSmtpPassword" value="Cambiar">
                 </td>
               </tr>
@@ -503,7 +507,7 @@
                 <td nowrap align="right" style="padding-left:12px;">Contraseña de inicio de sesión</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000"></font>
+                  <font color=""></font>
                   <input type="button" onclick="javascript:inputPassword('FOLDER')" name="buttonFolderPassword" value="Cambiar">
                 </td>
               </tr>
@@ -529,7 +533,7 @@
                 <td nowrap align="right" style="padding-left:12px;">Contraseña de inicio de sesión</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000"></font>
+                  <font color=""></font>
                   <input type="button" onclick="javascript:inputPassword('LDAP')" name="buttonLdapPassword" value="Cambiar">
                 </td>
               </tr>
@@ -537,34 +541,17 @@
                 <td nowrap><img src="/images/settingBullet.gif" alt="" title=""></td>
                 <td nowrap align="left">Funciones disponibles</td>
                 <td nowrap></td>
+                <td>
+                  <input type="checkbox" name="availableFuncIn" value="COPY" onClick="Check(1)" checked>Copiadora<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="FAX" onClick="Check(2)">Fax<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="SCAN" onClick="Check(3)" checked>Escáner<img src="/images/spacer.gif" alt="" height="1" width="5"></td>
               </tr>
               <tr class="selectProp">
-                <td nowrap></td>
-                <td nowrap align="right" style="padding-left:12px;">Copiadora</td>
-                <td nowrap>:</td>
-                <td nowrap>
-                  <input type="checkbox" name="availableFuncIn" value="COPY_FC" onClick="COPYCheck(1)">A todo color<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="COPY_TC" onClick="COPYCheck(2)">Dos colores<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="COPY_MC" onClick="COPYCheck(3)">Color personalizado<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="COPY_BW" onClick="COPYCheck(4)" checked>Blanco y Negro<img src="/images/spacer.gif" alt="" height="1" width="5"></td>
+                <td colspan="3"></td>
+                <td>
+                  <input type="checkbox" name="availableFuncIn" value="DBX" onClick="Check(4)">Document Server<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="PRT" onClick="Check(5)" checked>Impresora<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="MFPBROWSER" onClick="Check(6)">Navegador<img src="/images/spacer.gif" alt="" height="1" width="5"></td>
               </tr>
               <tr class="selectProp">
-                <td nowrap valign=""></td>
-                <td nowrap align="right" valign="">Limitación modo copia color</td>
-                <td nowrap valign="">:</td>
-                <td nowrap>
-                  <input type="radio" name="acsLimitationIn" value="ACSONLY_O" checked>Limitar a selección automática de color<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="radio" name="acsLimitationIn" value="ACSFULLCOLOR_O">A todo color/Selección automática de color</td>
-              </tr>
-              <tr class="selectProp">
-                <td nowrap></td>
-                <td nowrap align="right" style="padding-left:12px;">Impresora</td>
-                <td nowrap>:</td>
-                <td nowrap>
-                  <input type="checkbox" name="availableFuncIn" value="PRT_FC" onClick="PRTCheck(5)">Color<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="PRT_BW" onClick="PRTCheck(6)" checked>Blanco y Negro<img src="/images/spacer.gif" alt="" height="1" width="5"></td>
-              </tr>
-              <tr class="selectProp">
-                <td nowrap></td>
-                <td nowrap align="right" style="padding-left:12px;">Otras funciones</td>
-                <td nowrap>:</td>
-                <td nowrap>
-                  <input type="checkbox" name="availableFuncIn" value="DBX" onClick="Check(7)">Document Server<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="FAX" onClick="Check(8)">Fax<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="SCAN" onClick="Check(9)" checked>Escáner<img src="/images/spacer.gif" alt="" height="1" width="5"><input type="checkbox" name="availableFuncIn" value="MFPBROWSER" onClick="Check(10)">Navegador<img src="/images/spacer.gif" alt="" height="1" width="5"></td>
+                <td colspan="3"></td>
+                <td></td>
               </tr>
               <tr>
                 <td><img src="/images/spacer.gif" alt="" height="2"></td>
@@ -631,7 +618,7 @@
                 <td nowrap align="right" style="padding-left:12px;">Código de protección</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000"></font>
+                  <font color=""></font>
                   <input type="button" onclick="javascript:inputPassword('PROTECT')" name="buttonProtectCode" value="Cambiar">
                 </td>
               </tr>
@@ -652,7 +639,7 @@
                           <tr bgcolor="#becfe6">
                             <td nowrap width="12" height="24" align="left" valign="top"></td>
                             <td nowrap width="100%" align="left" valign="middle">
-                              <div class="standard" style="font-weight:bold;">Email</div>
+                              <div class="standard" style="font-weight:bold;">E-mail</div>
                             </td>
                             <td nowrap align="left" valign="middle" width="20">
                               <div class="commandLabel">
@@ -690,7 +677,7 @@
                 <td nowrap align="">Estado certificado usuario</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000">Ninguno</font>
+                  <font color="">Ninguno</font>
                 </td>
               </tr>
               <tr class="standard">
@@ -698,19 +685,18 @@
                 <td nowrap align="left">Certificado usuario</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000"></font>
+                  <font color=""></font>
                   <input type="button" onclick="Javascript:changeCertificate();" name="certificate" value="Cambiar">
                 </td>
               </tr>
               <tr class="standard">
-                <input type="hidden" name="isEncryptAlways" value="false">
                 <tr class="selectProp">
                   <td nowrap><img src="/images/settingBullet.gif" alt="" title=""></td>
-                  <td nowrap align="left">Cifrado</td>
+                  <td nowrap align="left">Encriptación</td>
                   <td nowrap>:</td>
                   <td nowrap>
-                    <input type="radio" name="isEncryptAlwaysIn" value="false" onClick="javascript:pageRefresh();Javascript:changeEncrypt();" checked>Ajustar individualmente</input>
-                    <input type="radio" name="isEncryptAlwaysIn" value="true" onClick="javascript:pageRefresh();Javascript:changeEncrypt();">Cifrar todo</input>
+                    <input type="radio" name="isEncryptAlways" value="false" onClick="javascript:pageRefresh()" checked>Ajustar individualmente</input>
+                    <input type="radio" name="isEncryptAlways" value="true" onClick="javascript:pageRefresh()">Encriptar todo</input>
                   </td>
                 </tr>
               </tr>
@@ -754,6 +740,9 @@
                 <td><img src="/images/spacer.gif" alt="" height="2"></td>
               </tr>
               <tr class="standard">
+                <td colspan="5"><img src="/images/spacer.gif" alt="" height="8">Al cambiar [Protocolo], [N.º de puerto], [Nombre de servidor] o [Ruta], se elimina la contraseña de acceso previamente establecida para la autenticación de la carpeta. Por lo tanto, deberá volver a introducirla.</td>
+              </tr>
+              <tr class="standard">
                 <td nowrap><img src="/images/settingBullet.gif" alt="" title=""></td>
                 <td nowrap align="">Protocolo</td>
                 <td nowrap>:</td>
@@ -766,7 +755,7 @@
               </tr>
               <tr class="standard">
                 <td nowrap><img src="/images/settingBullet.gif" alt="" title=""></td>
-                <td nowrap align="">N.º de puerto</td>
+                <td nowrap align="">Nº de puerto</td>
                 <td nowrap>:</td>
                 <td nowrap>
                   <input type="text" name="folderPortNoIn" value="21" maxLength="5" onChange="" onKeyup="javascript:handlePageRefresh('folderPortNo')" onBlur="javascript:handlePageRefresh('folderPortNo')" size="40">
@@ -833,7 +822,7 @@
                 <td nowrap align="">Detalles de grupo</td>
                 <td nowrap>:</td>
                 <td nowrap>
-                  <font color="#00000000"></font>
+                  <font color=""></font>
                   <input type="button" onclick="javascript:SelectEntry('GROUP_ASSIGN')" name="" value="Cambiar">
                 </td>
               </tr>
@@ -842,12 +831,12 @@
         </td>
       </tr>
       <tr>
-        <td nowrap height="1" width="12" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="12" height="1" border="0"></td>
+        <td nowrap height="1" width="8" align="left" valign="top"><img src="/images/spacer.gif" alt="" width="8" height="1" border="0"></td>
         <td>
           <table width="100%" border="0" cellspacing="0" cellpadding="2">
             <tr>
               <td height="8">
-                <table width="100%" border="0" cellspacing="0" cellpadding="0" class="settingDivision">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:url(/images/settingDivision.gif) repeat-x bottom;">
                   <tr>
                     <td><img src="/images/settingDivision.gif" alt=""></td>
                   </tr>
@@ -866,8 +855,8 @@
                           <td>
                             <table width="100%" class="defaultTableButton" cellspacing="0">
                               <tr>
-                                <td class="defaultTableButton" onclick="javascript:Apply(); return false;" height="20">
-                                  <a href="javascript:Apply()" class="defaultTableCommandButton">Aceptar</a>
+                                <td class="defaultTableButton" onclick="javascript:clickOK(); return false;" height="20">
+                                  <a href="javascript:clickOK()" class="defaultTableCommandButton">Aceptar</a>
                                 </td>
                               </tr>
                             </table>
@@ -890,8 +879,8 @@
                           <td>
                             <table width="100%" class="defaultTableButton" cellspacing="0">
                               <tr>
-                                <td class="defaultTableButton" onclick="javascript:Continue(); return false;" height="20">
-                                  <a href="javascript:Continue()" class="defaultTableCommandButton">Guardar y añadir otro</a>
+                                <td class="defaultTableButton" onclick="javascript:clickContinue(); return false;" height="20">
+                                  <a href="javascript:clickContinue()" class="defaultTableCommandButton">Guardar y añadir otro</a>
                                 </td>
                               </tr>
                             </table>
@@ -935,7 +924,7 @@
       </tr>
     </table>
     <form name="basicForm" onSubmit="return false;">
-      <input type="hidden" name="wimToken" value="1280853104">
+      <input type="hidden" name="wimToken" value="1333782130">
       <input type="hidden" name="mode" value="MODUSER">
       <input type="hidden" name="returnValue" value="SUCCESS">
       <input type="hidden" name="methodName" value="adrsGetUser">

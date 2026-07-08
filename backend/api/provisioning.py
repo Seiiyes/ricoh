@@ -626,8 +626,8 @@ async def sync_user_to_all_printers(
                 
                 import time
                 attempts = 0
-                max_attempts = 4
-                delay = 5.0
+                max_attempts = 12
+                delay = 4.0
                 sync_success = False
                 last_result = None
                 
