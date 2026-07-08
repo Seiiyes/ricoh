@@ -23,7 +23,7 @@ def main():
         print("[OK] SSH Connection established.")
         
         # Buscar en docker logs históricos
-        cmd = "docker logs ricoh-backend 2>&1 | grep -E '192.168.91.253|7104' | tail -n 150"
+        cmd = "docker logs ricoh-backend 2>&1 | tail -n 150"
         stdin, stdout, stderr = client.exec_command(f"echo '{PASS}' | sudo -S {cmd}")
         out = stdout.read().decode('utf-8', errors='replace').strip()
         

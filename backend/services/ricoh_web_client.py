@@ -1819,6 +1819,11 @@ class RicohWebClient:
             # 5. Leer valores ACTUALES del formulario (para mantener lo que no se modifica)
             current_name_input = soup.find('input', {'name': 'entryNameIn'})
             current_code_input = soup.find('input', {'name': 'userCodeIn'})
+            
+            if not current_name_input or not current_code_input:
+                logger.error("❌ El formulario devuelto no es el de edición (posible timeout de sesión WIM)")
+                return "TIMEOUT"
+                
             current_folder_input = soup.find('input', {'name': 'folderPathNameIn'})
             current_user_input = soup.find('input', {'name': 'folderAuthUserNameIn'})
             
