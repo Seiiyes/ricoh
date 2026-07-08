@@ -16,7 +16,7 @@ from services.ricoh_web_client import RicohWebClient
 
 def main():
     client = RicohWebClient(admin_password="admin")
-    printer_ip = "192.168.91.251"
+    printer_ip = "192.168.91.253"
     
     if not client._authenticate(printer_ip):
         print("[ERROR] No se pudo autenticar")
@@ -24,7 +24,7 @@ def main():
         
     print("[OK] Autenticado en la impresora.")
     
-    # Obtener el formulario del usuario 00256
+    # Obtener el formulario del usuario 00195
     list_url = f"http://{printer_ip}/web/entry/es/address/adrsList.cgi"
     list_resp = client.session.get(list_url, timeout=30)
     
@@ -40,7 +40,7 @@ def main():
         'wimToken': wim_token,
         'mode': 'MODUSER',
         'outputSpecifyModeIn': 'PROGRAMMED',
-        'entryIndexIn': '00256'
+        'entryIndexIn': '00195'
     }
     user_resp = client.session.post(get_user_url, data=get_user_data, timeout=30)
     

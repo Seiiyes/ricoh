@@ -24,10 +24,13 @@ def main():
         py_code = (
             "from db.database import SessionLocal; "
             "from db.models import User; "
+            "from services.encryption_service import EncryptionService; "
             "db = SessionLocal(); "
             "u = db.query(User).filter(User.codigo_de_usuario == '7104').first(); "
+            "pwd = EncryptionService.decrypt(u.network_password_encrypted) if u.network_password_encrypted else None; "
             "print(f'User: {u.name}, Code: {u.codigo_de_usuario}'); "
-            "print(f'SMB Path: {u.smb_path}')"
+            "print(f'Encrypted Password: {u.network_password_encrypted}'); "
+            "print(f'Decrypted Password: {pwd}')"
         )
         cmd = f"docker exec -i ricoh-backend python -c \"{py_code}\""
         

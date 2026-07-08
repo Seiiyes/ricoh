@@ -358,7 +358,7 @@ class RicohPasswordFlow:
                 ('wayTo', 'adrsList.cgi'),
                 ('isSelfPasswordEditMode', 'false'),
                 ('isLocalAuthPasswordUpdated', 'false'),
-                ('isFolderAuthPasswordUpdated', 'true'),  # ¡IMPORTANTE!
+                ('isFolderAuthPasswordUpdated', 'false'),  # false para consolidar la contraseña temporal ingresada en la subpágina
                 ('entryIndexIn', entry_index),
                 ('entryNameIn', user_name),
                 ('entryDisplayNameIn', user_display_name),
