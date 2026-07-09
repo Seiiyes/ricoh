@@ -176,6 +176,7 @@ docs/
 *   **[RESUMEN_TRABAJO_18_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_18_JUNIO_2026.md):** Resumen de hallazgos de Telnet y de la función de eliminación de usuarios con desactivación física paralela.
 *   **[RESUMEN_TRABAJO_12_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_12_JUNIO_2026.md):** Optimización de scraping web Ricoh (fastList / lazy loading), pools de sesión y caché en Redis.
 *   **[bitacora_trabajo_sena.md](resumen/bitacora_trabajo_sena.md):** Bitácora oficial de actividades Sena (15 de Mayo a 14 de Junio de 2026) verificada según modificaciones de archivos.
+*   **[bitacora_trabajo_sena_6.md](resumen/bitacora_trabajo_sena_6.md):** Bitácora oficial de actividades Sena (15 de Junio a 14 de Julio de 2026) verificada según commits y modificaciones de archivos.
 *   **[RESUMEN_TRABAJO_01_03_JUNIO_2026.md](resumen/RESUMEN_TRABAJO_01_03_JUNIO_2026.md):** Consolidado del ciclo de trabajo de junio para suministros, dashboard y simetría de contadores.
 *   **[RESUMEN_TRABAJO_26_29_MAYO_2026.md](resumen/RESUMEN_TRABAJO_26_29_MAYO_2026.md):** Resumen de fixes de API, normalización de centros de costo y remoción de soporte CSV.
 *   **[RESPONSIVE_COMPLETADO.md](resumen/RESPONSIVE_COMPLETADO.md) / [RESUMEN_FINAL_RESPONSIVE.md](resumen/RESUMEN_FINAL_RESPONSIVE.md):** Reportes del hito de implementación y adaptabilidad responsive completa.
