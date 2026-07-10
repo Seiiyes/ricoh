@@ -2190,33 +2190,50 @@ class RicohWebClient:
             token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
             logger.info(f"Submitting job deletion request for ID {job_id} with token {token_preview} (typeOnly={type_only})...")
 
-            # 3. Construct URL-encoded payload
-            # typeOnly controls which job category is processed:
-            #   1=Sample, 2=Stored, 3=Locked, 4=Hold
-            payload = [
-                ('wimToken', wim_token),
-                ('notDefault', '1'),
-                ('mode', '1'),
-                ('exec', '2'),
-                ('baseID', base_id),
-                ('position', ''),
-                ('size', size_val),
-                ('Copies', '0'),
-                ('totalCount', total_count),
-                ('selectedType', '-1'),
-                ('typeExisted', '1'),
-                ('typeOnly', type_only),   # ← KEY: must match the job's actual type
-                ('targetID', '-1'),
-                ('view', '0'),
-                ('selectedUserID', ''),
-                ('number', '10'),
-                ('selectedCount', '1')
-            ]
+            # 3. Build payload mirroring EXACTLY what the browser sends when deleting via WIM.
+            # We read all hidden fields from the GET page as-is, then override only:
+            #   exec: 0→2 (delete action)
+            #   mode: 0→1 (submit mode)
+            #   selectedCount: 0→1 (one job selected)
+            # We do NOT add extra fields (view, number, selectedUserID) that the form doesn't have.
+            # typeOnly comes from the form itself (native value=2) — the WIM shows ALL job types
+            # regardless of typeOnly=2, and the browser sends typeOnly=2 when deleting any job type.
 
+            # Start with all hidden fields from the form (preserving the native form state)
+            hidden_overrides = {
+                'exec': '2',      # delete action
+                'mode': '1',      # action submit mode
+                'selectedCount': '1',  # one job selected
+            }
+            payload = []
+            seen_hidden = set()
+            for inp in soup.find_all('input'):
+                iname = inp.get('name', '')
+                itype = inp.get('type', 'text').lower()
+                ivalue = inp.get('value', '')
+
+                if itype == 'hidden' and iname and iname not in ('display_ID', 'ID'):
+                    # Apply overrides for specific fields
+                    value_to_use = hidden_overrides.get(iname, ivalue)
+                    if iname not in seen_hidden:
+                        payload.append((iname, value_to_use))
+                        seen_hidden.add(iname)
+                elif itype == 'text' and iname == 'selectedCount':
+                    payload.append((iname, '1'))
+                    seen_hidden.add(iname)
+
+            # Handle any override fields not yet added (if not found in form)
+            for k, v in hidden_overrides.items():
+                if k not in seen_hidden:
+                    payload.append((k, v))
+
+            # Add all display_IDs (all visible job IDs for pagination context)
             for d_id in display_ids:
                 payload.append(('display_ID', d_id))
 
+            # Add ONLY the job we want to delete as a checked checkbox ID
             payload.append(('ID', job_id))
+
 
             # 4. Post deletion request
             post_headers = {
