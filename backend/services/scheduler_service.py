@@ -20,10 +20,11 @@ def calculate_next_run(
     specific_date: Optional[date] = None,
     day_of_week: Optional[int] = None,
     day_of_month: Optional[int] = None,
-    base_dt: Optional[datetime] = None
+    base_dt: Optional[datetime] = None,
+    tz: Optional[timezone] = None
 ) -> datetime:
     """
-    Calcula la fecha y hora de la siguiente ejecución (timezone-aware UTC).
+    Calcula la fecha y hora de la siguiente ejecución.
     
     Args:
         frequency: "once", "daily", "weekly", "monthly"
@@ -31,19 +32,25 @@ def calculate_next_run(
         specific_date: Fecha específica para frecuencia "once"
         day_of_week: 0 (Lunes) a 6 (Domingo) para frecuencia "weekly"
         day_of_month: 1 a 31 para frecuencia "monthly"
-        base_dt: Datetime base desde el cual calcular (defecto: now en UTC)
+        base_dt: Datetime base desde el cual calcular
+        tz: Zona horaria para la ejecución (defecto: tz de base_dt o local de sistema)
     """
+    if tz is None:
+        if base_dt is not None and base_dt.tzinfo is not None:
+            tz = base_dt.tzinfo
+        else:
+            tz = datetime.now().astimezone().tzinfo
+
     if base_dt is None:
-        base_dt = datetime.now(timezone.utc)
+        base_dt = datetime.now(tz)
+    else:
+        base_dt = base_dt.astimezone(tz)
         
     try:
         hour, minute = map(int, scheduled_time_str.split(":"))
     except ValueError:
         logger.error(f"Formato de hora inválido: {scheduled_time_str}")
         hour, minute = 0, 0
-
-    # Si base_dt tiene zona horaria, usaremos la misma
-    tz = base_dt.tzinfo
     
     if frequency == "once":
         if not specific_date:
@@ -171,7 +178,8 @@ async def check_and_run_schedules():
                         scheduled_time_str=schedule.scheduled_time,
                         day_of_week=schedule.day_of_week,
                         day_of_month=schedule.day_of_month,
-                        base_dt=now
+                        base_dt=now,
+                        tz=datetime.now().astimezone().tzinfo
                     )
                 
                 db.commit()

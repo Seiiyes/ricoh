@@ -48,8 +48,43 @@ export const CierreMasivoModal: React.FC<CierreMasivoModalProps> = ({ onClose, o
   const [schedules, setSchedules] = useState<ScheduledClosure[]>([]);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
 
-  // Fecha actual
-  const fechaActual = new Date().toISOString().split('T')[0];
+  // Fecha actual local en formato YYYY-MM-DD
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const fechaActual = getLocalDateString();
+
+  // Helper para formatear fechas YYYY-MM-DD de forma segura sin desplazamiento de zona horaria
+  const formatLocalDateString = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${parseInt(day)}/${parseInt(month)}/${year}`;
+    }
+    return dateStr;
+  };
+
+  // Helper para formatear fecha larga local
+  const formatLocalDateLong = (dateStr: string) => {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts.map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      return dateObj.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+    return dateStr;
+  };
+
   const nombreUsuario = user?.nombre_completo || user?.username || 'Usuario';
 
   // Load schedules when switching to list tab
@@ -173,7 +208,7 @@ export const CierreMasivoModal: React.FC<CierreMasivoModalProps> = ({ onClose, o
   const getFrequencyText = (schedule: ScheduledClosure) => {
     switch (schedule.frequency) {
       case 'once':
-        return `Una vez (${schedule.specific_date ? new Date(schedule.specific_date).toLocaleDateString('es-ES') : ''})`;
+        return `Una vez (${formatLocalDateString(schedule.specific_date)})`;
       case 'daily':
         return 'Todos los días';
       case 'weekly':
@@ -267,12 +302,7 @@ export const CierreMasivoModal: React.FC<CierreMasivoModalProps> = ({ onClose, o
                         Fecha del Cierre
                       </label>
                       <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 font-bold">
-                        {new Date(fechaActual).toLocaleDateString('es-ES', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
+                        {formatLocalDateLong(fechaActual)}
                       </div>
                     </div>
 

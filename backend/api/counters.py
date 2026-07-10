@@ -1369,7 +1369,8 @@ async def create_schedule(
             scheduled_time_str=request.scheduled_time,
             specific_date=request.specific_date,
             day_of_week=request.day_of_week,
-            day_of_month=request.day_of_month
+            day_of_month=request.day_of_month,
+            tz=datetime.now().astimezone().tzinfo
         )
 
     db_schedule = ScheduledClosure(
@@ -1451,7 +1452,8 @@ async def update_schedule(
             scheduled_time_str=scheduled_time,
             specific_date=specific_date,
             day_of_week=day_of_week,
-            day_of_month=day_of_month
+            day_of_month=day_of_month,
+            tz=datetime.now().astimezone().tzinfo
         )
     else:
         db_schedule.next_run = None
