@@ -2108,18 +2108,35 @@ class RicohWebClient:
     @with_printer_session
     def delete_stored_job(self, printer_ip: str, job_id: str, admin_password: Optional[str] = None, job_type: str = "stored") -> bool:
         """
-        Delete a stored or locked print job from WIM.
+        Delete a stored or locked print job from WIM via storedJob.cgi.
 
         Args:
             printer_ip: Printer IP address
             job_id: ID of the job to delete
             admin_password: Optional printer-specific admin password
-            job_type: "stored" for normal stored jobs, "locked" for IMPRESIÓN BLOQUEADA jobs
+            job_type: "stored" for normal stored jobs (typeOnly=2),
+                      "locked" for IMPRESIÓN BLOQUEADA jobs (typeOnly=3)
 
         Returns:
-            bool: True if deletion was successful, False otherwise
+            bool: True if deletion was confirmed successful, False otherwise
+
+        Note:
+            Ricoh WIM always uses storedJob.cgi regardless of job type.
+            lockedPrint.cgi does NOT exist on this printer model (returns 404).
+            The difference is the 'typeOnly' field in the POST payload:
+              typeOnly=2 → Stored Print
+              typeOnly=3 → Locked Print (IMPRESIÓN BLOQUEADA)
         """
-        logger.info(f"Attempting to delete job {job_id} (type={job_type}) on printer {printer_ip}...")
+        # Map job_type to Ricoh WIM typeOnly value
+        type_only_map = {
+            "stored": "2",   # Stored Print
+            "locked": "3",   # Locked Print (IMPRESIÓN BLOQUEADA)
+            "sample": "1",   # Sample Print
+            "hold":   "4",   # Hold Print
+        }
+        type_only = type_only_map.get(job_type, "2")
+
+        logger.info(f"Attempting to delete job {job_id} (type={job_type}, typeOnly={type_only}) on printer {printer_ip}...")
 
         # 1. Authenticate
         if not self._authenticate(printer_ip, admin_password):
@@ -2127,12 +2144,8 @@ class RicohWebClient:
             return False
 
         try:
-            # Select correct CGI endpoint based on job type
-            if job_type == "locked":
-                jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/lockedPrint.cgi"
-            else:
-                jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/storedJob.cgi"
-
+            # Always use storedJob.cgi — lockedPrint.cgi returns 404 on this model
+            jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/storedJob.cgi"
             headers = {
                 'Referer': f'http://{printer_ip}/web/entry/es/websys/webArch/topPage.cgi'
             }
@@ -2162,9 +2175,11 @@ class RicohWebClient:
 
             # Mask token for security
             token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
-            logger.info(f"Submitting job deletion request for ID {job_id} with token {token_preview}...")
+            logger.info(f"Submitting job deletion request for ID {job_id} with token {token_preview} (typeOnly={type_only})...")
 
             # 3. Construct URL-encoded payload
+            # typeOnly controls which job category is processed:
+            #   1=Sample, 2=Stored, 3=Locked, 4=Hold
             payload = [
                 ('wimToken', wim_token),
                 ('notDefault', '1'),
@@ -2177,7 +2192,7 @@ class RicohWebClient:
                 ('totalCount', total_count),
                 ('selectedType', '-1'),
                 ('typeExisted', '1'),
-                ('typeOnly', '2'),
+                ('typeOnly', type_only),   # ← KEY: must match the job's actual type
                 ('targetID', '-1'),
                 ('view', '0'),
                 ('selectedUserID', ''),
@@ -2204,13 +2219,14 @@ class RicohWebClient:
                 return False
 
             # 5. VERIFY actual deletion: check if job_id still appears in the response HTML.
-            # Ricoh always returns HTTP 200, even when deletion fails (e.g. locked/blocked jobs).
+            # Ricoh always returns HTTP 200, even when deletion fails.
             response_soup = BeautifulSoup(post_response.text, 'html.parser')
             remaining_ids = [el.get('value', '') for el in response_soup.find_all('input', {'name': 'ID'})]
             if job_id in remaining_ids:
                 logger.warning(
                     f"⚠️ Job {job_id} still present after DELETE on {printer_ip}. "
-                    f"Job may be locked/in-progress. Try type='locked' if this was an IMPRESIÓN BLOQUEADA job."
+                    f"typeOnly used: {type_only} (job_type={job_type}). "
+                    f"The job may require the user's PIN to be deleted (truly locked)."
                 )
                 return False
 
@@ -2219,12 +2235,13 @@ class RicohWebClient:
             if match:
                 self._wim_tokens[printer_ip] = match.group(1)
 
-            logger.info(f"✅ Job {job_id} confirmed deleted from printer {printer_ip}")
+            logger.info(f"✅ Job {job_id} confirmed deleted from printer {printer_ip} (type={job_type})")
             return True
 
         except Exception as e:
             logger.error(f"❌ Error deleting job {job_id} from printer {printer_ip}: {e}")
             return False
+
 
 
     @with_printer_session
