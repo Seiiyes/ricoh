@@ -1,7 +1,7 @@
 # 📚 Índice General de Documentación - Ricoh Fleet Management
 
-**Última actualización**: 6 de Julio de 2026  
-**Versión**: 4.1.5 (Actualizado)
+**Última actualización**: 10 de Julio de 2026  
+**Versión**: 4.1.6 (Actualizado)
 
 ---
 
@@ -43,6 +43,8 @@ docs/
 ## 🆕 Documentación de la Sesión Reciente (Junio-Julio 2026)
 
 ### 📅 Resúmenes de Trabajo y Fixes Recientes
+*   **[FIX_ELIMINACION_TRABAJOS_CONFIRMACION_2PASOS_10_JULIO_2026.md](fixes/FIX_ELIMINACION_TRABAJOS_CONFIRMACION_2PASOS_10_JULIO_2026.md)**
+    *   *Descripción:* Resolución del flujo de eliminación de trabajos de impresión (incluyendo Locked Print/Bloqueadas) mediante la implementación automatizada de la confirmación en dos pasos en WIM con mode=3.
 *   **[FIX_RESOLUCION_COMPATIBILIDAD_CONTRASENA_ESCANER_Y_PERMISOS_COLOR_08_JULIO_2026.md](fixes/FIX_RESOLUCION_COMPATIBILIDAD_CONTRASENA_ESCANER_Y_PERMISOS_COLOR_08_JULIO_2026.md)**
     *   *Descripción:* Resolución definitiva de errores de autenticación SMB en escáner WIM para impresoras nuevas y mapeo correcto de permisos de color TC y MC.
 *   **[PORTAL_AUDITORIA_SEGURIDAD_INDEPENDIENTE_JULIO_2026.md](seguridad/PORTAL_AUDITORIA_SEGURIDAD_INDEPENDIENTE_JULIO_2026.md)**
