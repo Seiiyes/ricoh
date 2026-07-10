@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime, date
 
 from db.database import get_db
-from db.models import User, CierreMensual, CierreMensualUsuario, Printer, ContadorImpresora, ContadorUsuario, ComparacionGuardada
+from db.models import User, CierreMensual, CierreMensualUsuario, Printer, ContadorImpresora, ContadorUsuario, ComparacionGuardada, ScheduledClosure
 from .counter_schemas import (
     ContadorImpresoraResponse, ContadorUsuarioResponse, 
     CierreMensualResponse, CierreMensualDetalleResponse,
@@ -14,12 +14,14 @@ from .counter_schemas import (
     CloseAllPrintersResponse,
     CierreUsuarioUpdateRequest, CierreUsuarioGlobalResponse,
     PaginatedCierreUsuarioGlobalResponse,
-    ComparacionGuardadaCreate, ComparacionGuardadaResponse
+    ComparacionGuardadaCreate, ComparacionGuardadaResponse,
+    ScheduledClosureCreate, ScheduledClosureUpdate, ScheduledClosureResponse
 )
 from services.counter_service import CounterService
 from services.close_service import CloseService
 from middleware.auth_middleware import get_current_user
 from services.company_filter_service import CompanyFilterService
+
 
 router = APIRouter(
     prefix="/api/counters",
@@ -1335,5 +1337,152 @@ async def delete_comparacion(
     db.commit()
     
     return {"message": "Comparación eliminada correctamente"}
+
+
+# ============================================================================
+# Scheduled Closures Endpoints
+# ============================================================================
+
+@router.post("/schedules", response_model=ScheduledClosureResponse, status_code=status.HTTP_201_CREATED)
+async def create_schedule(
+    request: ScheduledClosureCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Crea una nueva programación de cierre masivo.
+    Solo accesible por superadministradores.
+    """
+    if not current_user.is_superadmin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los superadministradores pueden gestionar programaciones de cierres"
+        )
+        
+    from services.scheduler_service import calculate_next_run
+    
+    # Precalcular primer next_run si está activa
+    next_run_dt = None
+    if request.frequency != "once" or (request.specific_date and request.specific_date >= date.today()):
+        next_run_dt = calculate_next_run(
+            frequency=request.frequency,
+            scheduled_time_str=request.scheduled_time,
+            specific_date=request.specific_date,
+            day_of_week=request.day_of_week,
+            day_of_month=request.day_of_month
+        )
+
+    db_schedule = ScheduledClosure(
+        frequency=request.frequency,
+        scheduled_time=request.scheduled_time,
+        specific_date=request.specific_date,
+        day_of_week=request.day_of_week,
+        day_of_month=request.day_of_month,
+        empresa_id=request.empresa_id,
+        is_active=True,
+        notas=request.notas,
+        created_by=current_user.nombre_completo or current_user.username,
+        next_run=next_run_dt
+    )
+    
+    db.add(db_schedule)
+    db.commit()
+    db.refresh(db_schedule)
+    return db_schedule
+
+
+@router.get("/schedules", response_model=List[ScheduledClosureResponse])
+async def list_schedules(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Lista las programaciones de cierre masivo registradas.
+    Solo accesible por superadministradores.
+    """
+    if not current_user.is_superadmin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los superadministradores pueden gestionar programaciones de cierres"
+        )
+        
+    return db.query(ScheduledClosure).order_by(ScheduledClosure.created_at.desc()).all()
+
+
+@router.put("/schedules/{schedule_id}", response_model=ScheduledClosureResponse)
+async def update_schedule(
+    schedule_id: int,
+    request: ScheduledClosureUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Actualiza una programación existente. Recalcula el next_run si cambia la configuración temporal.
+    Solo accesible por superadministradores.
+    """
+    if not current_user.is_superadmin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los superadministradores pueden gestionar programaciones de cierres"
+        )
+        
+    db_schedule = db.query(ScheduledClosure).filter(ScheduledClosure.id == schedule_id).first()
+    if not db_schedule:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Programación no encontrada")
+        
+    update_data = request.model_dump(exclude_unset=True)
+    
+    # Guardar estado actual por si requerimos recalcular next_run
+    frequency = update_data.get("frequency", db_schedule.frequency)
+    scheduled_time = update_data.get("scheduled_time", db_schedule.scheduled_time)
+    specific_date = update_data.get("specific_date", db_schedule.specific_date)
+    day_of_week = update_data.get("day_of_week", db_schedule.day_of_week)
+    day_of_month = update_data.get("day_of_month", db_schedule.day_of_month)
+    is_active = update_data.get("is_active", db_schedule.is_active)
+
+    for key, value in update_data.items():
+        setattr(db_schedule, key, value)
+
+    # Recalcular next_run
+    if is_active:
+        from services.scheduler_service import calculate_next_run
+        db_schedule.next_run = calculate_next_run(
+            frequency=frequency,
+            scheduled_time_str=scheduled_time,
+            specific_date=specific_date,
+            day_of_week=day_of_week,
+            day_of_month=day_of_month
+        )
+    else:
+        db_schedule.next_run = None
+
+    db.commit()
+    db.refresh(db_schedule)
+    return db_schedule
+
+
+@router.delete("/schedules/{schedule_id}", status_code=status.HTTP_200_OK)
+async def delete_schedule(
+    schedule_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Elimina una programación de cierre masivo.
+    Solo accesible por superadministradores.
+    """
+    if not current_user.is_superadmin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los superadministradores pueden gestionar programaciones de cierres"
+        )
+        
+    db_schedule = db.query(ScheduledClosure).filter(ScheduledClosure.id == schedule_id).first()
+    if not db_schedule:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Programación no encontrada")
+        
+    db.delete(db_schedule)
+    db.commit()
+    return {"message": "Programación eliminada correctamente"}
 
 

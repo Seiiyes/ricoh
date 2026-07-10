@@ -141,7 +141,78 @@ export const closeService = {
   deleteComparacion: async (comparacionId: number): Promise<{ message: string }> => {
     const response = await apiClient.delete<{ message: string }>(`/api/counters/comparaciones/${comparacionId}`);
     return response.data;
+  },
+
+  /**
+   * Obtener todas las programaciones de cierres
+   */
+  getSchedules: async (): Promise<ScheduledClosure[]> => {
+    const response = await apiClient.get<ScheduledClosure[]>('/api/counters/schedules');
+    return response.data;
+  },
+
+  /**
+   * Crear una programación de cierre masivo
+   */
+  createSchedule: async (data: CreateScheduledClosureRequest): Promise<ScheduledClosure> => {
+    const response = await apiClient.post<ScheduledClosure>('/api/counters/schedules', data);
+    return response.data;
+  },
+
+  /**
+   * Actualizar una programación de cierre
+   */
+  updateSchedule: async (id: number, data: UpdateScheduledClosureRequest): Promise<ScheduledClosure> => {
+    const response = await apiClient.put<ScheduledClosure>(`/api/counters/schedules/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Eliminar una programación de cierre
+   */
+  deleteSchedule: async (id: number): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(`/api/counters/schedules/${id}`);
+    return response.data;
   }
 };
 
+export interface ScheduledClosure {
+  id: number;
+  frequency: string;
+  scheduled_time: string;
+  specific_date?: string;
+  day_of_week?: number;
+  day_of_month?: number;
+  empresa_id?: number;
+  is_active: boolean;
+  notas?: string;
+  created_by: string;
+  last_run?: string;
+  next_run?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface CreateScheduledClosureRequest {
+  frequency: string;
+  scheduled_time: string;
+  specific_date?: string;
+  day_of_week?: number;
+  day_of_month?: number;
+  empresa_id?: number;
+  notas?: string;
+}
+
+export interface UpdateScheduledClosureRequest {
+  is_active?: boolean;
+  frequency?: string;
+  scheduled_time?: string;
+  specific_date?: string;
+  day_of_week?: number;
+  day_of_month?: number;
+  empresa_id?: number;
+  notas?: string;
+}
+
 export default closeService;
+

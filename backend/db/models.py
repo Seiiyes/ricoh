@@ -616,3 +616,44 @@ class ComparacionGuardada(Base):
     def __repr__(self):
         return f"<ComparacionGuardada(id={self.id}, titulo='{self.titulo}')>"
 
+
+class ScheduledClosure(Base):
+    """
+    Programación de cierres masivos.
+    Permite automatizar lecturas de contadores periódicas de forma diaria, semanal, mensual o una sola vez.
+    """
+    __tablename__ = "scheduled_closures"
+
+    id = Column(Integer, primary_key=True, index=True)
+    frequency = Column(String(50), nullable=False)  # "once", "daily", "weekly", "monthly"
+    scheduled_time = Column(String(5), nullable=False)  # Formato "HH:MM" (24h), ej: "18:00"
+    
+    # Para "once" (ejecución única)
+    specific_date = Column(Date, nullable=True)
+    
+    # Para "weekly" (0=Lunes, 6=Domingo)
+    day_of_week = Column(Integer, nullable=True)
+    
+    # Para "monthly" (1 a 31)
+    day_of_month = Column(Integer, nullable=True)
+    
+    # Filtro opcional por empresa
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="SET NULL"), nullable=True)
+    
+    is_active = Column(Boolean, default=True)
+    notas = Column(Text, nullable=True)
+    created_by = Column(String(100), nullable=False)
+    
+    last_run = Column(DateTime(timezone=True), nullable=True)
+    next_run = Column(DateTime(timezone=True), nullable=True)  # Siguiente ejecución precalculada
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relación
+    empresa = relationship("Empresa")
+
+    def __repr__(self):
+        return f"<ScheduledClosure(id={self.id}, frequency='{self.frequency}', time='{self.scheduled_time}')>"
+
+

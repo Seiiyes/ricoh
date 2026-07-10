@@ -557,3 +557,47 @@ class ComparacionGuardadaResponse(BaseModel):
         from_attributes = True
 
 
+# ============================================================================
+# Scheduled Closures Schemas
+# ============================================================================
+
+class ScheduledClosureCreate(BaseModel):
+    frequency: str = Field(..., description="Frecuencia del cierre: once, daily, weekly, monthly")
+    scheduled_time: str = Field(..., pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$", description="Hora de ejecución formato HH:MM")
+    specific_date: Optional[date] = Field(None, description="Fecha específica para ejecuciones de una sola vez")
+    day_of_week: Optional[int] = Field(None, ge=0, le=6, description="Día de la semana: 0 (Lunes) a 6 (Domingo)")
+    day_of_month: Optional[int] = Field(None, ge=1, le=31, description="Día del mes (1-31)")
+    empresa_id: Optional[int] = Field(None, description="Filtrar cierre para una empresa específica (opcional)")
+    notas: Optional[str] = Field(None, max_length=1000, description="Notas que se aplicarán a los cierres")
+
+class ScheduledClosureUpdate(BaseModel):
+    is_active: Optional[bool] = None
+    frequency: Optional[str] = None
+    scheduled_time: Optional[str] = Field(None, pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    specific_date: Optional[date] = None
+    day_of_week: Optional[int] = Field(None, ge=0, le=6)
+    day_of_month: Optional[int] = Field(None, ge=1, le=31)
+    empresa_id: Optional[int] = None
+    notas: Optional[str] = Field(None, max_length=1000)
+
+class ScheduledClosureResponse(BaseModel):
+    id: int
+    frequency: str
+    scheduled_time: str
+    specific_date: Optional[date]
+    day_of_week: Optional[int]
+    day_of_month: Optional[int]
+    empresa_id: Optional[int]
+    is_active: bool
+    notas: Optional[str]
+    created_by: str
+    last_run: Optional[datetime]
+    next_run: Optional[datetime]
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+

@@ -272,6 +272,13 @@ async def lifespan(app: FastAPI):
     if os.getenv("ENABLE_SESSION_CLEANUP", "true").lower() == "true":
         print("🧹 Starting session cleanup job (runs every hour)...")
         cleanup_task = asyncio.create_task(run_cleanup_job_periodically())
+
+    # Start scheduled closures scheduler
+    scheduler_task = None
+    if os.getenv("ENABLE_CLOSURE_SCHEDULER", "true").lower() == "true":
+        print("⏰ Starting scheduled closures scheduler (checks every minute)...")
+        from services.scheduler_service import run_scheduler_periodically
+        scheduler_task = asyncio.create_task(run_scheduler_periodically())
     
     print("🌐 Server ready!")
     
@@ -280,6 +287,14 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("🛑 Shutting down Ricoh Equipment Management API...")
     
+    # Cancel scheduler task
+    if scheduler_task:
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except asyncio.CancelledError:
+            pass
+
     # Cancel cleanup task
     if cleanup_task:
         cleanup_task.cancel()
@@ -287,6 +302,7 @@ async def lifespan(app: FastAPI):
             await cleanup_task
         except asyncio.CancelledError:
             pass
+
 
 
 async def run_cleanup_job_periodically():
