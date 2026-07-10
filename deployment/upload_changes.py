@@ -55,7 +55,12 @@ files_to_upload = [
     "backend/audit_microservice.py",
     "backend/templates/audit_portal.html",
     "docker-compose.yml",
-    "deployment/generate_bcrypt_hash.py"
+    "deployment/generate_bcrypt_hash.py",
+    "backend/services/scheduler_service.py",
+    "backend/db/migrations/020_scheduled_closures.sql",
+    "src/components/contadores/cierres/CierreMasivoModal.tsx",
+    "src/services/closeService.ts",
+    "backend/api/counter_schemas.py"
 ]
 
 print("="*60)
