@@ -2106,59 +2106,65 @@ class RicohWebClient:
             return []
 
     @with_printer_session
-    def delete_stored_job(self, printer_ip: str, job_id: str, admin_password: Optional[str] = None) -> bool:
+    def delete_stored_job(self, printer_ip: str, job_id: str, admin_password: Optional[str] = None, job_type: str = "stored") -> bool:
         """
-        Delete a stored print job from WIM storedJob.cgi
-        
+        Delete a stored or locked print job from WIM.
+
         Args:
             printer_ip: Printer IP address
             job_id: ID of the job to delete
             admin_password: Optional printer-specific admin password
-            
+            job_type: "stored" for normal stored jobs, "locked" for IMPRESIÓN BLOQUEADA jobs
+
         Returns:
             bool: True if deletion was successful, False otherwise
         """
-        logger.info(f"Attempting to delete job {job_id} on printer {printer_ip}...")
-        
+        logger.info(f"Attempting to delete job {job_id} (type={job_type}) on printer {printer_ip}...")
+
         # 1. Authenticate
         if not self._authenticate(printer_ip, admin_password):
             logger.error(f"❌ Cannot proceed with delete_stored_job without authentication for {printer_ip}")
             return False
-            
+
         try:
-            # 2. Get the stored jobs page to grab current wimToken and other details
-            jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/storedJob.cgi"
+            # Select correct CGI endpoint based on job type
+            if job_type == "locked":
+                jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/lockedPrint.cgi"
+            else:
+                jobs_url = f"http://{printer_ip}/web/entry/es/webprinter/storedJob.cgi"
+
             headers = {
                 'Referer': f'http://{printer_ip}/web/entry/es/websys/webArch/topPage.cgi'
             }
-            
+
+            # 2. Fetch jobs page to get current wimToken and form values
             response = self.session.get(jobs_url, headers=headers, timeout=self.timeout)
             if response.status_code != 200:
-                logger.error(f"❌ Failed to fetch stored jobs page (Status {response.status_code})")
+                logger.error(f"❌ Failed to fetch jobs page (Status {response.status_code})")
                 return False
-                
+
             soup = BeautifulSoup(response.text, 'html.parser')
-            
+
             # Extract form values
             wim_token_el = soup.find('input', {'name': 'wimToken'})
             wim_token = wim_token_el.get('value', '') if wim_token_el else ''
-            
+
             base_id_el = soup.find('input', {'name': 'baseID'})
             base_id = base_id_el.get('value', '') if base_id_el else ''
-            
+
             total_count_el = soup.find('input', {'name': 'totalCount'})
             total_count = total_count_el.get('value', '100') if total_count_el else '100'
-            
+
             size_el = soup.find('input', {'name': 'size'})
             size_val = size_el.get('value', '10') if size_el else '10'
-            
+
             display_ids = [el.get('value', '') for el in soup.find_all('input', {'name': 'display_ID'})]
-            
+
             # Mask token for security
             token_preview = f"{wim_token[:4]}...{wim_token[-4:]}" if len(wim_token) > 8 else wim_token
             logger.info(f"Submitting job deletion request for ID {job_id} with token {token_preview}...")
-            
-            # 3. Construct URL-encoded payload as list of tuples
+
+            # 3. Construct URL-encoded payload
             payload = [
                 ('wimToken', wim_token),
                 ('notDefault', '1'),
@@ -2178,35 +2184,48 @@ class RicohWebClient:
                 ('number', '10'),
                 ('selectedCount', '1')
             ]
-            
+
             for d_id in display_ids:
                 payload.append(('display_ID', d_id))
-                
+
             payload.append(('ID', job_id))
-            
+
             # 4. Post deletion request
             post_headers = {
                 'Referer': jobs_url,
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Origin': f'http://{printer_ip}'
             }
-            
+
             post_response = self.session.post(jobs_url, data=payload, headers=post_headers, timeout=self.timeout)
-            
-            if post_response.status_code == 200:
-                logger.info(f"✅ Delete request completed successfully for job {job_id}")
-                # Update cached wimToken if a new one is returned in the response
-                match = re.search(r'name="wimToken"\s+value="(\d+)"', post_response.text)
-                if match:
-                    self._wim_tokens[printer_ip] = match.group(1)
-                return True
-            else:
+
+            if post_response.status_code != 200:
                 logger.error(f"❌ Failed to delete job {job_id} (Status {post_response.status_code})")
                 return False
-                
+
+            # 5. VERIFY actual deletion: check if job_id still appears in the response HTML.
+            # Ricoh always returns HTTP 200, even when deletion fails (e.g. locked/blocked jobs).
+            response_soup = BeautifulSoup(post_response.text, 'html.parser')
+            remaining_ids = [el.get('value', '') for el in response_soup.find_all('input', {'name': 'ID'})]
+            if job_id in remaining_ids:
+                logger.warning(
+                    f"⚠️ Job {job_id} still present after DELETE on {printer_ip}. "
+                    f"Job may be locked/in-progress. Try type='locked' if this was an IMPRESIÓN BLOQUEADA job."
+                )
+                return False
+
+            # Update cached wimToken if a new one is returned
+            match = re.search(r'name="wimToken"\s+value="(\d+)"', post_response.text)
+            if match:
+                self._wim_tokens[printer_ip] = match.group(1)
+
+            logger.info(f"✅ Job {job_id} confirmed deleted from printer {printer_ip}")
+            return True
+
         except Exception as e:
-            logger.error(f"❌ Error deleting stored job {job_id} from printer {printer_ip}: {e}")
+            logger.error(f"❌ Error deleting job {job_id} from printer {printer_ip}: {e}")
             return False
+
 
     @with_printer_session
     def test_connection(self, printer_ip: str) -> bool:

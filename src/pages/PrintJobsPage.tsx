@@ -169,20 +169,23 @@ const PrintJobsPage = () => {
     }
   };
 
-  const handleDeleteJob = async (jobId: string, jobPrinterId?: number) => {
+  const handleDeleteJob = async (jobId: string, jobPrinterId?: number, jobTipo?: string) => {
     const firstSelectedPrinterId = selectedPrinterIds.find(id => id !== 'consolidated');
     const targetPrinterId = jobPrinterId || Number(firstSelectedPrinterId);
     if (!targetPrinterId || isNaN(targetPrinterId)) {
       notify.error('Error', 'No se pudo determinar el ID de la impresora para eliminar el trabajo.');
       return;
     }
-    
+
+    // Detectar si es un trabajo bloqueado (IMPRESIÓN BLOQUEADA = locked print en WIM)
+    const jobType = jobTipo?.toUpperCase().includes('BLOQUEADA') ? 'locked' : 'stored';
+
     const confirmDelete = window.confirm('¿Está seguro de que desea eliminar este trabajo de impresión de la impresora? Esta acción no se puede deshacer.');
     if (!confirmDelete) return;
 
     try {
       setDeletingJobId(jobId);
-      await deletePrinterJob(targetPrinterId, jobId);
+      await deletePrinterJob(targetPrinterId, jobId, jobType);
       notify.success('Trabajo eliminado', 'El trabajo de impresión ha sido cancelado y eliminado con éxito.');
       // Refrescar lista de trabajos
       loadJobs(selectedPrinterIds);
@@ -653,7 +656,7 @@ const PrintJobsPage = () => {
                             <td className="px-4 py-4 whitespace-nowrap text-center text-sm">
                               {job.job_id ? (
                                 <button
-                                  onClick={() => handleDeleteJob(job.job_id!, job.printer_id)}
+                                  onClick={() => handleDeleteJob(job.job_id!, job.printer_id, job.tipo)}
                                   disabled={deletingJobId !== null}
                                   className={cn(
                                     "p-1.5 rounded-lg border text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-all shadow-sm",

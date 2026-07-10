@@ -573,11 +573,14 @@ async def get_printer_jobs(
 async def delete_printer_job(
     printer_id: int,
     job_id: str,
+    job_type: str = "stored",
     current_user: AdminUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Delete a specific stored print job from a printer.
+    Delete a specific stored or locked print job from a printer.
+    - job_type=stored  → normal stored job (storedJob.cgi)
+    - job_type=locked  → IMPRESIÓN BLOQUEADA (lockedPrint.cgi)
     """
     printer = PrinterRepository.get_by_id(db, printer_id)
     if not printer:
@@ -585,27 +588,29 @@ async def delete_printer_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Printer with ID {printer_id} not found"
         )
-    
+
     # Validate company access
     if not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this printer"
         )
-    
+
     from services.ricoh_web_client import get_ricoh_web_client
     client = get_ricoh_web_client()
-    
+
     try:
         success = client.delete_stored_job(
             printer.ip_address,
             job_id,
-            admin_password=printer.admin_password
+            admin_password=printer.admin_password,
+            job_type=job_type
         )
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to delete job {job_id} from printer WIM"
+                detail=f"Failed to delete job {job_id} from printer WIM. "
+                       f"If this is an IMPRESIÓN BLOQUEADA job, it may be locked by the user's PIN."
             )
         return {"success": True, "message": f"Job {job_id} deleted successfully"}
     except HTTPException:
@@ -618,4 +623,5 @@ async def delete_printer_job(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete print job: {str(e)}"
         )
+
 

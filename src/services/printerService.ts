@@ -346,18 +346,20 @@ export async function fetchConsolidatedPrinterJobs(): Promise<any[]> {
 }
 
 /**
- * Deletes a stored print job for a specific printer
- * 
+ * Deletes a stored or locked print job for a specific printer.
+ *
  * @param printerId - ID of the printer
  * @param jobId - ID of the print job
+ * @param jobType - "stored" for normal jobs, "locked" for IMPRESIÓN BLOQUEADA jobs
  */
-export async function deletePrinterJob(printerId: number, jobId: string): Promise<void> {
+export async function deletePrinterJob(printerId: number, jobId: string, jobType: string = 'stored'): Promise<void> {
   try {
-    await apiClient.delete(`/printers/${printerId}/jobs/${jobId}`);
+    await apiClient.delete(`/printers/${printerId}/jobs/${jobId}?job_type=${jobType}`);
   } catch (error) {
     console.error(`Failed to delete print job ${jobId} for printer ${printerId}:`, error);
     throw error;
   }
 }
+
 
 
