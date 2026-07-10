@@ -156,7 +156,7 @@ def superadmin_token(superadmin_user, db_session):
         db=db_session,
         username=superadmin_user.username,
         password="TestPass123!",
-        ip_address="127.0.0.1",
+        ip_address="testclient",
         user_agent="testclient"
     )
     return login_response.access_token
@@ -170,7 +170,7 @@ def admin_token(admin_user, db_session):
         db=db_session,
         username=admin_user.username,
         password="TestPass123!",
-        ip_address="127.0.0.1",
+        ip_address="testclient",
         user_agent="testclient"
     )
     return login_response.access_token
@@ -230,8 +230,8 @@ def test_admin_session(db_session, test_admin_user):
     session = AdminSession(
         admin_user_id=test_admin_user.id,
         token=token,
-        ip_address="127.0.0.1",
-        user_agent="test-agent",
+        ip_address="testclient",
+        user_agent="testclient",
         expires_at=datetime.utcnow() + timedelta(minutes=30),
         last_activity=datetime.utcnow()
     )

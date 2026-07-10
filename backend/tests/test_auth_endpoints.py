@@ -83,9 +83,9 @@ class TestAuthEndpoints:
         assert "password_hash" not in data
     
     def test_get_me_without_token(self, client, db_session):
-        """Test GET /auth/me without token returns 403"""
+        """Test GET /auth/me without token returns 401"""
         response = client.get("/auth/me")
-        assert response.status_code == 403
+        assert response.status_code == 401
     
     def test_get_me_with_invalid_token(self, client):
         """Test GET /auth/me with invalid token returns 401"""

@@ -1339,6 +1339,38 @@ async def delete_comparacion(
     return {"message": "Comparación eliminada correctamente"}
 
 
+@router.delete("/monthly/{close_id}", status_code=status.HTTP_200_OK)
+async def delete_monthly_close(
+    close_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Elimina un cierre de contadores mensual/diario/semanal.
+    Valida el acceso de multi-tenancy a la empresa asociada a la impresora.
+    """
+    closure = db.query(CierreMensual).filter(CierreMensual.id == close_id).first()
+    if not closure:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El cierre no fue encontrado"
+        )
+        
+    # Validar permisos de multi-tenancy
+    from services.company_filter_service import CompanyFilterService
+    printer = db.query(Printer).filter(Printer.id == closure.printer_id).first()
+    if not printer or not CompanyFilterService.validate_company_access(current_user, printer.empresa_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes acceso para eliminar este cierre"
+        )
+        
+    db.delete(closure)
+    db.commit()
+    
+    return {"message": "Cierre de contadores eliminado correctamente"}
+
+
 # ============================================================================
 # Scheduled Closures Endpoints
 # ============================================================================

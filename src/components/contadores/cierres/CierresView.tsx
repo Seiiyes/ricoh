@@ -81,6 +81,17 @@ export const CierresView: React.FC = () => {
     setCierreModalOpen(true);
   };
 
+  const handleDeleteCierre = async (cierreId: number) => {
+    try {
+      await closeService.deleteMonthlyClose(cierreId);
+      notify.success('Cierre de contadores eliminado correctamente.');
+      loadCierres();
+    } catch (err: any) {
+      console.error('Error al eliminar cierre:', err);
+      notify.error(parseApiError(err, 'Error al eliminar el cierre'));
+    }
+  };
+
   const loadSavedComparaciones = async () => {
     setLoadingHistory(true);
     try {
@@ -319,6 +330,7 @@ export const CierresView: React.FC = () => {
               cierres={cierres}
               onCreateCierre={handleCreateCierre}
               onViewDetalle={(cierre) => { setSelectedCierre(cierre); setDetalleModalOpen(true); }}
+              onDeleteCierre={handleDeleteCierre}
             />
           </div>
         )}

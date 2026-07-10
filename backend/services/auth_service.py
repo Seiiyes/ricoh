@@ -455,14 +455,21 @@ class AuthService:
             if not session:
                 raise InvalidTokenError("Session not found")
                 
-            if session.expires_at < datetime.now(timezone.utc):
+            expires_at = session.expires_at
+            if expires_at.tzinfo is not None:
+                is_expired = expires_at < datetime.now(timezone.utc)
+            else:
+                is_expired = expires_at < datetime.now()
+                
+            if is_expired:
                 raise ExpiredTokenError("Session expired")
                 
             saved_ip = session.ip_address
             saved_ua = session.user_agent
             
             # Registrar en Redis
-            ttl = int((session.expires_at - datetime.now(timezone.utc)).total_seconds())
+            now_dt = datetime.now(timezone.utc) if expires_at.tzinfo is not None else datetime.now()
+            ttl = int((expires_at - now_dt).total_seconds())
             if ttl > 0:
                 redis_service.set(session_key, {
                     "user_id": user_id,

@@ -136,7 +136,10 @@ class AdminSession(Base):
     
     def is_expired(self) -> bool:
         """Check if session is expired"""
-        return self.expires_at < datetime.now(timezone.utc)
+        expires_at = self.expires_at
+        if expires_at.tzinfo is not None:
+            return expires_at < datetime.now(timezone.utc)
+        return expires_at < datetime.now()
 
 
 class AdminAuditLog(Base):

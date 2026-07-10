@@ -144,6 +144,14 @@ export const closeService = {
   },
 
   /**
+   * Eliminar un cierre de contadores
+   */
+  deleteMonthlyClose: async (closeId: number): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(`/api/counters/monthly/${closeId}`);
+    return response.data;
+  },
+
+  /**
    * Obtener todas las programaciones de cierres
    */
   getSchedules: async (): Promise<ScheduledClosure[]> => {

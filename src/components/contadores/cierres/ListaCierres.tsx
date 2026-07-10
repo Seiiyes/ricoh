@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { CierreMensual, Printer, TipoPeriodo } from './types';
-import { Button } from '@/components/ui';
+import { Button, Modal } from '@/components/ui';
+import { Trash2, AlertTriangle } from 'lucide-react';
 
 interface ListaCierresProps {
   printer: Printer;
@@ -8,6 +10,7 @@ interface ListaCierresProps {
   cierres: CierreMensual[];
   onCreateCierre: (fechaInicio: string, fechaFin: string) => void;
   onViewDetalle: (cierre: CierreMensual) => void;
+  onDeleteCierre: (cierreId: number) => Promise<void> | void;
 }
 
 export const ListaCierres: React.FC<ListaCierresProps> = ({
@@ -16,8 +19,11 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
   tipoPeriodo,
   cierres,
   onCreateCierre,
-  onViewDetalle
+  onViewDetalle,
+  onDeleteCierre
 }) => {
+  const [cierreToDelete, setCierreToDelete] = useState<number | null>(null);
+
   const formatNumber = (num: number) => num.toLocaleString('es-ES');
   const formatDate = (dateStr: string) => {
     // Para evitar el desfase de zona horaria con YYYY-MM-DD (que JS asume como UTC)
@@ -26,8 +32,12 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
     return date.toLocaleDateString('es-ES');
   };
 
-  // console.log('ListaCierres rendered with:', { printer, year, tipoPeriodo, cierresCount: cierres.length });
-
+  const handleConfirmDelete = async () => {
+    if (cierreToDelete !== null) {
+      await onDeleteCierre(cierreToDelete);
+      setCierreToDelete(null);
+    }
+  };
 
   if (cierres.length === 0) {
     return (
@@ -101,9 +111,17 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
                     {formatDate(cierre.fecha_inicio)}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
-                  ID: {cierre.id}
-                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCierreToDelete(cierre.id);
+                  }}
+                  className="text-slate-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg"
+                  title="Eliminar cierre"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
 
               {/* Período */}
@@ -183,6 +201,7 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
                 {cierre.cerrado_por || 'Sistema'}
               </span>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onViewDetalle(cierre);
@@ -195,6 +214,51 @@ export const ListaCierres: React.FC<ListaCierresProps> = ({
           </div>
         ))}
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {cierreToDelete !== null && (
+        <Modal
+          isOpen={true}
+          onClose={() => setCierreToDelete(null)}
+          title="¿Eliminar este cierre de contadores?"
+          size="sm"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 bg-red-50 p-4 rounded-2xl border border-red-100">
+              <AlertTriangle className="text-red-600 shrink-0 mt-0.5" size={20} />
+              <div>
+                <h4 className="text-sm font-bold text-red-900">Acción Irreversible</h4>
+                <p className="text-xs text-red-700 mt-1 leading-relaxed">
+                  Esta acción eliminará de forma permanente el cierre de contadores seleccionado.
+                  No podrás revertir este cambio ni recuperar los totales históricos asociados.
+                </p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-slate-500 px-1 leading-relaxed">
+              ¿Estás seguro de que deseas continuar con la eliminación del cierre?
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCierreToDelete(null)}
+                className="rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold px-5"
+              >
+                Eliminar Cierre
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
