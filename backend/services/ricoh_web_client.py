@@ -2218,16 +2218,35 @@ class RicohWebClient:
                 logger.error(f"❌ Failed to delete job {job_id} (Status {post_response.status_code})")
                 return False
 
-            # 5. VERIFY actual deletion: check if job_id still appears in the response HTML.
-            # Ricoh always returns HTTP 200, even when deletion fails.
-            response_soup = BeautifulSoup(post_response.text, 'html.parser')
-            remaining_ids = [el.get('value', '') for el in response_soup.find_all('input', {'name': 'ID'})]
-            if job_id in remaining_ids:
-                logger.warning(
-                    f"⚠️ Job {job_id} still present after DELETE on {printer_ip}. "
-                    f"typeOnly used: {type_only} (job_type={job_type}). "
-                    f"The job may require the user's PIN to be deleted (truly locked)."
-                )
+            # Log a preview of the POST response for debugging
+            response_preview = post_response.text[:800].replace('\n', ' ').replace('\r', '')
+            logger.debug(f"POST response preview: {response_preview}")
+
+            # 5. REAL VERIFICATION: do an independent fresh GET of all jobs and check if job_id still present.
+            # We CANNOT trust the POST response HTML because typeOnly filtering causes empty/partial pages
+            # regardless of whether the deletion actually happened on the printer.
+            import time
+            time.sleep(1)  # Brief wait for printer to commit the change
+
+            verify_response = self.session.get(jobs_url, headers=headers, timeout=self.timeout)
+            if verify_response.status_code == 200:
+                verify_soup = BeautifulSoup(verify_response.text, 'html.parser')
+                # Check all job IDs across all types (no typeOnly filter on this GET)
+                all_ids_in_fresh_list = [
+                    el.get('value', '') for el in verify_soup.find_all('input', {'name': 'ID'})
+                ]
+                logger.debug(f"Fresh GET after DELETE — all job IDs on page: {all_ids_in_fresh_list}")
+
+                if job_id in all_ids_in_fresh_list:
+                    logger.warning(
+                        f"⚠️ Job {job_id} STILL PRESENT after DELETE on {printer_ip}. "
+                        f"typeOnly={type_only}. "
+                        f"This Ricoh model may NOT support admin-level deletion of Locked Print jobs via WIM. "
+                        f"The job must be deleted from the printer's physical panel or by the user who sent it."
+                    )
+                    return False
+            else:
+                logger.warning(f"⚠️ Could not verify deletion (fresh GET status={verify_response.status_code}). Assuming failed.")
                 return False
 
             # Update cached wimToken if a new one is returned
@@ -2235,12 +2254,13 @@ class RicohWebClient:
             if match:
                 self._wim_tokens[printer_ip] = match.group(1)
 
-            logger.info(f"✅ Job {job_id} confirmed deleted from printer {printer_ip} (type={job_type})")
+            logger.info(f"✅ Job {job_id} confirmed DELETED (fresh GET verified) from printer {printer_ip} (type={job_type})")
             return True
 
         except Exception as e:
             logger.error(f"❌ Error deleting job {job_id} from printer {printer_ip}: {e}")
             return False
+
 
 
 

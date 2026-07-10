@@ -607,11 +607,19 @@ async def delete_printer_job(
             job_type=job_type
         )
         if not success:
+            is_locked = job_type == "locked"
+            detail_msg = (
+                f"No fue posible eliminar el trabajo {job_id} de la impresora. "
+                f"Los trabajos de IMPRESIÓN BLOQUEADA solo pueden eliminarse desde el panel físico "
+                f"de la impresora o por el usuario que los envió (requiere PIN)."
+                if is_locked else
+                f"Failed to delete job {job_id} from printer WIM."
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to delete job {job_id} from printer WIM. "
-                       f"If this is an IMPRESIÓN BLOQUEADA job, it may be locked by the user's PIN."
+                detail=detail_msg
             )
+
         return {"success": True, "message": f"Job {job_id} deleted successfully"}
     except HTTPException:
         raise
