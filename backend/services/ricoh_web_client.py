@@ -2234,7 +2234,6 @@ class RicohWebClient:
             # Add ONLY the job we want to delete as a checked checkbox ID
             payload.append(('ID', job_id))
 
-
             # 4. Post deletion request
             post_headers = {
                 'Referer': jobs_url,
@@ -2242,7 +2241,7 @@ class RicohWebClient:
                 'Origin': f'http://{printer_ip}'
             }
 
-            logger.info(f"📤 Full payload being sent: {payload}")
+            logger.info(f"📤 First POST (requesting delete): {payload}")
             post_response = self.session.post(jobs_url, data=payload, headers=post_headers, timeout=self.timeout)
 
             if post_response.status_code != 200:
@@ -2253,33 +2252,57 @@ class RicohWebClient:
             try:
                 with open(f'/tmp/wim_POST_response_{job_id}.html', 'w', encoding='utf-8') as _f:
                     _f.write(post_response.text)
-                logger.info(f"📄 POST response saved to /tmp/wim_POST_response_{job_id}.html")
             except Exception:
                 pass
             response_preview = post_response.text[:1200].replace('\n', ' ').replace('\r', '')
-            logger.info(f"POST response preview (1200 chars): {response_preview}")
+            logger.info(f"First POST response preview (1200 chars): {response_preview}")
+
+            # 4.5. SECOND STEP: Check for confirmation page and submit it if present
+            confirm_soup = BeautifulSoup(post_response.text, 'html.parser')
+            confirm_form = confirm_soup.find('form', {'name': 'hideform'})
+            
+            if confirm_form:
+                logger.info(f"🔄 Confirmation form 'hideform' found. Submitting second POST (Exec)...")
+                confirm_payload = []
+                for inp in confirm_form.find_all('input'):
+                    iname = inp.get('name', '')
+                    itype = inp.get('type', 'hidden').lower()
+                    ivalue = inp.get('value', '')
+                    if iname:
+                        if iname == 'mode':
+                            confirm_payload.append((iname, '3'))  # mode=3 confirms the deletion
+                        else:
+                            confirm_payload.append((iname, ivalue))
+                
+                logger.info(f"📤 Second POST (confirming delete): {confirm_payload}")
+                confirm_response = self.session.post(jobs_url, data=confirm_payload, headers=post_headers, timeout=self.timeout)
+                
+                if confirm_response.status_code != 200:
+                    logger.error(f"❌ Failed to confirm job {job_id} deletion (Status {confirm_response.status_code})")
+                    return False
+                
+                # Update token with the latest response from confirmation POST
+                post_html_to_check = confirm_response.text
+            else:
+                logger.info("ℹ️ No confirmation form 'hideform' found in POST response. Assuming direct deletion.")
+                post_html_to_check = post_response.text
 
             # 5. REAL VERIFICATION: do an independent fresh GET of all jobs and check if job_id still present.
-            # We CANNOT trust the POST response HTML because typeOnly filtering causes empty/partial pages
-            # regardless of whether the deletion actually happened on the printer.
             import time
-            time.sleep(1)  # Brief wait for printer to commit the change
+            time.sleep(2)  # Wait for printer to commit the change
 
             verify_response = self.session.get(jobs_url, headers=headers, timeout=self.timeout)
             if verify_response.status_code == 200:
                 verify_soup = BeautifulSoup(verify_response.text, 'html.parser')
-                # Check all job IDs across all types (no typeOnly filter on this GET)
                 all_ids_in_fresh_list = [
                     el.get('value', '') for el in verify_soup.find_all('input', {'name': 'ID'})
                 ]
-                logger.debug(f"Fresh GET after DELETE — all job IDs on page: {all_ids_in_fresh_list}")
+                logger.info(f"Fresh GET after DELETE — all job IDs on page: {all_ids_in_fresh_list}")
 
                 if job_id in all_ids_in_fresh_list:
                     logger.warning(
                         f"⚠️ Job {job_id} STILL PRESENT after DELETE on {printer_ip}. "
-                        f"typeOnly={type_only}. "
-                        f"This Ricoh model may NOT support admin-level deletion of Locked Print jobs via WIM. "
-                        f"The job must be deleted from the printer's physical panel or by the user who sent it."
+                        f"This Ricoh model may require manual PIN entry or physical panels to delete this job."
                     )
                     return False
             else:
