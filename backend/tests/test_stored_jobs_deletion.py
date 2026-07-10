@@ -69,8 +69,10 @@ class TestStoredJobsDeletion:
         mock_delete_stored_job.assert_called_once_with(
             printer.ip_address,
             "job123",
-            admin_password="test-password"
+            admin_password="test-password",
+            job_type="stored"
         )
+
 
     @patch("services.ricoh_web_client.RicohWebClient.delete_stored_job")
     def test_delete_job_failure_in_client(self, mock_delete_stored_job, client, db_session, test_empresa, superadmin_token):
