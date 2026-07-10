@@ -12,7 +12,8 @@ def test_calculate_next_run_once():
         frequency="once",
         scheduled_time_str="18:30",
         specific_date=specific_date,
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     assert next_run == datetime(2026, 7, 12, 18, 30, 0, tzinfo=timezone.utc)
@@ -26,7 +27,8 @@ def test_calculate_next_run_daily_future_today():
     next_run = calculate_next_run(
         frequency="daily",
         scheduled_time_str="18:00",
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     assert next_run == datetime(2026, 7, 10, 18, 0, 0, tzinfo=timezone.utc)
@@ -40,7 +42,8 @@ def test_calculate_next_run_daily_past_today():
     next_run = calculate_next_run(
         frequency="daily",
         scheduled_time_str="18:00",
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     assert next_run == datetime(2026, 7, 11, 18, 0, 0, tzinfo=timezone.utc)
@@ -55,7 +58,8 @@ def test_calculate_next_run_weekly_future():
         frequency="weekly",
         scheduled_time_str="10:00",
         day_of_week=6,
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     # Friday + 2 days = Sunday (July 12)
@@ -71,7 +75,8 @@ def test_calculate_next_run_weekly_past_today():
         frequency="weekly",
         scheduled_time_str="10:00",
         day_of_week=4,
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     # Should schedule for next Friday (July 17)
@@ -87,7 +92,8 @@ def test_calculate_next_run_monthly_future():
         frequency="monthly",
         scheduled_time_str="08:00",
         day_of_month=15,
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     assert next_run == datetime(2026, 7, 15, 8, 0, 0, tzinfo=timezone.utc)
@@ -102,7 +108,8 @@ def test_calculate_next_run_monthly_past():
         frequency="monthly",
         scheduled_time_str="08:00",
         day_of_month=5,
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     assert next_run == datetime(2026, 8, 5, 8, 0, 0, tzinfo=timezone.utc)
@@ -118,7 +125,8 @@ def test_calculate_next_run_monthly_boundary_cap():
         frequency="monthly",
         scheduled_time_str="18:00",
         day_of_month=31,
-        base_dt=base_dt
+        base_dt=base_dt,
+        tz=timezone.utc
     )
     
     assert next_run == datetime(2026, 1, 31, 18, 0, 0, tzinfo=timezone.utc)
@@ -129,6 +137,7 @@ def test_calculate_next_run_monthly_boundary_cap():
         frequency="monthly",
         scheduled_time_str="18:00",
         day_of_month=31,
-        base_dt=base_dt_past
+        base_dt=base_dt_past,
+        tz=timezone.utc
     )
     assert next_run_feb == datetime(2026, 2, 28, 18, 0, 0, tzinfo=timezone.utc)
