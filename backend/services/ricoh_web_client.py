@@ -2156,6 +2156,19 @@ class RicohWebClient:
                 logger.error(f"❌ Failed to fetch jobs page (Status {response.status_code})")
                 return False
 
+            # LOG: Save full GET HTML for comparison with browser request
+            try:
+                with open(f'/tmp/wim_GET_before_delete_{job_id}.html', 'w', encoding='utf-8') as _f:
+                    _f.write(response.text)
+                logger.info(f"📄 GET page saved to /tmp/wim_GET_before_delete_{job_id}.html")
+            except Exception:
+                pass
+            logger.info(f"GET page size: {len(response.text)} chars")
+            # Log ALL input fields found
+            _pre_soup = BeautifulSoup(response.text, 'html.parser')
+            _all_inputs = [(i.get('name',''), i.get('value',''), i.get('type','text')) for i in _pre_soup.find_all('input')]
+            logger.info(f"All form fields on GET page: {_all_inputs}")
+
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # Extract form values
@@ -2212,15 +2225,22 @@ class RicohWebClient:
                 'Origin': f'http://{printer_ip}'
             }
 
+            logger.info(f"📤 Full payload being sent: {payload}")
             post_response = self.session.post(jobs_url, data=payload, headers=post_headers, timeout=self.timeout)
 
             if post_response.status_code != 200:
                 logger.error(f"❌ Failed to delete job {job_id} (Status {post_response.status_code})")
                 return False
 
-            # Log a preview of the POST response for debugging
-            response_preview = post_response.text[:800].replace('\n', ' ').replace('\r', '')
-            logger.debug(f"POST response preview: {response_preview}")
+            # LOG: Save full POST response HTML
+            try:
+                with open(f'/tmp/wim_POST_response_{job_id}.html', 'w', encoding='utf-8') as _f:
+                    _f.write(post_response.text)
+                logger.info(f"📄 POST response saved to /tmp/wim_POST_response_{job_id}.html")
+            except Exception:
+                pass
+            response_preview = post_response.text[:1200].replace('\n', ' ').replace('\r', '')
+            logger.info(f"POST response preview (1200 chars): {response_preview}")
 
             # 5. REAL VERIFICATION: do an independent fresh GET of all jobs and check if job_id still present.
             # We CANNOT trust the POST response HTML because typeOnly filtering causes empty/partial pages
