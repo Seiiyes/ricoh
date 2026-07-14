@@ -1,216 +1,117 @@
 # Ricoh Suite
 
-Sistema integral de gestión de impresoras Ricoh con autenticación JWT, multi-tenancy y tres módulos principales: Governance (Aprovisionamiento), Contadores y Cierres Mensuales.
+Sistema integral de gestion de impresoras Ricoh con autentificacion JWT, multi-tenancy y cuatro modulos principales: Governance (Aprovisionamiento), Contadores, Cierres Mensuales y Gestion de Trabajos de Impresion.
 
-**Versión**: 2.2.0 | **Estado**: ✅ Producción | **Última actualización**: 06 de Mayo de 2026
-
----
-
-## 📊 Estado Actual del Sistema (6 Mayo 2026)
-
-### ✅ Sistema Operativo y Funcionando
-
-**Ambiente**: Desarrollo Local  
-**IP Local**: 192.168.91.34  
-**Acceso**: 
-- Local: http://localhost:5173
-- Red: http://192.168.91.34:5173
-
-### Servicios Activos
-
-| Servicio | Estado | Puerto | Salud |
-|----------|--------|--------|-------|
-| Frontend | ✅ Running | 5173 | Healthy |
-| Backend | ✅ Running | 8000 | Healthy |
-| PostgreSQL | ✅ Running | 5432 | Healthy |
-| Redis | ✅ Running | 6379 | Healthy |
-| Adminer | ✅ Running | 8080 | Running |
-
-### 🔒 Seguridad
-
-**Estado**: ✅ Correcto para DESARROLLO, ❌ NO listo para PRODUCCIÓN
-
-- ⚠️ ENVIRONMENT=development (cambiar a `production`)
-- ⚠️ DEBUG=true (cambiar a `false`)
-- ⚠️ CORS_ORIGINS=* (restringir dominios)
-- ⚠️ Claves de ejemplo (generar nuevas únicas)
-- ⚠️ Redis sin contraseña (configurar contraseña)
-
-**Ver auditoría completa**: `docs/resumen/AUDITORIA_SEGURIDAD_6_MAYO_2026.md`
-
-### 💡 Importante
-
-⚠️ **Si apagas tu PC, TODO el sistema se cae**
-
-Para entender opciones y soluciones, ver: `docs/resumen/QUE_PASA_SI_APAGO_PC.md`
+**Version**: 4.1.7 | **Estado**: Activado en Produccion | **Ultima actualizacion**: 14 de Julio de 2026
 
 ---
 
-## 🚀 Inicio Rápido
+## Estado Actual del Sistema
 
-### ⚡ Opción 1: Con Docker (Recomendado)
+### Servidor de Produccion Activo y Funcionando
+*   **Servidor**: Host local en produccion
+*   **IP del Servidor**: 192.168.91.131
+*   **Acceso Web**: http://192.168.91.131 (redirigido y controlado por Nginx)
+*   **Portal de Logs de Auditoria**: http://192.168.91.131:8088
 
+### Servicios de Produccion (Docker Compose)
+
+| Servicio | Estado | Puerto Interno | Salud |
+| :--- | :--- | :---: | :--- |
+| ricoh-nginx | Running | 80 / 443 | Healthy |
+| ricoh-frontend | Running | 80 | Healthy |
+| ricoh-backend | Running | 8000 / 8088 | Healthy |
+| ricoh-postgres | Running | 5432 | Healthy |
+| ricoh-redis | Running | 6379 | Healthy |
+
+---
+
+## Inicio Rapido (Desarrollo Local)
+
+### Opcion 1: Con Docker (Recomendado)
 ```cmd
 docker-start.bat
 ```
+Luego abra: http://localhost:5173
 
-Luego abre: http://localhost:5173
+### Opcion 2: Ejecucion Manual Local
 
-### 🔧 Opción 2: Desarrollo Local
-
-**1. Iniciar Backend:**
-```cmd
-cd backend
-start-backend.bat
-```
-Deja la ventana abierta.
-
-**2. Iniciar Frontend:**
-```cmd
-start-dev.bat
-```
-
-**3. Abrir:** http://localhost:5173
-
-📖 **Guía completa**: Ver `docs/INICIO_RAPIDO.md`
+1. Iniciar Backend:
+   ```cmd
+   cd backend
+   start-backend.bat
+   ```
+2. Iniciar Frontend:
+   ```cmd
+   start-dev.bat
+   ```
+3. Abrir navegador en: http://localhost:5173
 
 ---
 
-## 📋 Módulos del Sistema
+## Modulos del Sistema
 
-### 1. Sistema de Autenticación y Multi-Tenancy
-- Login con JWT (access token + refresh token)
-- Gestión de empresas y usuarios administradores
-- Multi-tenancy con filtrado automático
-- Auditoría completa de acciones
-- Rate limiting y bloqueo de cuenta
+### 1. Autenticacion JWT y Multi-Tenancy
+*   Login seguro con access token y refresh token JWT.
+*   Device Binding (Seguridad por IP y navegador) que invalida la sesion si el token es copiado a otro dispositivo.
+*   Aislamiento estricto de empresas (los administradores estandar no pueden ver recursos de otras organizaciones).
+*   Modulo de administracion de empresas y usuarios administradores de soporte.
 
-### 2. Governance (Aprovisionamiento)
-- Descubrimiento automático de impresoras en red
-- Configuración de usuarios y perfiles
-- Sincronización de configuraciones
-- Soporte para contraseñas vacías
+### 2. Governance (Aprovisionamiento de Usuarios)
+*   Descubrimiento de impresoras activas en la red por escaneo de puertos.
+*   Inyeccion automatizada de credenciales de red SMB (Scan-to-Folder) cifradas con AES-256 en la libreta fisica Ricoh.
+*   Asignacion fina de privilegios de color (Copia/Impresion) por impresora.
+*   Desactivacion logica (Soft Delete) de asignaciones que preserva el entry_index del usuario para evitar colisiones en la libreta.
 
-### 3. Contadores
-- Lectura automática de contadores totales
-- Lectura de contadores por usuario
-- Soporte para contador ecológico
-- Historial de lecturas
+### 3. Suministros y Contadores
+*   Monitoreo visual del nivel de toners (Cyan, Magenta, Amarillo, Negro) y del estado online/offline en el dashboard.
+*   Lectura en vivo de contadores del hardware y registro de consumos.
 
-### 4. Cierres Mensuales
-- Creación de cierres mensuales automáticos
-- Snapshot de contadores por usuario
-- Comparación entre cierres
-- Exportación a CSV, Excel y formato Ricoh (3 hojas)
-- Nombres de archivo personalizados: `SERIAL DD.MM.YYYY.extensión`
-- Validación de integridad de datos
+### 4. Cierres Mensuales y Analytics
+*   Consolidacion de contadores mediante cierres individuales o cierres masivos concurrentes.
+*   Comparativa grafica dinamica entre meses del consumo por usuario y departamento.
+*   Exportacion oficial a Excel en tres hojas estructuradas (Resumen, Centros de Costos, Usuarios) con nombres basados en el serial del equipo.
+*   Eliminacion de cierres errados protegida por confirmacion de accion irreversible.
 
-### 5. Sistema de Notificaciones
-- Notificaciones modernas con Sileo
-- Animaciones basadas en física
-- Mensajes amigables en español
+### 5. Gestion de Trabajos de Impresion (Print Jobs)
+*   Visualizacion consolidada de las colas de impresion de multiples impresoras en paralelo.
+*   Eliminacion segura de trabajos (Locked Print/Normal) emulando la confirmacion en dos pasos (mode=3) en la interfaz WIM.
 
 ---
 
-## ⚠️ Solución de Problemas
+## Estructura de Documentacion (Carpeta docs/)
 
-### Error: "Error al sincronizar usuarios"
-**Causa**: Backend no está corriendo  
-**Solución**: Ejecuta `backend\start-backend.bat`
+Toda la documentacion de diseño, DevOps y manuales reside en la carpeta `docs/` (y sincronizada en `/home/odootic/ricoh-app/docs/` en produccion):
 
-📖 **Guía completa**: Ver `docs/SOLUCION_ERROR_SINCRONIZACION.md`
+*   **INDICE_DOCUMENTACION.md**: Indice general de todos los documentos y guias.
+*   **CREDENCIALES_SISTEMA.md**: Manual de contraseñas de red, base de datos, backend y servidor.
+*   **arquitectura/INFRAESTRUCTURA_Y_STACK_TECNOLOGICO.md**: Detalle de contenedores, redes Docker y volumenes.
+*   **arquitectura/ARQUITECTURA_DETALLADA_Y_PATRONES.md**: Capas logicas de software (Clean Architecture) y patrones de diseño.
+*   **arquitectura/ADR_DECISIONES_DISENO.md**: Registro historico de decisiones de diseño (ADR).
+*   **arquitectura/DIAGRAMA_C4_MODEL.md**: Diagramas C4 del sistema en formato Mermaid.
+*   **desarrollo/GUIA_CONFIGURACION_ENTORNO.md**: Setup local, dependencias, variables y formateadores.
+*   **guias/HISTORIAS_USUARIO_Y_CRITERIOS_ACEPTACION.md**: Casos de uso e hitos de validacion QA.
+*   **guias/GUIA_USUARIO.md**: Manual paso a paso de todas las funciones de la interfaz para el usuario final.
+*   **deployment/PLAN_RECUPERACION_ANTE_DESASTRES.md**: Plan DRP de respaldos y restauracion.
+*   **deployment/MONITOREO_Y_ALERTAS.md**: Ubicacion de logs de servicios y solucion rapida de incidencias.
 
 ---
 
-## 📦 Respaldos
+## Desarrollo y Compilacion
 
-```cmd
-REM Crear respaldo
-backup-db.bat
+### Requisitos locales:
+*   Node.js v20.x
+*   Python 3.11+
+*   PostgreSQL 16 y Redis 7 (mediante Docker)
 
-REM Restaurar respaldo
-restore-db.bat
-```
-
-## 📚 Documentación
-
-Toda la documentación está organizada en la carpeta `docs/`:
-
-### 🆕 Documentación de Configuración y Despliegue (Mayo 2026)
-- **`docs/INDICE_DOCUMENTACION.md`** - 📚 **Índice completo de documentación** (EMPEZAR AQUÍ)
-- **`docs/DEPLOYMENT_PRODUCTION.md`** - 🚀 Guía completa de despliegue a producción (50+ páginas)
-- **`docs/DIFERENCIAS_LOCAL_VS_PRODUCCION.md`** - 🔄 Comparativa Local vs Producción
-- **`docs/resumen/AUDITORIA_SEGURIDAD_6_MAYO_2026.md`** - 🔒 Auditoría de seguridad completa
-- **`docs/resumen/QUE_PASA_SI_APAGO_PC.md`** - 💻 Explicación sobre disponibilidad
-- **`docs/resumen/RESUMEN_COMPLETO_CONFIGURACION_6_MAYO_2026.md`** - 📋 Estado actual completo
-
-### Estado del Proyecto
-- `docs/desarrollo/mejoras/MODERNIZACION_UI_UX_PREMIUM_2026.md` - 💎 **Modernización UI/UX Premium**
-- `docs/PROGRESO_SESION_HOY.md` - 📊 Historial de progreso actualizado
-- `docs/INDICE_DOCUMENTACION_ACTUALIZADO.md` - Índice detallado
-- `CHANGELOG.md` - 📝 Registro de cambios por versión (v2.2.0)
-
-### Inicio y Uso
-- `docs/guias/INICIO_RAPIDO.md` - 🚀 Guía de inicio rápido
-- `docs/guias/GUIA_DE_USO.md` - Guía completa de uso
-- `docs/guias/GUIA_USUARIO.md` - Manual de usuario
-
-### Técnica y API
-- `docs/arquitectura/ARCHITECTURE.md` - Arquitectura del sistema
-- `docs/api/API_CONTADORES.md` - API de contadores
-- `docs/api/API_CIERRES_MENSUALES.md` - API de cierres mensuales
-- `docs/seguridad/SISTEMA_AUTENTICACION_COMPLETADO.md` - Sistema de autenticación
-
-### Desarrollo y Fixes
-- `docs/desarrollo/` - Documentación de desarrollo (100+ archivos)
-- `docs/fixes/` - Correcciones de bugs documentadas (18 archivos)
-- `docs/resumen/` - Resúmenes de sesiones (25 archivos)
-
-## 🛠️ Desarrollo
-
-### Stack Tecnológico
-
-**Frontend:**
-- React 19.2.0 + TypeScript 5.9.3
-- Vite 7.3.1, Zustand 5.0.11
-- Tailwind CSS 4.1.18
-- Sileo 0.1.5 (notificaciones)
-- Axios 1.13.6, Recharts 3.7.0
-
-**Backend:**
-- Python 3.11+ + FastAPI 0.109.0
-- SQLAlchemy 2.0.25, PostgreSQL 16
-- JWT (PyJWT 2.8.0), bcrypt 4.1.2
-- Cryptography 42.0.0 (AES-256)
-
-**Infraestructura:**
-- Docker + Docker Compose
-- Adminer (DB admin UI)
-- WebSocket (real-time)
-
-### Estructura del Proyecto
-```
-proyecto/
-├── src/                    # Frontend React + TypeScript
-├── backend/                # Backend FastAPI + Python
-│   ├── api/               # Endpoints REST
-│   ├── services/          # Lógica de negocio
-│   ├── db/                # Modelos y base de datos
-│   └── scripts/           # Scripts de utilidad
-├── docs/                   # Documentación
-│   └── desarrollo/        # Docs de desarrollo
-└── scripts/                # Scripts de automatización
-```
-
-### Comandos Útiles
-```cmd
-REM Instalar dependencias locales (para el editor)
+### Comandos utiles:
+```bash
+# Instalar dependencias locales de React
 npm install
 
-REM Ver logs
+# Instalar dependencias de Python (activando entorno virtual)
+pip install -r backend/requirements.txt
+
+# Ver logs de Docker en vivo
 docker-compose logs -f
 ```
-
-## 📞 Soporte
-
-Ver documentación completa en `docs/`

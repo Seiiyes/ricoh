@@ -5,6 +5,47 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [4.1.7] - 2026-07-14
+
+### Added — Eliminación de Cierres y Documentación de Arquitectura
+- **Eliminación de Cierres Mensuales (Feature)** — Implementado el flujo completo para eliminar un cierre mensual de contadores desde la interfaz. Se añadió el endpoint `DELETE /api/counters/monthly/{close_id}` con validación de multi-tenancy (los administradores estándar solo pueden borrar cierres pertenecientes a impresoras de su empresa), borrado automático en cascada de los registros `CierreMensualUsuario` relacionados y control de acceso estricto por rol. En el frontend se incorporó un botón papelera con confirmación de Acción Irreversible.
+- **Documentación Completa del Sistema** — Creación de 6 manuales técnicos unificados en `docs/`:
+  - `ADR_DECISIONES_DISENO.md` (Registro de decisiones arquitectónicas como Zustand, SQLite en auditoría y deactivación lógica).
+  - `DIAGRAMA_C4_MODEL.md` (Diagramas visuales en Mermaid de Contexto, Contenedores y Componentes).
+  - `GUIA_CONFIGURACION_ENTORNO.md` (Requisitos de software, variables .env, formateadores y extensiones recomendadas de VS Code).
+  - `HISTORIAS_USUARIO_Y_CRITERIOS_ACEPTACION.md` (Casos de uso e hitos de aprobación QA).
+  - `PLAN_RECUPERACION_ANTE_DESASTRES.md` (DRP con respaldos para Postgres/SQLite y pasos de restauración).
+  - `MONITOREO_Y_ALERTAS.md` (Manual de logs en Docker/Nginx/SQLite y solución rápida de excepciones y rate limit).
+  - `CREDENCIALES_SISTEMA.md` (Manual unificado de contraseñas y claves del servidor y local).
+- **Limpieza de Emojis** — Remoción de todos los emojis de la documentación (`docs/`) para asegurar un tono formal y corporativo acorde a estándares organizacionales.
+- **Script de Carga de Docs** — Implementado `deployment/upload_docs.py` para subir de forma recursiva y automatizada la documentación al servidor de producción a través de SFTP.
+
+### Fixed — Modal Portal y Layout Full-Screen
+- **Modal Descentrado por Stacking Context** — Se diagnosticó que `backdrop-filter: blur()` en los contenedores padres del módulo de Contadores creaba un nuevo stacking context CSS, obligando a los elementos con `position: fixed` a posicionarse de forma relativa a ellos en vez del viewport global. Solución: se reescribió `Modal.tsx` utilizando `ReactDOM.createPortal` para renderizar los modales directamente en `document.body`, independizándolo del árbol DOM del módulo.
+- **Layout Incompleto en Contadores** — Se corrigió la envoltura de la ruta `/contadores` en `Dashboard.tsx` aplicando márgenes negativos y `h-[calc(100vh)]` para cancelar el padding del layout padre y permitir que el módulo ocupe el 100% de la pantalla sin scroll externo.
+- **Suite de Pruebas Unitarias** — Implementado `test_monthly_close_deletion.py` (3 tests — 100% PASS). Corregidas inconsistencias en el harness de pruebas: IP de `conftest.py` configurada en `testclient` para prevenir violaciones de IP binding, aserciones en `test_auth_endpoints.py` (401 vs 403) y comparaciones timezone-aware en `models_auth.py` para compatibilidad de base de datos local y producción.
+
+---
+
+## [3.5.0] - 2026-07-10
+
+### Added — Flujo de Eliminación de Trabajos en Dos Pasos (Confirmación mode=3)
+- **Eliminación de Trabajos Retenidos/Bloqueados (Feature)** — A través de ingeniería inversa y análisis de los scripts de Ricoh Web Image Monitor (`common.js`), se determinó que la impresora rechaza peticiones directas de eliminación y exige un flujo en dos pasos: un POST inicial de selección y un segundo POST emulando el clic de Aceptar con `mode=3` usando los campos del formulario `hideform` (`baseID`, `kind`). Implementado de forma transparente en `ricoh_web_client.py` (`delete_stored_job`).
+- **Verificación en Vivo** — Tras eliminar el trabajo, el backend realiza un GET fresco a la impresora para verificar que el registro ya no reside en el disco duro físico del dispositivo.
+
+---
+
+## [3.0.0] - 2026-07-07
+
+### Added — Optimización UX de Trabajos de Impresión, Portal de Auditoría Independiente y Contraseñas SMB
+- **Consolidado de Trabajos de Impresión Multi-Impresora** — Implementada la consulta paralela de colas de impresión de múltiples dispositivos simultáneamente mediante `ThreadPoolExecutor` en el backend.
+- **Paginación Interactiva y Diseño Responsivo** — Se eliminó el scroll horizontal reduciendo paddings y quitando la columna irrelevante "ID Trabajo". Se expandió el contenedor principal a ancho fluido y se añadió una paginación interactiva arriba y abajo de la tabla.
+- **Portal de Auditoría Independiente (Puerto 8088)** — Desarrollado un microservicio aislado con su propio servidor Uvicorn, base de datos SQLite local para no degradar el motor principal Postgres, cifrado de contraseñas con bcrypt, JWT de 30 minutos, y buscador en vivo con exportación de bitácora a CSV.
+- **Compatibilidad Universal de Contraseña SMB (Escáner)** — Corrección en el envío de contraseña de red: inyección dual en los campos `wkpasswordIn` y `passwordIn` para compatibilidad con impresoras Ricoh antiguas y modernas, y cambio de flag a `isFolderAuthPasswordUpdated=false` para evitar el borrado temporal por parte del firmware al guardar.
+- **Restricción de Permisos de Color** — Ajuste en el mapeo de permisos: limitación de las opciones de color intermedio `TC` (Dos colores) y `MC` (Color personalizado) al flag `copiadora_color` para evitar accesos de color a usuarios restringidos.
+
+---
+
 ## [2.8.0] - 2026-07-06
 
 ### 🔧 Fixed — Consistencia de Estados y Contadores en Gestión de Usuarios
