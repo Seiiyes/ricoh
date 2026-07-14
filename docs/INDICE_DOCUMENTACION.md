@@ -139,10 +139,12 @@ docs/
 
 
 ###  Seguridad y Autenticación
+*   **[CREDENCIALES_SISTEMA.md](CREDENCIALES_SISTEMA.md):** Manual unificado de credenciales de acceso del servidor (SSH), base de datos Postgres/Redis, portal de auditoría y superadministrador.
 *   **[SISTEMA_AUTENTICACION_COMPLETADO.md](seguridad/SISTEMA_AUTENTICACION_COMPLETADO.md):** Mecanismo de autenticación JWT y roles del sistema.
 *   **[CRITICAL_SECURITY_IMPLEMENTATION.md](seguridad/CRITICAL_SECURITY_IMPLEMENTATION.md):** Detalles del endurecimiento de seguridad en API y base de datos.
 *   **[DDOS_PROTECTION.md](seguridad/DDOS_PROTECTION.md):** Configuración de rate limiting con Redis.
 *   **[WALKTHROUGH_SEGURIDAD.md](seguridad/WALKTHROUGH_SEGURIDAD.md):** Guía de verificación, correcciones de WebSockets y auditoría general de seguridad (Junio 2026).
+
 
 ---
 
