@@ -175,7 +175,11 @@ const Dashboard = () => {
               <Route path="/descubrimiento" element={<ProvisioningPanel showDiscoveryOnly={true} />} />
               <Route path="/aprovisionamiento" element={<ProvisioningPanel showDiscoveryOnly={false} />} />
               <Route path="/administracion" element={<AdministracionUsuarios />} />
-              <Route path="/contadores" element={<ContadoresModule />} />
+              <Route path="/contadores" element={
+                <div className="-mx-4 -my-6 sm:-mx-6 lg:-mx-10 lg:-my-10 h-[calc(100vh-0px)] flex flex-col overflow-hidden">
+                  <ContadoresModule />
+                </div>
+              } />
               <Route path="/trabajos" element={<PrintJobsPage />} />
               
               {/* Rutas solo para superadmin */}

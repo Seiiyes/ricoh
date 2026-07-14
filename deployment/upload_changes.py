@@ -60,6 +60,10 @@ files_to_upload = [
     "backend/db/migrations/020_scheduled_closures.sql",
     "src/components/contadores/cierres/CierreMasivoModal.tsx",
     "src/services/closeService.ts",
+    "src/components/contadores/cierres/CierresView.tsx",
+    "src/components/contadores/cierres/ListaCierres.tsx",
+    "src/pages/Dashboard.tsx",
+    "src/components/ui/Modal.tsx",
     "backend/api/counter_schemas.py"
 ]
 

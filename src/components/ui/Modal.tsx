@@ -1,13 +1,16 @@
 /**
  * Modal Component
- * 
+ *
  * Componente de modal reutilizable con overlay, animaciones y cierre automático.
- * 
+ * Usa ReactDOM.createPortal para renderizar en document.body y evitar que
+ * backdrop-blur u overflow:hidden del padre rompan el posicionamiento fixed.
+ *
  * @created 2026-03-18
  * @author Kiro AI
  */
 
 import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
 
 export interface ModalProps {
@@ -80,9 +83,9 @@ export const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
       onClick={handleOverlayClick}
     >
       <div
@@ -120,4 +123,7 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  // Renderizar en document.body para escapar de cualquier stacking context del padre
+  return ReactDOM.createPortal(modalContent, document.body);
 };
