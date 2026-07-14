@@ -1,295 +1,137 @@
-# Guía de Usuario - Sistema de Autenticación Ricoh Suite
+# Manual de Usuario - Ricoh Equipment Manager Suite
 
-## 👋 Bienvenido
-
-Esta guía te ayudará a usar el sistema de autenticación y gestión de empresas de Ricoh Suite.
+Este manual detalla paso a paso como utilizar todas las funcionalidades del sistema Ricoh Equipment Manager para administrar impresoras, aprovisionar usuarios, consultar lecturas de contadores y realizar cierres mensuales de facturacion.
 
 ---
 
-## 🚀 Inicio Rápido para Superadmin
+## 1. Acceso al Sistema y Seguridad de Sesion
 
-### 1. Primer Login
+### 1.1 Inicio de Sesion
+1. Abra el navegador web e ingrese a la direccion del servidor local de produccion: `http://192.168.91.131` (o la IP asignada por su departamento de TI).
+2. En la pantalla de inicio de sesion, ingrese sus credenciales de administrador:
+   - **Usuario**: Su nombre de usuario (ej: `superadmin` o el asignado a su cuenta corporativa).
+   - **Contrasena**: Ingrese su contrasena de seguridad (ej: `ricoh2026`).
+3. Presione el boton **Iniciar Sesion**.
 
-Al iniciar el sistema por primera vez, usa las credenciales del superadmin:
+### 1.2 Bloqueo de Seguridad y Rate Limiting
+*   **Politica de Bloqueo**: Si ingresa una contrasena incorrecta 5 veces consecutivas, su cuenta sera bloqueada de forma automatica durante 15 minutos por politicas de proteccion contra fuerza bruta.
+*   **Rate Limiting**: Si realiza multiples solicitudes rapidas consecutivas, la pantalla mostrara un mensaje temporal de "Demasiados intentos. Por favor, intente mas tarde." provocado por el middleware anti-DDoS. El bloqueo expira tras esperar 60 segundos de inactividad.
 
-```
-Usuario: superadmin
-Contraseña: {:Z75M!=x>9PiPp2
-```
-
-**⚠️ IMPORTANTE**: Cambia esta contraseña inmediatamente después del primer login.
-
-### 2. Cambiar Contraseña
-
-1. Haz clic en tu nombre en la esquina superior derecha
-2. Selecciona "Cambiar Contraseña"
-3. Ingresa tu contraseña actual
-4. Ingresa tu nueva contraseña (debe cumplir requisitos de seguridad)
-5. Confirma la nueva contraseña
-6. Haz clic en "Guardar"
-
-**Requisitos de contraseña:**
-- Mínimo 8 caracteres
-- Al menos una letra mayúscula
-- Al menos una letra minúscula
-- Al menos un número
-- Al menos un carácter especial (!@#$%^&*()_+-=[]{}|;:,.<>?)
+### 1.3 Cierre de Sesion
+1. Localice la tarjeta de usuario en la esquina inferior del menu lateral izquierdo.
+2. Haga clic en su nombre de usuario.
+3. Seleccione la opcion **Cerrar Sesion** para destruir el token JWT de forma segura e invalidar la sesion activa.
 
 ---
 
-## 🏢 Gestión de Empresas (Solo Superadmin)
+## 2. Busqueda y Descubrimiento de Equipos en Red
 
-### Crear una Empresa
+Este modulo le permite escanear e integrar nuevas impresoras Ricoh a la base de datos de control.
 
-1. Ve a "Gestión de Empresas" en el menú lateral
-2. Haz clic en el botón "Nueva Empresa"
-3. Completa el formulario:
-   - **Razón Social**: Nombre legal de la empresa (ej: "Mi Empresa S.A.S.")
-   - **Nombre Comercial**: Identificador único en formato kebab-case (ej: "mi-empresa")
-   - **NIT**: Número de identificación tributaria (ej: "900123456-7")
-   - **Dirección**: Dirección física de la empresa
-   - **Teléfono**: Número de contacto
-   - **Email**: Correo electrónico de contacto
-   - **Nombre de Contacto**: Persona de contacto
-   - **Cargo de Contacto**: Cargo de la persona de contacto
-4. Haz clic en "Guardar"
-
-**Notas:**
-- La razón social debe ser única
-- El nombre comercial debe ser único y en formato kebab-case (minúsculas con guiones)
-- El NIT debe ser único
-
-### Editar una Empresa
-
-1. Ve a "Gestión de Empresas"
-2. Busca la empresa que deseas editar
-3. Haz clic en el botón "Editar" (ícono de lápiz)
-4. Modifica los campos necesarios
-5. Haz clic en "Guardar"
-
-### Desactivar una Empresa
-
-1. Ve a "Gestión de Empresas"
-2. Busca la empresa que deseas desactivar
-3. Haz clic en el botón "Desactivar" (ícono de papelera)
-4. Confirma la acción
-
-**⚠️ IMPORTANTE**: No puedes desactivar una empresa que tenga:
-- Impresoras activas
-- Usuarios activos
-- Usuarios administradores activos
-
-Primero debes desactivar o reasignar estos recursos.
-
-### Buscar Empresas
-
-1. Ve a "Gestión de Empresas"
-2. Usa la barra de búsqueda en la parte superior
-3. Escribe parte de la razón social o nombre comercial
-4. Los resultados se filtrarán automáticamente
+### 2.1 Escaneo y Registro de Equipos en Red
+1. En el menu lateral izquierdo, dirijase a **Buscar Equipos**.
+2. Presione el boton **Escanear Red** ubicado en la esquina superior derecha.
+3. En el formulario emergente, especifique el rango de direcciones IP a escanear (ej: `192.168.91.100 - 192.168.91.254`).
+4. Haga clic en **Comenzar Escaneo**. El sistema realizara una consulta asincrona en paralelo detectando los puertos Ricoh activos (80, 443, 161).
+5. Al finalizar el escaneo, se listaran las impresoras detectadas junto con su hostname, direccion IP y numero de serie.
+6. Seleccione las impresoras que desea registrar marcando la casilla de seleccion izquierda y presione **Registrar Dispositivos**.
 
 ---
 
-## 👥 Gestión de Usuarios Administradores (Solo Superadmin)
+## 3. Asignacion y Aprovisionamiento de Usuarios (Governance)
 
-### Crear un Usuario Admin
+El modulo de Governance le permite crear perfiles de usuario e inyectar su configuracion directamente en la libreta de direcciones fisica de las impresoras Ricoh de forma remota.
 
-1. Ve a "Gestión de Usuarios Admin" en el menú lateral
-2. Haz clic en el botón "Nuevo Usuario Admin"
-3. Completa el formulario:
-   - **Username**: Nombre de usuario único (minúsculas, números, guiones y guiones bajos)
-   - **Contraseña**: Contraseña segura (cumplir requisitos)
-   - **Nombre Completo**: Nombre y apellido del usuario
-   - **Email**: Correo electrónico único
-   - **Rol**: Selecciona el rol apropiado
-   - **Empresa**: Selecciona la empresa (solo si el rol no es superadmin)
-4. Haz clic en "Guardar"
+### 3.1 Registrar un Nuevo Usuario en el Sistema
+1. En el menu lateral izquierdo, ingrese a **Asignar Usuarios**.
+2. En el panel izquierdo de la pantalla, complete los campos del formulario de creacion:
+   - **Nombre**: Nombre completo del usuario (este sera el nombre visible en la pantalla fisica de la impresora).
+   - **PIN / Codigo de Acceso**: Codigo numerico de 4 a 8 digitos con el cual el usuario iniciara sesion fisica en el teclado de la impresora.
+   - **Email**: Correo corporativo del usuario (opcional).
+   - **Departamento / Centro de Costos**: Identificador para la posterior facturacion.
+3. En el selector de **Configuracion de Carpetas (SMB Scan-to-Folder)**, especifique la ruta de red donde se guardaran los documentos escaneados por el usuario (ej: `\\TIC0264\Escaner`) y sus credenciales de red (usuario y contrasena). El backend cifrara estas credenciales con algoritmo AES-256 antes de guardarlas en base de datos.
+4. En el selector de **Permisos de Impresion**, defina si el usuario tiene permitido imprimir o copiar en color:
+   - Marque **Copiadora Color** y **Permitir Impresion Color** si el usuario requiere acceso a color completo. Si se desmarcan, el usuario sera restringido estrictamente a Blanco y Negro en el firmware del equipo.
+5. En el panel derecho de la pantalla, localice el listado de impresoras y marque la casilla de los equipos donde desea aprovisionar al usuario.
+6. Presione **Enviar Configuracion**. El sistema iniciara un proceso en segundo plano conectandose a cada impresora seleccionada en paralelo. Una consola en vivo en la parte inferior de la pantalla reportara el estado del aprovisionamiento ("Autenticando en impresora...", "Usuario registrado en entry_index: 4", "Configuracion SMB completada").
 
-**Roles disponibles:**
-- **Superadmin**: Acceso total al sistema, gestiona empresas y usuarios admin
-- **Admin**: Acceso solo a su empresa, gestiona recursos de su empresa
-- **Viewer**: Solo lectura (preparado para futuro)
-- **Operator**: Operaciones limitadas (preparado para futuro)
-
-**Notas:**
-- El username debe ser único
-- El email debe ser único
-- Los superadmin NO tienen empresa asignada
-- Los admin, viewer y operator DEBEN tener empresa asignada
-
-### Editar un Usuario Admin
-
-1. Ve a "Gestión de Usuarios Admin"
-2. Busca el usuario que deseas editar
-3. Haz clic en el botón "Editar" (ícono de lápiz)
-4. Modifica los campos necesarios
-5. Haz clic en "Guardar"
-
-**Notas:**
-- No puedes cambiar el username
-- Si cambias el rol de admin a superadmin, la empresa se quitará automáticamente
-- Si cambias el rol de superadmin a admin, debes asignar una empresa
-
-### Desactivar un Usuario Admin
-
-1. Ve a "Gestión de Usuarios Admin"
-2. Busca el usuario que deseas desactivar
-3. Haz clic en el botón "Desactivar" (ícono de papelera)
-4. Confirma la acción
-
-**Efecto:**
-- El usuario no podrá iniciar sesión
-- Todas las sesiones activas del usuario se invalidarán inmediatamente
-- El usuario seguirá visible en el sistema pero marcado como inactivo
-
-### Cambiar Contraseña de un Usuario
-
-1. Ve a "Gestión de Usuarios Admin"
-2. Busca el usuario
-3. Haz clic en el botón "Cambiar Contraseña"
-4. Ingresa la nueva contraseña
-5. Confirma la nueva contraseña
-6. Haz clic en "Guardar"
-
-**Nota:** El usuario deberá usar la nueva contraseña en su próximo login.
-
-### Filtrar Usuarios
-
-Puedes filtrar usuarios por:
-- **Rol**: Selecciona un rol específico
-- **Empresa**: Selecciona una empresa específica
-- **Búsqueda**: Escribe parte del username, nombre completo o email
+### 3.2 Gestion de Usuarios y Desactivacion Logica
+1. Dirijase a **Gestion de Usuarios** en el menu lateral.
+2. En la parte superior de la pantalla, vera dos selectores principales: **Usuarios Activos** e **Usuarios Inactivos**.
+3. Haga clic en la tarjeta de un usuario para desplegar la lista de equipos donde se encuentra enrolado.
+4. **Desactivar un usuario en un equipo especifico**:
+   - Presione el boton **Desactivar en este equipo** (representado con un icono de papelera al lado del nombre de la impresora).
+   - Confirme la operacion en el cuadro emergente de confirmacion reactivo.
+   - El sistema modificara el estado de la asignacion a `is_active = False` en base de datos. En la impresora fisica, deshabilitara todos los permisos del usuario de forma inmediata (bloqueando impresion y copias) pero **no eliminara al usuario de la libreta de direcciones**. Esto preserva el indice de entrada (`entry_index`) para evitar colisiones en futuros aprovisionamientos.
+5. **Reactivar un usuario**:
+   - Vaya a la pestana **Usuarios Inactivos**, seleccione al usuario y vuelva a asignar las impresoras deseadas presionando **Reactivar**.
 
 ---
 
-## 🔐 Seguridad y Mejores Prácticas
+## 4. Lectura de Contadores y Cierres Mensuales
 
-### Contraseñas Seguras
+Este modulo permite recolectar los contadores fisicos de las impresoras para la facturacion mensual y generar comparativas de consumo.
 
-✅ **Buenas prácticas:**
-- Usa al menos 12 caracteres
-- Combina mayúsculas, minúsculas, números y símbolos
-- No uses información personal (nombre, fecha de nacimiento, etc.)
-- No reutilices contraseñas de otros sistemas
-- Cambia tu contraseña periódicamente (cada 90 días)
+### 4.1 Visualizar Contadores en Vivo
+1. Ingrese a **Lectura de Contadores** en el menu lateral.
+2. Seleccione un **Dispositivo Escaneado** de la lista desplegable en la barra de filtros premium (ej: `RNP002673721B98 (192.168.91.253)`).
+3. Seleccione el **Periodo Anual** a consultar (ej: `2026`).
+4. Si la impresora seleccionada es valida, se desplegara el listado de cierres historicos organizados de forma cronologica.
+5. Cada tarjeta de cierre detalla:
+   - Rango de fechas del periodo evaluado.
+   - **Contador Global**: Paginas totales registradas en el dispositivo.
+   - **Desglose de Totales**: Copiadora, Impresora, Escaneo y Fax.
+   - **Gasto en Periodo**: Paginas consumidas unicamente en el rango de fechas evaluado.
+   - Nombre de la persona o sistema que ejecuto el cierre.
 
-❌ **Evita:**
-- Contraseñas comunes (123456, password, admin, etc.)
-- Palabras del diccionario
-- Secuencias de teclado (qwerty, asdfgh, etc.)
-- Información personal
+### 4.2 Ejecutar un Cierre Mensual Individual
+1. En la barra superior de filtros de la pantalla **Lectura de Contadores**, presione **Cierre Individual**.
+2. En el formulario flotante:
+   - Especifique la fecha de inicio y la fecha de fin del periodo contable.
+   - El sistema realizara una consulta remota en la impresora para capturar el snapshot de contadores de cada usuario activo y del dispositivo general.
+3. Presione **Guardar Cierre**. El cierre quedara registrado y se generara la comparativa de consumos.
 
-### Sesiones
+### 4.3 Generar e Importar Comparativas
+1. Si dispone de dos o mas cierres mensuales registrados, presione el boton **Comparativa** en la barra superior.
+2. Seleccione el primer mes de referencia y el segundo mes a contrastar.
+3. El sistema generara un grafico comparativo dinamico detallando el incremento o decremento de paginas impresas por cada usuario.
+4. Para guardar el reporte de comparativa, presione **Guardar Comparacion** en la esquina superior derecha, asigne un titulo y una descripcion. Este reporte podra consultarse en cualquier momento desde la seccion **Comparaciones Guardadas** del dashboard del modulo.
 
-- Tu sesión expira después de 30 minutos de inactividad
-- El sistema renovará automáticamente tu sesión si estás activo
-- Si tu sesión expira, deberás iniciar sesión nuevamente
-- Puedes tener múltiples sesiones activas en diferentes dispositivos
+### 4.4 Exportar Reportes a Formato Oficial Ricoh (Excel)
+1. Ingrese a los detalles de cualquier cierre guardado haciendo clic en **Ver Detalles** en la tarjeta de cierre.
+2. Presione el boton **Exportar Excel**.
+3. El sistema generara de forma automatica un libro de Excel estructurado en 3 hojas bajo el formato Ricoh oficial:
+   - **Hoja 1 (Resumen)**: Datos generales de la impresora, serial, IP y totales de consumo.
+   - **Hoja 2 (Consumo por Centros de Costo)**: Agrupacion y costos calculados por departamento.
+   - **Hoja 3 (Detalle de Usuarios)**: Consumo individualizado por cada codigo PIN registrado.
+4. El archivo se descargara en su navegador con la nomenclatura oficial automatizada: `SERIAL_DD.MM.YYYY.xlsx` (donde SERIAL es el serial de la impresora consultada y la fecha corresponde al dia del cierre).
 
-### Bloqueo de Cuenta
-
-- Después de 5 intentos fallidos de login, tu cuenta se bloqueará por 15 minutos
-- Durante el bloqueo, no podrás iniciar sesión incluso con la contraseña correcta
-- Después de 15 minutos, el bloqueo se levantará automáticamente
-- Si olvidas tu contraseña, contacta al superadmin
-
----
-
-## 📊 Uso del Sistema como Admin
-
-### Vista de Datos
-
-Como usuario admin, solo verás datos de tu empresa:
-- **Impresoras**: Solo las impresoras asignadas a tu empresa
-- **Usuarios**: Solo los usuarios de impresoras de tu empresa
-- **Contadores**: Solo los contadores de impresoras de tu empresa
-- **Cierres Mensuales**: Solo los cierres de tu empresa
-
-### Crear Recursos
-
-Cuando creas un nuevo recurso (impresora, usuario, etc.), automáticamente se asignará a tu empresa. No puedes crear recursos para otras empresas.
-
-### Editar/Eliminar Recursos
-
-Solo puedes editar o eliminar recursos que pertenecen a tu empresa. Si intentas acceder a un recurso de otra empresa, recibirás un error de "Acceso denegado".
+### 4.5 Eliminar un Cierre Mensual
+1. Localice el cierre mensual en el **Historial de Cierres**.
+2. Presione el boton de **Papelera** (🗑️) ubicado en la esquina superior derecha de la tarjeta de cierre.
+3. En pantalla aparecera el modal de confirmacion de **Accion Irreversible** perfectamente centrado.
+4. Si esta seguro de descartar las lecturas, haga clic en el boton rojo **Eliminar Cierre**. Esto eliminara de forma permanente el registro del cierre y todos los historiales de consumos asociados de los usuarios en la base de datos en cascada.
 
 ---
 
-## ❓ Preguntas Frecuentes (FAQ)
+## 5. Administracion de Trabajos de Impresion (Print Jobs)
 
-### ¿Olvidé mi contraseña, qué hago?
+El modulo de Trabajos de Impresion permite gestionar en vivo las colas de impresion de una o multiples impresoras en paralelo para tareas de mantenimiento y auditoria de documentos confidenciales.
 
-Contacta al superadmin para que te restablezca la contraseña.
+### 5.1 Consultar Cola de Impresion Multi-Impresora
+1. En el menu lateral izquierdo, ingrese a **Trabajos de Impresion**.
+2. En la barra superior, seleccione una o mas impresoras marcando las casillas del selector desplegable.
+3. El sistema realizara consultas concurrentes en segundo plano usando multiples hilos y cargara la tabla unificada de trabajos.
+4. La tabla detalla:
+   - **Dispositivo**: Impresora donde reside el trabajo.
+   - **Usuario**: Creador del documento.
+   - **Nombre del Documento**: Titulo del archivo en cola.
+   - **Tipo**: Identificador del trabajo (Impresion Normal, Impresion Bloqueada / Locked Print, etc.).
+   - **Estado**: Esperando / Retenido / En proceso.
+   - **Fecha de Recepcion**: Hora de llegada al disco duro.
 
-### ¿Por qué mi cuenta está bloqueada?
-
-Tu cuenta se bloquea automáticamente después de 5 intentos fallidos de login. Espera 15 minutos y vuelve a intentar.
-
-### ¿Puedo cambiar mi username?
-
-No, el username no se puede cambiar. Si necesitas un username diferente, el superadmin debe crear una nueva cuenta.
-
-### ¿Puedo ver datos de otras empresas?
-
-No, como usuario admin solo puedes ver datos de tu propia empresa. Solo los superadmin pueden ver datos de todas las empresas.
-
-### ¿Qué significa "kebab-case"?
-
-Es un formato de texto donde las palabras se escriben en minúsculas y se separan con guiones. Ejemplo: "mi-empresa-sas"
-
-### ¿Puedo tener múltiples sesiones activas?
-
-Sí, puedes iniciar sesión en múltiples dispositivos o navegadores simultáneamente.
-
-### ¿Cuánto tiempo dura mi sesión?
-
-Tu sesión dura 30 minutos desde tu última actividad. Si estás activo, el sistema renovará automáticamente tu sesión.
-
-### ¿Qué pasa si desactivo un usuario admin?
-
-El usuario no podrá iniciar sesión y todas sus sesiones activas se invalidarán inmediatamente.
-
-### ¿Puedo reactivar una empresa o usuario desactivado?
-
-Sí, el superadmin puede reactivar empresas y usuarios desactivados editándolos y marcándolos como activos.
-
-### ¿Se registran mis acciones en el sistema?
-
-Sí, todas las acciones administrativas se registran en el sistema de auditoría, incluyendo:
-- Inicios de sesión
-- Creación, edición y eliminación de recursos
-- Cambios de contraseña
-- Accesos denegados
-
----
-
-## 🆘 Soporte
-
-Si tienes problemas o preguntas:
-
-1. **Revisa esta guía**: La mayoría de las preguntas comunes están respondidas aquí
-2. **Contacta al superadmin**: Para problemas de acceso o permisos
-3. **Revisa los logs**: El superadmin puede revisar los logs del sistema para diagnosticar problemas
-
----
-
-## 📱 Acceso desde Dispositivos Móviles
-
-El sistema es completamente responsive y funciona en:
-- **Smartphones**: iPhone, Android
-- **Tablets**: iPad, Android tablets
-- **Computadoras**: Windows, Mac, Linux
-
-Usa el mismo URL y credenciales en cualquier dispositivo.
-
----
-
-## 🔄 Actualizaciones del Sistema
-
-El sistema se actualiza periódicamente con nuevas características y mejoras de seguridad. Las actualizaciones se realizan durante ventanas de mantenimiento programadas y se notificarán con anticipación.
-
----
-
-**Última actualización**: 20 de Marzo de 2026  
-**Versión del sistema**: 2.0.0
-
+### 5.2 Eliminar Trabajos de Impresion Retenidos o Bloqueados
+1. En la tabla de trabajos, localice el archivo que desea remover.
+2. Haga clic en el boton de **Eliminacion** (🗑️) de la fila.
+3. El backend ejecutara una rutina segura en dos pasos: realizara la llamada de seleccion de trabajo a WIM, analizara el formulario de respuesta e inyectara la confirmacion final de borrado (`mode=3`).
+4. Al completarse la accion, la tabla se actualizara en vivo y el documento desaparecera del disco duro de la impresora.
