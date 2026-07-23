@@ -59,10 +59,17 @@ async def get_user_counters_latest(printer_id: int, db: Session = Depends(get_db
     # Obtener contadores con JOIN de users
     contadores = CounterService.get_user_counters_latest(db, printer_id)
     
+    # Batch fetch users to prevent N+1 queries
+    user_ids = [c.user_id for c in contadores]
+    users_dict = {}
+    if user_ids:
+        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        users_dict = {u.id: u for u in users}
+
     # Serializar con datos de usuario
     result = []
     for contador in contadores:
-        user = db.query(User).filter(User.id == contador.user_id).first()
+        user = users_dict.get(contador.user_id)
         contador_dict = {
             **{k: getattr(contador, k) for k in contador.__dict__ if not k.startswith('_')},
             'codigo_usuario': user.codigo_de_usuario if user else str(contador.user_id),
@@ -96,10 +103,17 @@ async def get_latest_counters_with_printer(printer_id: int, db: Session = Depend
     from db.models import User
     contadores = CounterService.get_user_counters_latest(db, printer_id)
     
+    # Batch fetch users to prevent N+1 queries
+    user_ids = [c.user_id for c in contadores]
+    users_dict = {}
+    if user_ids:
+        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        users_dict = {u.id: u for u in users}
+
     # Serializar contadores con datos de usuario
     counters_serialized = []
     for contador in contadores:
-        user = db.query(User).filter(User.id == contador.user_id).first()
+        user = users_dict.get(contador.user_id)
         contador_dict = {
             **{k: getattr(contador, k) for k in contador.__dict__ if not k.startswith('_')},
             'codigo_usuario': user.codigo_de_usuario if user else str(contador.user_id),
